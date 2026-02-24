@@ -17,8 +17,8 @@ public final class TopicRegistry {
     static {
         register(new OopTopic());
         register(new CollectionsTopic());
-        register(stub("io-nio", "I/O & NIO", "Stream, Channel, Buffer"));
-        register(stub("concurrency", "Concurrency", "Thread, Executor, synchronized"));
+        register(new IoNioTopic());
+        register(new ConcurrencyTopic());
         register(stub("jvm-memory", "JVM & Memory", "Heap, Stack, GC"));
         register(stub("exception", "Exception", "try-catch, checked/unchecked"));
         register(stub("generics", "Generics", "Type parameters, wildcards"));

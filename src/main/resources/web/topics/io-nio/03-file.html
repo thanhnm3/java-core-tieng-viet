@@ -1,0 +1,57 @@
+<section>
+  <h3>File và Buffered Stream</h3>
+  <p><code>File</code> (java.io) — đại diện path, không mở file. <code>FileInputStream</code> / <code>FileOutputStream</code> — stream byte. <code>FileReader</code> / <code>FileWriter</code> — stream char (mặc định encoding hệ thống).</p>
+
+  <h4>BufferedInputStream / BufferedOutputStream</h4>
+  <p>Lớp wrapper: giữ buffer nội bộ (mặc định 8KB). <code>read()</code> lấy từ buffer; khi buffer rỗng mới gọi <code>in.read()</code> xuống đĩa. Giảm số lần system call — đọc 1KB từng byte = 1024 lần; với buffer = 1 lần.</p>
+
+  <table class="comparison-table">
+    <caption>Độ phức tạp — Unbuffered vs Buffered</caption>
+    <thead>
+      <tr>
+        <th>Thao tác</th>
+        <th>FileInputStream</th>
+        <th>BufferedInputStream</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>read()</code> 1 byte</td>
+        <td>1 system call</td>
+        <td>Đọc block, lấy từ buffer</td>
+      </tr>
+      <tr>
+        <td><code>read(byte[])</code> 8KB</td>
+        <td>1 system call</td>
+        <td>1 system call (buffer size)</td>
+      </tr>
+      <tr>
+        <td>Đọc 1MB</td>
+        <td>Nhiều call</td>
+        <td>~128 call (8KB buffer)</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <pre><code>// Đọc file text — luôn dùng BufferedReader
+try (BufferedReader br = new BufferedReader(
+    new InputStreamReader(new FileInputStream("data.txt"), StandardCharsets.UTF_8))) {
+  String line;
+  while ((line = br.readLine()) != null) {
+    System.out.println(line);
+  }
+}
+
+// Ghi file
+try (BufferedWriter bw = new BufferedWriter(
+    new OutputStreamWriter(new FileOutputStream("out.txt"), StandardCharsets.UTF_8))) {
+  bw.write("Hello");
+  bw.newLine();
+}</code></pre>
+
+  <section class="when-use">
+    <h4>Khi nào dùng Buffered?</h4>
+    <p class="when-use-do"><strong>Luôn dùng:</strong> BufferedInputStream/BufferedOutputStream khi đọc/ghi file; BufferedReader cho text (readLine).</p>
+    <p class="when-use-avoid"><strong>Tránh:</strong> FileInputStream/FileReader trực tiếp khi đọc nhiều — chậm do không có buffer.</p>
+  </section>
+</section>

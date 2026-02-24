@@ -1,0 +1,60 @@
+<section>
+  <h3>Các lỗi kinh điển cần tránh</h3>
+
+  <h4>Deadlock</h4>
+  <p>Thread A giữ Lock 1 đợi Lock 2; Thread B giữ Lock 2 đợi Lock 1. Cả hai đứng mãi. <strong>Cách tránh:</strong> Luôn lấy lock theo thứ tự cố định (A rồi B); dùng <code>tryLock</code> với timeout.</p>
+
+  <h4>Livelock</h4>
+  <p>Hai thread liên tục nhường nhịn nhau, không việc gì hoàn thành. Ví dụ: hai người qua cửa, cả hai lùi rồi tiến lại. <strong>Cách tránh:</strong> Thêm randomness hoặc backoff.</p>
+
+  <h4>Starvation</h4>
+  <p>Thread "đói" tài nguyên vì thread ưu tiên cao chiếm hết CPU. <strong>Cách tránh:</strong> Dùng <code>Fair</code> lock; cân bằng priority.</p>
+
+  <h4>Race Condition</h4>
+  <p>Kết quả phụ thuộc thứ tự thực thi — thread nào chạy trước. Ví dụ: <code>i++</code> không atomic. <strong>Cách tránh:</strong> <code>synchronized</code>, <code>AtomicInteger</code>, <code>volatile</code> (chỉ visibility).</p>
+
+  <table class="comparison-table">
+    <caption>Tóm tắt lỗi và cách tránh</caption>
+    <thead>
+      <tr>
+        <th>Lỗi</th>
+        <th>Nguyên nhân</th>
+        <th>Giải pháp</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Deadlock</td>
+        <td>Circular wait</td>
+        <td>Lock ordering, tryLock</td>
+      </tr>
+      <tr>
+        <td>Livelock</td>
+        <td>Nhường nhịn vô hạn</td>
+        <td>Backoff, randomness</td>
+      </tr>
+      <tr>
+        <td>Starvation</td>
+        <td>Priority không công bằng</td>
+        <td>Fair lock</td>
+      </tr>
+      <tr>
+        <td>Race Condition</td>
+        <td>Shared state không sync</td>
+        <td>synchronized, Atomic*</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <section class="pro-con">
+    <h4>Lời khuyên</h4>
+    <div class="pro-con-list">
+      <div class="pro-con-item pro-con-item--pro">
+        <strong>Ưu tiên:</strong> Dùng class có sẵn trong <code>java.util.concurrent</code> thay vì tự viết cơ chế khóa bằng synchronized/wait-notify. Dùng ExecutorService, ConcurrentHashMap, BlockingQueue.
+      </div>
+      <div class="pro-con-item pro-con-item--con">
+        <strong>Tránh:</strong> Tự implement lock phức tạp; dùng synchronized khi có thể dùng Atomic*; quên shutdown ExecutorService.
+      </div>
+    </div>
+  </section>
+</section>

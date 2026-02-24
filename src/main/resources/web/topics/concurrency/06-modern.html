@@ -1,0 +1,52 @@
+<section>
+  <h3>Modern Java Concurrency</h3>
+
+  <h4>CompletableFuture (Java 8)</h4>
+  <p>Lập trình bất đồng bộ theo phong cách Functional. Kết chuỗi: "Làm A xong → lấy kết quả làm B → lỗi thì C". <code>thenApply</code>, <code>thenCompose</code>, <code>thenCombine</code>, <code>exceptionally</code>.</p>
+
+  <pre><code>CompletableFuture&lt;String&gt; future = CompletableFuture
+    .supplyAsync(() -> fetchData())
+    .thenApply(s -> process(s))
+    .exceptionally(ex -> "fallback");
+String result = future.get();</code></pre>
+
+  <h4>Fork/Join Framework</h4>
+  <p>Chia nhỏ tác vụ lớn thành tác vụ con, chạy song song. Thuật toán work-stealing: thread rỗi "đánh cắp" task từ thread bận. <code>ForkJoinPool</code>, <code>RecursiveTask</code>, <code>RecursiveAction</code>. Dùng trong <code>parallelStream()</code>.</p>
+
+  <h4>Virtual Threads (Java 21)</h4>
+  <p>Luồng siêu nhẹ do JVM quản lý, không phải OS. Có thể chạy hàng triệu thread trên laptop. Blocking I/O không tốn OS thread. <code>Thread.ofVirtual().start(task)</code> hoặc <code>Executors.newVirtualThreadPerTaskExecutor()</code>.</p>
+
+  <table class="comparison-table">
+    <caption>Platform Thread vs Virtual Thread</caption>
+    <thead>
+      <tr>
+        <th>Tiêu chí</th>
+        <th>Platform Thread</th>
+        <th>Virtual Thread</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Quản lý</td>
+        <td>OS</td>
+        <td>JVM</td>
+      </tr>
+      <tr>
+        <td>Stack</td>
+        <td>~1MB</td>
+        <td>KB, mở rộng khi cần</td>
+      </tr>
+      <tr>
+        <td>Số lượng</td>
+        <td>Hàng nghìn</td>
+        <td>Hàng triệu</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <section class="when-use">
+    <h4>Khi nào dùng Virtual Threads?</h4>
+    <p class="when-use-do"><strong>Nên dùng:</strong> Ứng dụng nhiều I/O blocking; server HTTP; thay thế thread pool cho task I/O-bound.</p>
+    <p class="when-use-avoid"><strong>Tránh khi:</strong> CPU-bound thuần — platform thread vẫn tốt; cần pin (synchronized với native).</p>
+  </section>
+</section>

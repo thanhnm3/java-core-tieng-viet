@@ -1,0 +1,68 @@
+<section>
+  <h3>Path và Files — NIO.2</h3>
+  <p>Java 7+ có <code>java.nio.file</code>. <code>Path</code> thay <code>File</code> — immutable, cross-platform. <code>Paths.get()</code> hoặc <code>Path.of()</code> (Java 11) tạo Path. <code>Files</code> — utility static: read, write, copy, delete, walk...</p>
+
+  <h4>Path vs File</h4>
+  <p><code>File</code> (java.io) — cũ, có nhiều method I/O; <code>Path</code> — chỉ đại diện path, không mở file. <code>Path</code> dùng với <code>Files</code> hoặc <code>FileChannel</code>. <code>File.toPath()</code> chuyển File sang Path.</p>
+
+  <table class="comparison-table">
+    <caption>Files utility methods</caption>
+    <thead>
+      <tr>
+        <th>Method</th>
+        <th>Mô tả</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>Files.readAllBytes(Path)</code></td>
+        <td>Đọc toàn bộ file</td>
+      </tr>
+      <tr>
+        <td><code>Files.readAllLines(Path, Charset)</code></td>
+        <td>Đọc lines thành List</td>
+      </tr>
+      <tr>
+        <td><code>Files.write(Path, byte[])</code></td>
+        <td>Ghi byte</td>
+      </tr>
+      <tr>
+        <td><code>Files.copy(Path, Path)</code></td>
+        <td>Copy file</td>
+      </tr>
+      <tr>
+        <td><code>Files.walk(Path)</code></td>
+        <td>Duyệt cây thư mục</td>
+      </tr>
+      <tr>
+        <td><code>Files.exists(Path)</code></td>
+        <td>Kiểm tra tồn tại</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <pre><code>Path path = Path.of("data", "file.txt");
+
+// Đọc
+byte[] bytes = Files.readAllBytes(path);
+List&lt;String&gt; lines = Files.readAllLines(path, StandardCharsets.UTF_8);
+
+// Ghi
+Files.write(path, "content".getBytes(StandardCharsets.UTF_8));
+Files.writeString(path, "content");  // Java 11
+
+// Duyệt thư mục
+Files.walk(path, 3)
+    .filter(Files::isRegularFile)
+    .forEach(System.out::println);</code></pre>
+
+  <section class="pro-con">
+    <h4>Path + Files — Ưu điểm</h4>
+    <div class="pro-con-list">
+      <div class="pro-con-item pro-con-item--pro">
+        <strong>Ưu điểm:</strong> Immutable; cross-platform; Files utility mạnh; walk, copy, delete atomic; symbolic link.</div>
+      <div class="pro-con-item pro-con-item--con">
+        <strong>Lưu ý:</strong> readAllBytes/readAllLines load toàn bộ vào memory — không dùng cho file rất lớn.</div>
+    </div>
+  </section>
+</section>

@@ -1,0 +1,62 @@
+<section>
+  <h3>Đồng bộ hóa (Synchronization)</h3>
+  <p>Để tránh <strong>Race Condition</strong> — nhiều thread cùng sửa dữ liệu dẫn đến kết quả sai. Cần kiểm soát truy cập vào shared state.</p>
+
+  <h4>synchronized</h4>
+  <p>Khóa một phương thức hoặc block — chỉ 1 thread truy cập tại một thời điểm. Mỗi object có một monitor lock. <code>synchronized</code> trên method = lock trên <code>this</code>; trên static method = lock trên <code>Class</code> object.</p>
+
+  <h4>volatile</h4>
+  <p>Đảm bảo mọi thread đọc giá trị mới nhất từ main memory (không đọc từ CPU cache). Không đảm bảo atomicity cho compound (i++) — chỉ phù hợp flag đơn giản.</p>
+
+  <h4>ReentrantLock</h4>
+  <p>Linh hoạt hơn <code>synchronized</code>: <code>tryLock()</code> thử lấy lock không block; <code>lockInterruptibly()</code> cho phép ngắt khi đợi; lock timeout.</p>
+
+  <h4>wait() / notify()</h4>
+  <p>Giao tiếp giữa các thread. Phải gọi trong <code>synchronized</code> block. <code>wait()</code> giải phóng lock và chờ; <code>notify()</code> đánh thức thread đang chờ. Dùng cho Producer-Consumer.</p>
+
+  <table class="comparison-table">
+    <caption>synchronized vs volatile vs ReentrantLock</caption>
+    <thead>
+      <tr>
+        <th>Công cụ</th>
+        <th>Phạm vi</th>
+        <th>tryLock</th>
+        <th>Use case</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>synchronized</code></td>
+        <td>Block/method</td>
+        <td>Không</td>
+        <td>Đơn giản, phổ biến</td>
+      </tr>
+      <tr>
+        <td><code>volatile</code></td>
+        <td>Biến</td>
+        <td>—</td>
+        <td>Flag visibility</td>
+      </tr>
+      <tr>
+        <td><code>ReentrantLock</code></td>
+        <td>Block</td>
+        <td>Có</td>
+        <td>Linh hoạt, timeout</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <pre><code>// synchronized
+synchronized (lock) {
+  sharedCounter++;
+}
+
+// wait/notify — Producer-Consumer
+synchronized (queue) {
+  while (queue.isEmpty()) {
+    queue.wait();
+  }
+  return queue.poll();
+}
+// Producer: queue.offer(x); queue.notify();</code></pre>
+</section>

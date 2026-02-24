@@ -3,38 +3,119 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Java Core - Học bằng thực hành</title>
+  <meta name="description" content="Web Engine hiệu năng cao xây dựng từ Java Core thuần: NIO, Thread Pool, Routing bằng Reflection. Học Java qua thực hành.">
+  <title>Trang chủ — Java Core</title>
   <link rel="stylesheet" href="/css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
-<body>
-  <header class="site-header">
-    <h1>Java Core Learning Site</h1>
-    <p>Custom Web Server từ Socket + NIO — Học bằng cách xây dựng</p>
+<body class="topic-page">
+  <header class="topic-header">
+    <div class="topic-header-inner">
+      <a href="/" class="topic-header-logo">Java Core</a>
+      <nav class="topic-header-nav">
+        <a href="/">Trang chủ</a>
+      </nav>
+    </div>
   </header>
 
-  <main class="main-content">
-    <section class="intro">
-      <h2>Chào mừng</h2>
-      <p>Đây là website học Java Core được xây dựng bằng chính kỹ thuật Java Core: Custom Web Server từ Java Socket và NIO, không dùng Spring Boot.</p>
-    </section>
-
-    <section class="topic-list">
-      <h2>Các chủ đề Java Core</h2>
+  <div class="topic-layout">
+    <nav class="topic-sidebar">
       <ul>
-        <li><a href="/topics/oop">OOP - Lập trình hướng đối tượng</a> — Class, Object, Kế thừa, Đa hình, Đóng gói</li>
-        <li><a href="/topics/collections">Collections</a> — List, Set, Map, Iterator, Queue, Deque</li>
-        <li><a href="/topics/io-nio">I/O & NIO</a> — Stream, Channel, Buffer</li>
-        <li><a href="/topics/concurrency">Concurrency</a> — Thread, Executor, synchronized</li>
-        <li><a href="/topics/jvm-memory">JVM & Memory</a> — Heap, Stack, GC</li>
-        <li><a href="/topics/exception">Exception</a> — try-catch, checked/unchecked</li>
-        <li><a href="/topics/generics">Generics</a> — Type parameters, wildcards</li>
-        <li><a href="/topics/lambda">Lambda & Stream</a> — Functional interface, Stream API</li>
+        <li><a href="/" class="topic-sidebar-link--active">Trang chủ</a></li>
+        <li><a href="/topics/oop">OOP</a></li>
+        <li><a href="/topics/collections">Collections</a></li>
+        <li><a href="/topics/io-nio">I/O & NIO</a></li>
+        <li><a href="/topics/concurrency">Concurrency</a></li>
+        <li><a href="/topics/jvm-memory">JVM & Memory</a></li>
+        <li><a href="/topics/exception">Exception</a></li>
+        <li><a href="/topics/generics">Generics</a></li>
+        <li><a href="/topics/lambda">Lambda & Stream</a></li>
       </ul>
-    </section>
-  </main>
+    </nav>
 
-  <footer class="site-footer">
-    <p>Built with Java 17+ · No frameworks · Pure NIO</p>
+    <main class="main-content topic-main">
+      <div class="breadcrumb"><a href="/">Trang chủ</a></div>
+      <article class="topic-content">
+        <h2>Trang chủ</h2>
+        <p>Web Engine hiệu năng cao xây dựng từ Java Core thuần. Khám phá Mạng, Đa luồng và Nội bộ JVM thông qua triển khai Socket thô — không dùng Spring Boot hay framework nào. Website này chính là sản phẩm học tập: mỗi trang bạn đang xem được phục vụ bởi máy chủ HTTP tự viết, chạy trên Java Socket và NIO Selector.</p>
+
+        <section id="code-showcase">
+          <h3>Đoạn mã minh họa</h3>
+          <p>Vòng lặp chính của NioServer — một luồng duy nhất xử lý nhiều kết nối đồng thời nhờ Selector multiplexing.</p>
+          <pre><code><span class="code-keyword">while</span> (running) {
+<span class="code-keyword">  int</span> ready = selector.select(<span class="code-number">1000</span>);
+<span class="code-keyword">  if</span> (ready == <span class="code-number">0</span>) <span class="code-keyword">continue</span>;
+
+  Set&lt;SelectionKey&gt; keys = selector.selectedKeys();
+  Iterator&lt;SelectionKey&gt; it = keys.iterator();
+
+  <span class="code-keyword">while</span> (it.hasNext()) {
+    SelectionKey key = it.next();
+    it.remove();
+
+    <span class="code-keyword">if</span> (key.isAcceptable()) handleAccept(key);
+    <span class="code-keyword">else if</span> (key.isReadable()) handleRead(key);
+    <span class="code-keyword">else if</span> (key.isWritable()) handleWrite(key);
+  }
+}</code></pre>
+        </section>
+
+        <section>
+          <h3>Ba trụ cột kiến trúc</h3>
+          <p>Engine được xây dựng trên ba lớp kỹ thuật cốt lõi của Java, giúp xử lý hàng nghìn kết nối với tài nguyên tối thiểu.</p>
+          <div class="comparison-grid comparison-grid--pillars">
+            <div class="comparison-box comparison-box--pro">
+              <h4>Tầng 1: I/O không chặn (Non-blocking I/O)</h4>
+              <p>Một luồng duy nhất dùng Selector để đa hợp nhiều kết nối. Không tốn bộ nhớ cho mô hình "một luồng mỗi kết nối".</p>
+            </div>
+            <div class="comparison-box comparison-box--pro">
+              <h4>Tầng 2: Thread Pool tùy chỉnh</h4>
+              <p>Tối ưu chu kỳ CPU bằng các pool Executor chuyên biệt: xử lý request, hoàn thành I/O. Giới hạn số luồng để tránh context switch quá nhiều.</p>
+            </div>
+            <div class="comparison-box comparison-box--pro">
+              <h4>Tầng 3: Routing dựa trên Reflection</h4>
+              <p>Không phụ thuộc framework. Pure Java: ánh xạ đường dẫn tới handler, có thể mở rộng bằng cách đăng ký route mới.</p>
+            </div>
+          </div>
+        </section>
+
+        <section>
+          <h3>Chỉ số thời gian thực <span class="metrics-badge">Đang phát triển</span></h3>
+          <p>Theo dõi bộ nhớ Heap và số luồng JVM đang chạy — dữ liệu lấy từ máy chủ phục vụ trang này.</p>
+          <div class="metrics-dashboard">
+            <div class="metrics-card">
+              <div class="metrics-card-header">
+                <span class="metrics-label">Bộ nhớ Heap JVM</span>
+                <span class="metrics-value" id="heap-used">—</span>
+              </div>
+              <div class="metrics-bar">
+                <div class="metrics-bar-fill" id="heap-bar"></div>
+              </div>
+              <div class="metrics-footer">
+                <span id="heap-max">—</span> dung lượng tối đa
+              </div>
+            </div>
+            <div class="metrics-card">
+              <div class="metrics-card-header">
+                <span class="metrics-label">Số luồng đang chạy</span>
+                <span class="metrics-value" id="thread-count">—</span>
+              </div>
+              <div class="metrics-spark">
+                <span class="metrics-spark-value" id="thread-spark">—</span>
+              </div>
+            </div>
+          </div>
+        </section>
+      </article>
+    </main>
+  </div>
+
+  <footer class="topic-footer">
+    <p>Xây dựng bằng Java 17+ · Không dùng framework · Pure NIO</p>
   </footer>
+
+  <script src="/js/landing.js"></script>
 </body>
 </html>

@@ -1,0 +1,71 @@
+<section>
+  <h3>Executor Framework</h3>
+  <p>Đừng tạo thread thủ công bằng <code>new Thread().start()</code> — tạo/hủy thread tốn tài nguyên. <code>ExecutorService</code> quản lý pool thread có sẵn, tái sử dụng.</p>
+
+  <table class="comparison-table">
+    <caption>Các loại Thread Pool</caption>
+    <thead>
+      <tr>
+        <th>Pool</th>
+        <th>Đặc điểm</th>
+        <th>Use case</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>FixedThreadPool</code></td>
+        <td>Số thread cố định.</td>
+        <td>Workload ổn định, giới hạn tài nguyên</td>
+      </tr>
+      <tr>
+        <td><code>CachedThreadPool</code></td>
+        <td>Tự tạo thread mới khi cần, tái sử dụng thread idle.</td>
+        <td>Nhiều task ngắn, burst</td>
+      </tr>
+      <tr>
+        <td><code>ScheduledThreadPool</code></td>
+        <td>Chạy định kỳ hoặc sau delay.</td>
+        <td>Cron, heartbeat</td>
+      </tr>
+      <tr>
+        <td><code>SingleThreadExecutor</code></td>
+        <td>Chỉ 1 thread, đảm bảo thứ tự.</td>
+        <td>Queue tuần tự</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <pre><code>ExecutorService fixed = Executors.newFixedThreadPool(4);
+fixed.submit(() -> System.out.println("Task"));
+
+ScheduledExecutorService scheduled = Executors.newScheduledThreadPool(2);
+scheduled.scheduleAtFixedRate(() -> log(), 0, 1, TimeUnit.SECONDS);
+
+fixed.shutdown();  // Luôn shutdown khi xong</code></pre>
+
+  <section class="comparison">
+    <h4>Khi nào chọn Thread Pool?</h4>
+    <div class="comparison-grid">
+      <div class="comparison-box comparison-box--pro">
+        <h4>FixedThreadPool</h4>
+        <ul>
+          <li>Giới hạn số thread</li>
+          <li>Phù hợp: server xử lý request</li>
+        </ul>
+      </div>
+      <div class="comparison-box comparison-box--pro">
+        <h4>CachedThreadPool</h4>
+        <ul>
+          <li>Không giới hạn (cẩn thận)</li>
+          <li>Phù hợp: task ngắn, burst</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="when-use">
+    <h4>Lưu ý</h4>
+    <p class="when-use-do"><strong>Luôn dùng:</strong> ExecutorService thay vì new Thread(); gọi <code>shutdown()</code> hoặc <code>shutdownNow()</code> khi không dùng nữa.</p>
+    <p class="when-use-avoid"><strong>Tránh:</strong> CachedThreadPool với task dài — có thể tạo quá nhiều thread.</p>
+  </section>
+</section>

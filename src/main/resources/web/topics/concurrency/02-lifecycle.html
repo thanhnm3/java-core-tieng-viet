@@ -1,0 +1,59 @@
+<section>
+  <h3>Vòng đời Thread (Thread Lifecycle)</h3>
+  <p>Thread không chỉ "chạy" hay "dừng" — nó đi qua các trạng thái. Mỗi trạng thái có <code>Thread.State</code> tương ứng.</p>
+
+  <table class="comparison-table">
+    <caption>Các trạng thái Thread</caption>
+    <thead>
+      <tr>
+        <th>Trạng thái</th>
+        <th>Mô tả</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>NEW</code></td>
+        <td>Vừa tạo bằng <code>new Thread()</code>, chưa gọi <code>start()</code></td>
+      </tr>
+      <tr>
+        <td><code>RUNNABLE</code></td>
+        <td>Đã gọi <code>start()</code>, đang chờ CPU hoặc đang chạy</td>
+      </tr>
+      <tr>
+        <td><code>BLOCKED</code></td>
+        <td>Đang chờ lấy monitor Lock (ví dụ chờ vào <code>synchronized</code>)</td>
+      </tr>
+      <tr>
+        <td><code>WAITING</code></td>
+        <td>Đợi vô thời hạn cho đến khi thread khác đánh thức (wait(), join())</td>
+      </tr>
+      <tr>
+        <td><code>TIMED_WAITING</code></td>
+        <td>Đợi có thời gian (sleep(ms), wait(ms), join(ms))</td>
+      </tr>
+      <tr>
+        <td><code>TERMINATED</code></td>
+        <td>Đã hoàn thành hoặc bị lỗi</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <pre><code>Thread t = new Thread(() -> {
+  try {
+    Thread.sleep(1000);  // TIMED_WAITING
+  } catch (InterruptedException e) {
+    Thread.currentThread().interrupt();
+  }
+});
+System.out.println(t.getState());  // NEW
+t.start();
+System.out.println(t.getState());  // RUNNABLE hoặc TIMED_WAITING
+t.join();
+System.out.println(t.getState());  // TERMINATED</code></pre>
+
+  <section class="when-use">
+    <h4>Lưu ý</h4>
+    <p class="when-use-do"><strong>start() vs run():</strong> Gọi <code>start()</code> để tạo luồng mới; gọi <code>run()</code> trực tiếp chạy trên luồng hiện tại — không tạo luồng mới.</p>
+    <p class="when-use-avoid"><strong>Tránh:</strong> Gọi <code>start()</code> hai lần — ném <code>IllegalThreadStateException</code>.</p>
+  </section>
+</section>

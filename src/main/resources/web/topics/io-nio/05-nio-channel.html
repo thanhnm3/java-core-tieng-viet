@@ -1,0 +1,63 @@
+<section>
+  <h3>Channel — java.nio.channels</h3>
+  <p><code>Channel</code> là kết nối tới nguồn/đích. Đọc/ghi qua <code>Buffer</code>. <code>FileChannel</code> — file; <code>SocketChannel</code> — TCP; <code>ServerSocketChannel</code> — TCP server; <code>DatagramChannel</code> — UDP.</p>
+
+  <h4>FileChannel</h4>
+  <p>Lấy từ <code>FileInputStream.getChannel()</code>, <code>FileOutputStream.getChannel()</code>, hoặc <code>RandomAccessFile.getChannel()</code>. <code>read(ByteBuffer)</code> đọc vào buffer; <code>write(ByteBuffer)</code> ghi. <code>transferTo</code> / <code>transferFrom</code> — zero-copy giữa channel (OS hỗ trợ sendfile).</p>
+
+  <table class="comparison-table">
+    <caption>FileChannel vs Stream</caption>
+    <thead>
+      <tr>
+        <th>Tiêu chí</th>
+        <th>FileInputStream</th>
+        <th>FileChannel</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Mô hình</td>
+        <td>Stream byte</td>
+        <td>Buffer + Channel</td>
+      </tr>
+      <tr>
+        <td>Zero-copy</td>
+        <td>Không</td>
+        <td>transferTo/transferFrom</td>
+      </tr>
+      <tr>
+        <td>Position</td>
+        <td>skip()</td>
+        <td>position(long)</td>
+      </tr>
+      <tr>
+        <td>Lock</td>
+        <td>Không</td>
+        <td>lock() / tryLock()</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <pre><code>// Đọc file bằng FileChannel
+try (FileChannel channel = FileChannel.open(Path.of("data.txt"), StandardOpenOption.READ)) {
+  ByteBuffer buf = ByteBuffer.allocate(8192);
+  while (channel.read(buf) != -1) {
+    buf.flip();
+    process(buf);
+    buf.clear();
+  }
+}
+
+// Copy file — zero-copy
+try (FileChannel src = FileChannel.open(Path.of("a.txt"), StandardOpenOption.READ);
+     FileChannel dst = FileChannel.open(Path.of("b.txt"),
+         StandardOpenOption.WRITE, StandardOpenOption.CREATE)) {
+  src.transferTo(0, src.size(), dst);
+}</code></pre>
+
+  <section class="when-use">
+    <h4>Khi nào dùng FileChannel?</h4>
+    <p class="when-use-do"><strong>Nên dùng:</strong> Copy file lớn (transferTo); cần file lock; random access; tích hợp với Selector (SocketChannel).</p>
+    <p class="when-use-avoid"><strong>Tránh khi:</strong> Chỉ đọc file text nhỏ — BufferedReader đơn giản hơn.</p>
+  </section>
+</section>

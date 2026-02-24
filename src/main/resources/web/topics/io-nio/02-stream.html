@@ -1,0 +1,64 @@
+<section>
+  <h3>InputStream và OutputStream</h3>
+  <p>Đọc/ghi byte. <code>read()</code> trả về byte (0–255) hoặc -1 khi hết; <code>read(byte[] b)</code> đọc vào mảng. <code>write(int b)</code> / <code>write(byte[] b)</code> ghi. Luôn dùng try-with-resources.</p>
+
+  <h4>Cấu trúc</h4>
+  <p>InputStream là abstract: <code>read()</code> abstract. <code>read(byte[] b)</code> mặc định gọi <code>read()</code> từng byte — chậm. Override trong BufferedInputStream để đọc block. <code>available()</code> ước lượng byte có sẵn (không đáng tin với network).</p>
+
+  <table class="comparison-table">
+    <caption>InputStream vs Reader</caption>
+    <thead>
+      <tr>
+        <th>Class</th>
+        <th>Đơn vị</th>
+        <th>Encoding</th>
+        <th>Use case</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>InputStream</code></td>
+        <td>Byte</td>
+        <td>Không xử lý</td>
+        <td>Binary, image, file</td>
+      </tr>
+      <tr>
+        <td><code>Reader</code></td>
+        <td>Char (16-bit)</td>
+        <td>Có (InputStreamReader)</td>
+        <td>Text, UTF-8</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <pre><code>// Đọc byte
+try (InputStream in = new FileInputStream("data.bin")) {
+  byte[] buf = new byte[8192];
+  int n;
+  while ((n = in.read(buf)) != -1) {
+    process(buf, 0, n);
+  }
+}
+
+// Đọc text với encoding
+try (Reader r = new InputStreamReader(
+    new FileInputStream("data.txt"), StandardCharsets.UTF_8)) {
+  char[] buf = new char[1024];
+  int n;
+  while ((n = r.read(buf)) != -1) {
+    System.out.print(new String(buf, 0, n));
+  }
+}</code></pre>
+
+  <section class="pro-con">
+    <h4>Stream — Ưu và nhược điểm</h4>
+    <div class="pro-con-list">
+      <div class="pro-con-item pro-con-item--pro">
+        <strong>Ưu điểm:</strong> Đơn giản; Reader/Writer xử lý encoding; dễ wrap (BufferedInputStream, GZIPInputStream).
+      </div>
+      <div class="pro-con-item pro-con-item--con">
+        <strong>Nhược điểm:</strong> Blocking; mỗi kết nối cần 1 thread; không có multiplexing.
+      </div>
+    </div>
+  </section>
+</section>

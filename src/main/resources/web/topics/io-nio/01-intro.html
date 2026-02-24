@@ -1,0 +1,58 @@
+<h2>I/O &amp; NIO — Đọc ghi dữ liệu</h2>
+
+<p>Java cung cấp hai mô hình I/O: <strong>java.io</strong> (Stream-based, blocking) và <strong>java.nio</strong> (Buffer/Channel-based, hỗ trợ non-blocking). I/O cũ dùng stream byte/char; NIO dùng buffer và channel, phù hợp high-throughput và multiplexing.</p>
+
+<section>
+  <h3>Tổng quan I/O vs NIO</h3>
+  <table class="comparison-table">
+    <caption>So sánh java.io và java.nio</caption>
+    <thead>
+      <tr>
+        <th>Tiêu chí</th>
+        <th>java.io (Stream)</th>
+        <th>java.nio (Buffer/Channel)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Mô hình</td>
+        <td>Stream — đọc/ghi tuần tự</td>
+        <td>Buffer + Channel — đọc/ghi qua buffer</td>
+      </tr>
+      <tr>
+        <td>Blocking</td>
+        <td>Blocking (thread chờ I/O)</td>
+        <td>Hỗ trợ non-blocking (Selector)</td>
+      </tr>
+      <tr>
+        <td>Đơn vị xử lý</td>
+        <td>Byte/char</td>
+        <td>Block (Buffer)</td>
+      </tr>
+      <tr>
+        <td>Multiplexing</td>
+        <td>Không</td>
+        <td>Selector — 1 thread quản lý nhiều channel</td>
+      </tr>
+      <tr>
+        <td>Package</td>
+        <td><code>java.io</code></td>
+        <td><code>java.nio</code>, <code>java.nio.channels</code>, <code>java.nio.file</code></td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h3>Hierarchy java.io</h3>
+  <p><strong>InputStream / OutputStream</strong> — byte stream. <strong>Reader / Writer</strong> — character stream (Unicode). Các subclass: FileInputStream, BufferedInputStream, FileReader, BufferedReader... Luôn đóng stream bằng try-with-resources để tránh rò rỉ file descriptor.</p>
+
+  <h4>Hierarchy java.nio</h4>
+  <p><strong>Buffer</strong> — ByteBuffer, CharBuffer, IntBuffer... Container cho dữ liệu. <strong>Channel</strong> — FileChannel, SocketChannel, ServerSocketChannel... Kết nối tới nguồn/đích. <strong>Selector</strong> — multiplexing nhiều channel non-blocking.</p>
+
+  <section class="when-use">
+    <h4>Khi nào dùng I/O vs NIO?</h4>
+    <p class="when-use-do"><strong>java.io:</strong> File đơn giản, text đọc/ghi; dùng Reader/Writer cho encoding; code đơn giản, dễ hiểu.</p>
+    <p class="when-use-avoid"><strong>java.nio:</strong> Tránh khi chỉ cần đọc file nhỏ; ưu tiên khi cần high-throughput, non-blocking, multiplexing (server nhiều kết nối).</p>
+  </section>
+</section>

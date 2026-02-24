@@ -1,5 +1,6 @@
 package com.javacore.server;
 
+import com.javacore.server.handler.MetricsHandler;
 import com.javacore.server.handler.StaticFileHandler;
 import com.javacore.server.handler.TopicPageHandler;
 import com.javacore.server.server.NioServer;
@@ -52,7 +53,9 @@ public final class Main {
     private static Router buildRouter() {
         Router router = new Router();
         router.addRoute("/topics/", new TopicPageHandler());
+        router.addRoute("/api/", new MetricsHandler());
         router.addRoute("/css/", new StaticFileHandler());
+        router.addRoute("/js/", new StaticFileHandler());
         router.addRoute("/", new StaticFileHandler());
         return router;
     }

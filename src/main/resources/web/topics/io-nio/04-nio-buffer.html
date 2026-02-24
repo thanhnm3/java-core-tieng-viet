@@ -1,0 +1,79 @@
+<section>
+  <h3>Buffer — java.nio</h3>
+  <p><code>Buffer</code> là container cho dữ liệu primitive. <code>ByteBuffer</code> là phổ biến nhất. Có 4 thuộc tính: <strong>capacity</strong> (kích thước), <strong>position</strong> (vị trí đọc/ghi), <strong>limit</strong> (giới hạn), <strong>mark</strong> (đánh dấu để reset).</p>
+
+  <h4>Cơ chế flip</h4>
+  <p>Để ghi: <code>put()</code> tăng position. Sau khi ghi xong, gọi <code>flip()</code> — limit = position, position = 0. Để đọc: <code>get()</code> lấy từ buffer. Sau khi đọc xong, <code>clear()</code> — position = 0, limit = capacity (chuẩn bị ghi lại). <code>compact()</code> — đẩy dữ liệu chưa đọc lên đầu, position = remaining, limit = capacity.</p>
+
+  <table class="comparison-table">
+    <caption>Buffer methods</caption>
+    <thead>
+      <tr>
+        <th>Method</th>
+        <th>Thay đổi</th>
+        <th>Mục đích</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>flip()</code></td>
+        <td>limit=position, position=0</td>
+        <td>Chuyển từ write sang read</td>
+      </tr>
+      <tr>
+        <td><code>clear()</code></td>
+        <td>position=0, limit=capacity</td>
+        <td>Chuẩn bị ghi mới</td>
+      </tr>
+      <tr>
+        <td><code>compact()</code></td>
+        <td>Copy remaining lên đầu</td>
+        <td>Giữ dữ liệu chưa đọc, ghi tiếp</td>
+      </tr>
+      <tr>
+        <td><code>rewind()</code></td>
+        <td>position=0</td>
+        <td>Đọc lại từ đầu</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <pre><code>ByteBuffer buf = ByteBuffer.allocate(1024);
+
+// Ghi
+buf.put("Hello".getBytes(StandardCharsets.UTF_8));
+buf.flip();  // Chuyển sang mode đọc
+
+// Đọc
+byte[] dst = new byte[buf.remaining()];
+buf.get(dst);
+System.out.println(new String(dst, StandardCharsets.UTF_8));
+
+// Direct buffer — nằm ngoài heap, tốt cho I/O
+ByteBuffer direct = ByteBuffer.allocateDirect(1024);</code></pre>
+
+  <h4>Heap vs Direct Buffer</h4>
+  <p><code>allocate()</code> — buffer trên heap (byte[]). <code>allocateDirect()</code> — buffer ngoài heap, JVM có thể dùng DMA cho I/O, tránh copy qua kernel. Direct buffer tốt cho high-throughput nhưng allocation tốn hơn.</p>
+
+  <section class="comparison">
+    <h4>Heap vs Direct Buffer</h4>
+    <div class="comparison-grid">
+      <div class="comparison-box comparison-box--pro">
+        <h4>Heap Buffer</h4>
+        <ul>
+          <li>Allocation nhanh</li>
+          <li>GC quản lý</li>
+          <li>Dùng mặc định</li>
+        </ul>
+      </div>
+      <div class="comparison-box comparison-box--pro">
+        <h4>Direct Buffer</h4>
+        <ul>
+          <li>Zero-copy I/O với kernel</li>
+          <li>Phù hợp high-throughput</li>
+          <li>Allocation chậm</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+</section>

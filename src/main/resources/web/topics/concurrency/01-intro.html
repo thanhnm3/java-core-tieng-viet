@@ -1,0 +1,98 @@
+<h2>Concurrency — Lập trình đa luồng</h2>
+
+<p>Concurrency giúp ứng dụng tận dụng CPU nhiều nhân. Ví dụ quán cà phê: thay vì một người làm tất cả (pha chế, bưng bê, tính tiền), thuê nhiều nhân viên làm cùng lúc. Java cung cấp <code>Thread</code>, <code>Executor</code>, <code>synchronized</code>, và <code>java.util.concurrent</code> để xử lý đa luồng an toàn.</p>
+
+<section>
+  <h3>Process và Thread</h3>
+  <p><strong>Process</strong> (tiến trình) — chương trình đang chạy, có vùng nhớ riêng. Ví dụ: một instance IntelliJ IDEA là một Process. <strong>Thread</strong> (luồng) — đơn vị nhỏ nhất trong Process. Các Thread trong cùng Process chia sẻ Heap nhưng có Stack riêng.</p>
+
+  <table class="comparison-table">
+    <caption>Process vs Thread</caption>
+    <thead>
+      <tr>
+        <th>Tiêu chí</th>
+        <th>Process</th>
+        <th>Thread</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Vùng nhớ</td>
+        <td>Riêng biệt</td>
+        <td>Chia sẻ Heap, Stack riêng</td>
+      </tr>
+      <tr>
+        <td>Giao tiếp</td>
+        <td>IPC (phức tạp)</td>
+        <td>Chia sẻ biến (cần sync)</td>
+      </tr>
+      <tr>
+        <td>Chi phí tạo</td>
+        <td>Cao</td>
+        <td>Thấp hơn</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h3>Ba cách tạo Thread trong Java</h3>
+
+  <h4>1. Extends class Thread</h4>
+  <p>Đơn giản nhưng không tối ưu — Java không cho phép đa kế thừa, nên class không thể extend thêm class khác.</p>
+  <pre><code>class MyThread extends Thread {
+  @Override
+  public void run() {
+    System.out.println("Running: " + getName());
+  }
+}
+new MyThread().start();</code></pre>
+
+  <h4>2. Implements Runnable</h4>
+  <p>Cách phổ biến nhất. Tách biệt logic thực thi và quản lý luồng. Có thể implement thêm interface khác.</p>
+  <pre><code>Runnable task = () -> System.out.println("Thread: " + Thread.currentThread().getName());
+Thread t = new Thread(task);
+t.start();</code></pre>
+
+  <h4>3. Implements Callable</h4>
+  <p>Giống Runnable nhưng trả về kết quả (<code>Future</code>) và có thể ném Exception. Dùng với <code>ExecutorService.submit()</code>.</p>
+  <pre><code>Callable&lt;Integer&gt; task = () -> {
+  Thread.sleep(1000);
+  return 42;
+};
+ExecutorService exec = Executors.newSingleThreadExecutor();
+Future&lt;Integer&gt; future = exec.submit(task);
+System.out.println(future.get());  // 42</code></pre>
+
+  <table class="comparison-table">
+    <caption>So sánh 3 cách tạo Thread</caption>
+    <thead>
+      <tr>
+        <th>Cách</th>
+        <th>Trả về</th>
+        <th>Exception</th>
+        <th>Khuyến nghị</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>extends Thread</td>
+        <td>—</td>
+        <td>—</td>
+        <td>Tránh (đa kế thừa)</td>
+      </tr>
+      <tr>
+        <td>implements Runnable</td>
+        <td>—</td>
+        <td>Phải catch trong run()</td>
+        <td>Phổ biến</td>
+      </tr>
+      <tr>
+        <td>implements Callable</td>
+        <td>Future</td>
+        <td>Ném ra ngoài</td>
+        <td>Khi cần kết quả</td>
+      </tr>
+    </tbody>
+  </table>
+</section>

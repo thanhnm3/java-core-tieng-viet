@@ -1,0 +1,53 @@
+<section>
+  <h3>Concurrent Collections</h3>
+  <p>Thay vì dùng <code>Vector</code>, <code>Hashtable</code> (cũ, lock toàn bộ), dùng <code>java.util.concurrent</code> — tối ưu cho đa luồng.</p>
+
+  <h4>ConcurrentHashMap</h4>
+  <p>Cho phép nhiều thread đọc/ghi đồng thời. Không khóa toàn bộ — phân đoạn (segment) hoặc lock per-bucket (Java 8+). <code>putIfAbsent</code>, <code>compute</code>, <code>merge</code> — atomic. Không cho phép null key/value.</p>
+
+  <h4>CopyOnWriteArrayList</h4>
+  <p>Mỗi lần ghi tạo bản copy mới. Đọc không cần lock. Phù hợp: ít ghi, nhiều đọc (listener, config). Ghi tốn O(n) — copy toàn bộ.</p>
+
+  <h4>BlockingQueue</h4>
+  <p>Queue blocking: <code>put()</code> block khi đầy; <code>take()</code> block khi rỗng. <code>ArrayBlockingQueue</code>, <code>LinkedBlockingQueue</code>, <code>LinkedTransferQueue</code>. Cực kỳ hữu ích cho Producer-Consumer.</p>
+
+  <table class="comparison-table">
+    <caption>Concurrent Collections</caption>
+    <thead>
+      <tr>
+        <th>Class</th>
+        <th>Đặc điểm</th>
+        <th>Use case</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>ConcurrentHashMap</code></td>
+        <td>Lock per-bucket, atomic ops</td>
+        <td>Cache, shared map</td>
+      </tr>
+      <tr>
+        <td><code>CopyOnWriteArrayList</code></td>
+        <td>Copy on write</td>
+        <td>Listener list, ít ghi</td>
+      </tr>
+      <tr>
+        <td><code>BlockingQueue</code></td>
+        <td>Block put/take</td>
+        <td>Producer-Consumer</td>
+      </tr>
+      <tr>
+        <td><code>ConcurrentLinkedQueue</code></td>
+        <td>Non-blocking, lock-free</td>
+        <td>Queue không cần block</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <pre><code>ConcurrentHashMap&lt;String, Integer&gt; map = new ConcurrentHashMap&lt;&gt;();
+map.compute("key", (k, v) -> v == null ? 1 : v + 1);
+
+BlockingQueue&lt;Task&gt; queue = new LinkedBlockingQueue&lt;&gt;(100);
+queue.put(task);  // Block nếu đầy
+Task t = queue.take();  // Block nếu rỗng</code></pre>
+</section>
