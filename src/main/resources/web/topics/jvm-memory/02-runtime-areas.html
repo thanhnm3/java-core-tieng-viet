@@ -1,0 +1,44 @@
+<section>
+  <h3>Runtime Data Areas — Chi tiết kỹ thuật</h3>
+  <p>Bộ nhớ JVM chia 5 khu vực: Shared (Heap, Metaspace) và Per-Thread (Stack, PC Register, Native Method Stack).</p>
+
+  <h4>Heap — Cấu trúc Object</h4>
+  <p>Mỗi Object trên Heap có <strong>Object Header</strong>: <em>Mark Word</em> (8 byte trên 64-bit) — hash, GC age, lock state (biased, lightweight, heavyweight); <em>Klass Pointer</em> — trỏ tới metadata trong Metaspace. Sau header là instance fields (theo thứ tự declaration, alignment). Array có thêm length field (4 byte).</p>
+
+  <h4>Metaspace vs PermGen</h4>
+  <p>Java 8 bỏ PermGen (nằm trong Heap, giới hạn -XX:MaxPermSize). <strong>Metaspace</strong> nằm trong Native Memory — không giới hạn bởi -Xmx. Lưu: class metadata (Klass), method metadata, constant pool, annotations. Class loader bị GC → metadata tương ứng có thể unload. <code>-XX:MaxMetaspaceSize</code> giới hạn để tránh Native OOM.</p>
+
+  <h4>Stack — Stack Frame</h4>
+  <p>Mỗi lời gọi method tạo <strong>Stack Frame</strong>: <em>Local Variables</em> (slot cho biến cục bộ, slot 0 = this với instance method); <em>Operand Stack</em> (LIFO cho bytecode thao tác); <em>Frame Data</em> (return address, exception table). Kích thước frame cố định tại compile time. Stack overflow khi đệ quy sâu hoặc frame quá lớn.</p>
+
+  <h4>PC Register</h4>
+  <p>Lưu địa chỉ (offset) lệnh JVM hiện tại. Native method: PC undefined. Mỗi thread một PC.</p>
+
+  <table class="comparison-table">
+    <caption>Object Header (64-bit, compressed oops)</caption>
+    <thead>
+      <tr>
+        <th>Thành phần</th>
+        <th>Kích thước</th>
+        <th>Nội dung</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Mark Word</td>
+        <td>8 byte</td>
+        <td>Hash, GC age, lock (01=unlocked, 00=lightweight, 10=heavyweight, 11=GC)</td>
+      </tr>
+      <tr>
+        <td>Klass Pointer</td>
+        <td>4/8 byte</td>
+        <td>Compressed: 4 byte; không compress: 8 byte</td>
+      </tr>
+      <tr>
+        <td>Array length</td>
+        <td>4 byte</td>
+        <td>Chỉ với array</td>
+      </tr>
+    </tbody>
+  </table>
+</section>

@@ -1,0 +1,44 @@
+<section>
+  <h3>Chi phí của Exception — Góc nhìn JVM</h3>
+  <p>Tạo Exception rất "đắt" về hiệu năng. Khi <code>new Exception()</code>, JVM gọi <code>fillInStackTrace()</code> — quét toàn bộ Stack hiện tại để ghi lại call stack. Mỗi Frame cần snapshot (class name, method name, line number).</p>
+
+  <h4>fillInStackTrace</h4>
+  <p>Native method — walk stack từ PC hiện tại. O(depth) với depth = số Frame. Trong vòng lặp nhanh, throw Exception mỗi iteration có thể gây chậm đáng kể.</p>
+
+  <h4>Khi nào nên tránh</h4>
+  <p>Đừng dùng Exception để điều khiển logic nghiệp vụ. Ví dụ: User không tìm thấy — trả về <code>Optional.empty()</code> hoặc <code>null</code>, không throw <code>UserNotFoundException</code> trong path bình thường. Exception cho tình huống "bất thường".</p>
+
+  <table class="comparison-table">
+    <caption>Exception vs return value</caption>
+    <thead>
+      <tr>
+        <th>Trường hợp</th>
+        <th>Nên dùng</th>
+        <th>Tránh</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>User không tồn tại</td>
+        <td>Optional.empty(), null</td>
+        <td>throw trong path chính</td>
+      </tr>
+      <tr>
+        <td>File không tìm thấy</td>
+        <td>FileNotFoundException</td>
+        <td>—</td>
+      </tr>
+      <tr>
+        <td>Validation fail</td>
+        <td>return Result</td>
+        <td>throw mỗi lần validate</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <section class="when-use">
+    <h4>Lời khuyên</h4>
+    <p class="when-use-do"><strong>Exception cho:</strong> I/O lỗi, network fail, lỗi không mong đợi. Không dùng cho flow control.</p>
+    <p class="when-use-avoid"><strong>Tránh:</strong> <code>for (;;) { try { ... } catch (NoMoreException e) { break; } }</code> — dùng flag hoặc điều kiện.</p>
+  </section>
+</section>

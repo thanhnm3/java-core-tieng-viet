@@ -1,0 +1,36 @@
+<section>
+  <h3>Generational Heap — Chi tiết</h3>
+  <p>Dựa trên <strong>Weak Generational Hypothesis</strong>: phần lớn Object chết trẻ. Young Gen nhỏ, Minor GC nhanh; Old Gen lớn, Major GC chậm nhưng ít xảy ra.</p>
+
+  <h4>TLAB (Thread-Local Allocation Buffer)</h4>
+  <p>Mỗi thread có vùng nhỏ trong Eden để allocate Object — tránh lock khi nhiều thread cùng <code>new</code>. Object lớn (vượt TLAB) allocate trực tiếp Eden. <code>-XX:+UseTLAB</code> mặc định bật.</p>
+
+  <h4>Young Generation — Eden, Survivor</h4>
+  <p><strong>Eden:</strong> Mọi allocation mới. Khi đầy → Minor GC. Object sống copy sang Survivor (Copying algorithm). <strong>S0, S1:</strong> Chỉ một active; mỗi Minor GC: copy survivor từ S0→S1 hoặc ngược lại, clear vùng cũ. Object sống qua N lần Minor GC (tenuring threshold, mặc định 15) → promote lên Old. <code>-XX:MaxTenuringThreshold</code>.</p>
+
+  <h4>Old Generation</h4>
+  <p>Object promoted từ Young. Major/Full GC dọn ở đây — thường Stop-the-World lâu hơn. G1 chia Heap thành region (1–32MB), không còn Eden/S0/S1 cố định — mỗi region có thể Eden, Survivor, hoặc Old.</p>
+
+  <table class="comparison-table">
+    <caption>Thuật toán GC theo vùng</caption>
+    <thead>
+      <tr>
+        <th>Vùng</th>
+        <th>Thuật toán</th>
+        <th>Đặc điểm</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Young (Eden, Survivor)</td>
+        <td>Copying</td>
+        <td>Copy live object, clear toàn bộ — không fragmentation</td>
+      </tr>
+      <tr>
+        <td>Old</td>
+        <td>Mark-Sweep-Compact</td>
+        <td>Mark live, sweep dead, compact để giảm fragmentation</td>
+      </tr>
+    </tbody>
+  </table>
+</section>

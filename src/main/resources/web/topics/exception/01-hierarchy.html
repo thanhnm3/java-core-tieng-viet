@@ -1,0 +1,45 @@
+<h2>Exception — Xử lý ngoại lệ</h2>
+
+<p>Exception Handling là quản lý luồng điều khiển (control flow) để ứng dụng không "sập" bất ngờ và cung cấp đủ thông tin để truy vết lỗi trong Production. Mọi lỗi trong Java bắt nguồn từ <code>java.lang.Throwable</code>.</p>
+
+<section>
+  <h3>Hệ thống phân cấp Throwable</h3>
+
+  <h4>Error</h4>
+  <p>Lỗi hệ thống nghiêm trọng mà ứng dụng không nên (và thường không thể) xử lý. Ví dụ: <code>OutOfMemoryError</code>, <code>StackOverflowError</code>, <code>VirtualMachineError</code>. Khi gặp, tốt nhất để chương trình dừng — không nên catch.</p>
+
+  <h4>Exception</h4>
+  <p>Tình huống lỗi mà chương trình có thể dự đoán và xử lý. Chia hai nhánh:</p>
+  <ul>
+    <li><strong>Checked Exception:</strong> Bắt buộc xử lý tại compile-time. Kế thừa <code>Exception</code> (không phải RuntimeException). Ví dụ: <code>IOException</code>, <code>SQLException</code>, <code>ClassNotFoundException</code>. Compiler bắt buộc try-catch hoặc <code>throws</code>.</li>
+    <li><strong>Unchecked Exception (Runtime):</strong> Xảy ra khi chạy. Kế thừa <code>RuntimeException</code>. Thường do lỗi logic. Ví dụ: <code>NullPointerException</code>, <code>ArrayIndexOutOfBoundsException</code>, <code>IllegalArgumentException</code>. Không bắt buộc khai báo.</li>
+  </ul>
+
+  <table class="comparison-table">
+    <caption>Error vs Checked vs Unchecked</caption>
+    <thead>
+      <tr>
+        <th>Loại</th>
+        <th>Compile-time</th>
+        <th>Ví dụ</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Error</td>
+        <td>Không bắt buộc</td>
+        <td>OutOfMemoryError, StackOverflowError</td>
+      </tr>
+      <tr>
+        <td>Checked Exception</td>
+        <td>Bắt buộc try-catch hoặc throws</td>
+        <td>IOException, SQLException</td>
+      </tr>
+      <tr>
+        <td>Unchecked (Runtime)</td>
+        <td>Không bắt buộc</td>
+        <td>NullPointerException, IllegalArgumentException</td>
+      </tr>
+    </tbody>
+  </table>
+</section>

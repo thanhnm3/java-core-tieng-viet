@@ -1,0 +1,29 @@
+<section>
+  <h3>Exception Propagation</h3>
+  <p>Nếu Exception xảy ra trong method mà không được catch, nó được đẩy ngược lên (pop) khỏi Stack Frame của method đó và chuyển về method gọi nó. Quá trình tiếp tục cho đến khi gặp catch phù hợp hoặc lên <code>main()</code>. Nếu không ai xử lý — JVM in stack trace và dừng Thread đó.</p>
+
+  <h4>Stack Unwinding</h4>
+  <p>JVM "unwind" Stack: pop các Frame cho đến khi tìm thấy handler. Mỗi Frame bị pop — local variable mất, nhưng Exception object vẫn giữ trong Heap. Stack trace ghi lại chuỗi Frame (call stack) tại thời điểm throw.</p>
+
+  <h4>Chained Exception</h4>
+  <p><code>throw new IOException("wrap", cause)</code> — Exception gốc được wrap. <code>getCause()</code> lấy cause. Giữ nguyên nguyên nhân khi rethrow — giúp debug.</p>
+
+  <pre><code>void a() { b(); }
+void b() { c(); }
+void c() {
+  throw new RuntimeException("error");
+}
+// Propagation: c → b → a → main → JVM in stack trace</code></pre>
+
+  <section class="pro-con">
+    <h4>Rethrow</h4>
+    <div class="pro-con-list">
+      <div class="pro-con-item pro-con-item--pro">
+        <strong>Nên:</strong> Catch, log, rethrow với cause: <code>throw new ServiceException("failed", e)</code> — giữ stack trace gốc.
+      </div>
+      <div class="pro-con-item pro-con-item--con">
+        <strong>Tránh:</strong> <code>throw new Exception(e.getMessage())</code> — mất cause, mất stack trace gốc.
+      </div>
+    </div>
+  </section>
+</section>

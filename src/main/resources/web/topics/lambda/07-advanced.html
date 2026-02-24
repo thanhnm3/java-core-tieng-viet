@@ -1,0 +1,98 @@
+<section>
+  <h3>Optional</h3>
+  <p>Container chứa 0 hoặc 1 phần tử — tránh NullPointerException. Không dùng Optional cho parameter, field collection; dùng cho return type khi có thể null.</p>
+
+  <pre><code>// Tạo
+Optional&lt;String&gt; opt = Optional.of("value");      // Non-null
+Optional&lt;String&gt; empty = Optional.empty();
+Optional&lt;String&gt; nullable = Optional.ofNullable(getMaybeNull());
+
+// Lấy giá trị
+String s = opt.orElse("default");
+String s2 = opt.orElseGet(() -> computeExpensive());
+opt.ifPresent(System.out::println);
+
+// Chuyển đổi
+Optional&lt;Integer&gt; len = opt.map(String::length);
+Optional&lt;Integer&gt; flat = opt.flatMap(s -> Optional.of(s.length()));</code></pre>
+
+  <section class="when-use">
+    <h4>Optional — Nên và không nên</h4>
+    <ul class="when-use-do">
+      <li>Return type của method có thể trả null</li>
+      <li>Chain: map, flatMap, filter</li>
+      <li>orElse/orElseGet khi cần default</li>
+    </ul>
+    <ul class="when-use-avoid">
+      <li>Optional làm field, parameter</li>
+      <li>Optional&lt;List&gt; — dùng List rỗng thay vì Optional.empty()</li>
+      <li>opt.get() không kiểm tra — dùng orElse/orElseGet</li>
+    </ul>
+  </section>
+</section>
+
+<section>
+  <h3>Parallel Stream</h3>
+  <p><code>parallelStream()</code> hoặc <code>stream().parallel()</code> — chia công việc cho nhiều thread. Chỉ có lợi khi:</p>
+  <ul>
+    <li>Dữ liệu lớn (hàng nghìn phần tử trở lên)</li>
+    <li>Operation tốn CPU, không bị I/O block</li>
+    <li>Không có shared mutable state</li>
+  </ul>
+
+  <pre><code>// Cẩn thận — reduce cần combiner associative
+int sum = list.parallelStream().reduce(0, Integer::sum, Integer::sum);
+
+// Collectors đã thread-safe
+Map&lt;String, Long&gt; map = list.parallelStream()
+  .collect(Collectors.groupingByConcurrent(Function.identity(), Collectors.counting()));</code></pre>
+
+  <section class="pro-con">
+    <h4>Parallel Stream — Ưu nhược</h4>
+    <ul class="pro-con-list">
+      <li class="pro-con-item pro-con-item--pro">Dễ dùng, không cần quản lý Executor</li>
+      <li class="pro-con-item pro-con-item--con">Overhead với data nhỏ — có thể chậm hơn sequential</li>
+      <li class="pro-con-item pro-con-item--con">Shared mutable state → race condition</li>
+    </ul>
+  </section>
+</section>
+
+<section>
+  <h3>Một số lỗi thường gặp</h3>
+  <table class="comparison-table">
+    <caption>Pitfalls</caption>
+    <thead>
+      <tr>
+        <th>Lỗi</th>
+        <th>Cách tránh</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Dùng stream đã consumed</td>
+        <td>Stream chỉ dùng 1 lần — tạo stream mới nếu cần</td>
+      </tr>
+      <tr>
+        <td>Side-effect trong filter/map</td>
+        <td>Dùng forEach cho side-effect; filter/map nên pure</td>
+      </tr>
+      <tr>
+        <td>Null trong stream</td>
+        <td>filter(Objects::nonNull) hoặc Optional</td>
+      </tr>
+      <tr>
+        <td>Boxing overhead (IntStream)</td>
+        <td>Dùng IntStream, LongStream, DoubleStream khi có thể</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <pre><code>// SAI — stream đã closed
+Stream&lt;String&gt; s = list.stream();
+s.forEach(System.out::println);
+s.count();  // IllegalStateException!
+
+// ĐÚNG
+list.stream().forEach(System.out::println);
+long c = list.stream().count();</code></pre>
+</section>

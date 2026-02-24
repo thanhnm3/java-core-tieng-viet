@@ -1,0 +1,43 @@
+<section>
+  <h3>Năm từ khóa cốt lõi</h3>
+
+  <h4>try, catch, finally</h4>
+  <p><strong>try:</strong> Bao quanh code có thể gây lỗi. <strong>catch:</strong> Xử lý lỗi nếu xảy ra. Nhiều catch — thứ tự từ cụ thể đến chung (Exception cuối). <strong>finally:</strong> Luôn chạy dù có lỗi hay không — dùng đóng resource, cleanup. Khi return trong try, finally vẫn chạy trước khi return.</p>
+
+  <h4>throw, throws</h4>
+  <p><strong>throw:</strong> Chủ động ném Exception: <code>throw new IllegalArgumentException("invalid");</code>. <strong>throws:</strong> Khai báo ở method signature — báo cho caller biết method có thể ném Exception nào: <code>void read() throws IOException</code>.</p>
+
+  <pre><code>try {
+  int result = parse(input);
+} catch (NumberFormatException e) {
+  log.error("Invalid number", e);
+  throw new IllegalArgumentException("Bad input", e);
+} finally {
+  cleanup();
+}
+
+// throws — caller phải xử lý
+void readFile() throws IOException {
+  Files.readAllBytes(path);
+}</code></pre>
+
+  <table class="comparison-table">
+    <caption>Thứ tự catch — Polymorphism</caption>
+    <thead>
+      <tr>
+        <th>Thứ tự</th>
+        <th>Lý do</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Catch cụ thể trước</td>
+        <td>FileNotFoundException trước IOException</td>
+      </tr>
+      <tr>
+        <td>Catch chung sau</td>
+        <td>Exception cuối — nếu không compile error (unreachable)</td>
+      </tr>
+    </tbody>
+  </table>
+</section>

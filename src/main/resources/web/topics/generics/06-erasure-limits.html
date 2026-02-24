@@ -1,0 +1,59 @@
+<section>
+  <h3>Type Erasure và Giới hạn</h3>
+  <p>Generics chỉ tồn tại tại compile-time. JVM không biết generic — <strong>type erasure</strong>: compiler xóa thông tin type, thay bằng bound (hoặc Object nếu unbounded). <code>List&lt;String&gt;</code> và <code>List&lt;Integer&gt;</code> cùng class tại runtime.</p>
+
+  <h4>Hậu quả của Erasure</h4>
+  <ul>
+    <li><strong>Không instanceof:</strong> <code>if (obj instanceof List&lt;String&gt;)</code> — lỗi. Chỉ <code>obj instanceof List</code>.</li>
+    <li><strong>Không new T[]:</strong> <code>new T[10]</code> — lỗi. Dùng <code>(T[]) new Object[n]</code> (unchecked cast) hoặc truyền Class&lt;T&gt;.</li>
+    <li><strong>Không primitive:</strong> <code>List&lt;int&gt;</code> — lỗi. Dùng <code>List&lt;Integer&gt;</code>.</li>
+    <li><strong>Overload theo T:</strong> <code>void m(List&lt;String&gt;)</code> và <code>void m(List&lt;Integer&gt;)</code> — cùng erasure, compile error.</li>
+  </ul>
+
+  <pre><code>// Erasure — sau compile
+class Box&lt;T&gt; { T value; }
+// Thành: class Box { Object value; }  (T unbounded)
+
+class Box&lt;T extends Number&gt; { T value; }
+// Thành: class Box { Number value; }</code></pre>
+
+  <table class="comparison-table">
+    <caption>Giới hạn Generics</caption>
+    <thead>
+      <tr>
+        <th>Giới hạn</th>
+        <th>Giải pháp</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Không primitive</td>
+        <td>Integer, Long... (boxing)</td>
+      </tr>
+      <tr>
+        <td>Không new T[]</td>
+        <td>Array.newInstance(Class, n) hoặc List</td>
+      </tr>
+      <tr>
+        <td>Không instanceof T</td>
+        <td>instanceof List (raw)</td>
+      </tr>
+      <tr>
+        <td>Không static field T</td>
+        <td>Mỗi instantiation chia sẻ cùng static</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <section class="pro-con">
+    <h4>Generics — Tóm tắt</h4>
+    <div class="pro-con-list">
+      <div class="pro-con-item pro-con-item--pro">
+        <strong>Ưu điểm:</strong> Type-safe, không cast, lỗi compile-time; code tái sử dụng; Collections API.
+      </div>
+      <div class="pro-con-item pro-con-item--con">
+        <strong>Giới hạn:</strong> Erasure — mất type tại runtime; không primitive; cú pháp phức tạp với wildcard.
+      </div>
+    </div>
+  </section>
+</section>

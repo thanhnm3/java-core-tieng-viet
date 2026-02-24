@@ -1,0 +1,29 @@
+<section>
+  <h3>Try-with-resources (Java 7+)</h3>
+  <p>Tự động đóng resource implement <code>AutoCloseable</code> (có method <code>close()</code>). Tránh memory leak khi quên close trong finally. Resource được đóng theo thứ tự ngược với khai báo.</p>
+
+  <h4>Cơ chế</h4>
+  <p>Compiler sinh bytecode: gọi <code>close()</code> trong block finally ẩn. Nếu cả try và close() đều ném Exception — Exception từ try được <strong>suppressed</strong>, có thể lấy qua <code>getSuppressed()</code>. Java 9+: biến trong try-with-resources có thể là effectively final.</p>
+
+  <pre><code>// Java 7+
+try (BufferedReader br = new BufferedReader(
+    new FileReader("test.txt"))) {
+  System.out.println(br.readLine());
+} catch (IOException e) {
+  e.printStackTrace();
+}
+// br.close() tự động gọi, dù có lỗi hay không</code></pre>
+
+  <pre><code>// Nhiều resource — đóng theo thứ tự ngược
+try (InputStream in = openInput();
+     OutputStream out = openOutput()) {
+  copy(in, out);
+}
+// out.close() trước, rồi in.close()</code></pre>
+
+  <section class="when-use">
+    <h4>Khi nào dùng</h4>
+    <p class="when-use-do"><strong>Luôn dùng:</strong> InputStream, OutputStream, Reader, Writer, Connection, Socket — mọi resource cần close.</p>
+    <p class="when-use-avoid"><strong>Tránh:</strong> Gọi close() thủ công trong finally khi đã có try-with-resources — dư thừa, dễ lỗi.</p>
+  </section>
+</section>

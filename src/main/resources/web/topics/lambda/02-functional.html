@@ -1,0 +1,83 @@
+<section>
+  <h3>Functional Interface</h3>
+  <p>Interface có đúng <strong>một</strong> abstract method. Dùng <code>@FunctionalInterface</code> để compiler kiểm tra. Java cung cấp sẵn nhiều functional interface trong <code>java.util.function</code>.</p>
+
+  <h4>Các functional interface cơ bản</h4>
+  <table class="comparison-table">
+    <caption>java.util.function — các interface chính</caption>
+    <thead>
+      <tr>
+        <th>Interface</th>
+        <th>Method</th>
+        <th>Mô tả</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>Predicate&lt;T&gt;</code></td>
+        <td><code>boolean test(T t)</code></td>
+        <td>Kiểm tra điều kiện, trả boolean</td>
+      </tr>
+      <tr>
+        <td><code>Function&lt;T,R&gt;</code></td>
+        <td><code>R apply(T t)</code></td>
+        <td>Chuyển đổi T → R</td>
+      </tr>
+      <tr>
+        <td><code>Consumer&lt;T&gt;</code></td>
+        <td><code>void accept(T t)</code></td>
+        <td>Tiêu thụ T, không trả về</td>
+      </tr>
+      <tr>
+        <td><code>Supplier&lt;T&gt;</code></td>
+        <td><code>T get()</code></td>
+        <td>Cung cấp giá trị, không nhận tham số</td>
+      </tr>
+      <tr>
+        <td><code>UnaryOperator&lt;T&gt;</code></td>
+        <td><code>T apply(T t)</code></td>
+        <td>Function T→T (chuyên biệt)</td>
+      </tr>
+      <tr>
+        <td><code>BiFunction&lt;T,U,R&gt;</code></td>
+        <td><code>R apply(T t, U u)</code></td>
+        <td>Chuyển đổi (T,U) → R</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <pre><code>// Predicate — filter
+Predicate&lt;Integer&gt; isEven = n -> n % 2 == 0;
+List.of(1, 2, 3, 4).stream().filter(isEven).toList();  // [2, 4]
+
+// Function — map
+Function&lt;String, Integer&gt; len = s -> s.length();
+List.of("a", "ab", "abc").stream().map(len).toList();  // [1, 2, 3]
+
+// Consumer — forEach
+Consumer&lt;String&gt; print = s -> System.out.println(s);
+List.of("x", "y").forEach(print);
+
+// Supplier — lazy init
+Supplier&lt;LocalDate&gt; today = LocalDate::now;
+LocalDate d = today.get();</code></pre>
+
+  <h4>Tự định nghĩa functional interface</h4>
+  <pre><code>@FunctionalInterface
+public interface TriPredicate&lt;A, B, C&gt; {
+  boolean test(A a, B b, C c);
+}
+
+TriPredicate&lt;Integer, Integer, Integer&gt; isTriangle =
+  (a, b, c) -> a + b &gt; c &amp;&amp; b + c &gt; a &amp;&amp; a + c &gt; b;</code></pre>
+
+  <section class="when-use">
+    <h4>Khi nào dùng interface nào?</h4>
+    <ul class="when-use-do">
+      <li><code>Predicate</code>: filter, removeIf, anyMatch, allMatch</li>
+      <li><code>Function</code>: map, flatMap, computeIfAbsent</li>
+      <li><code>Consumer</code>: forEach, peek</li>
+      <li><code>Supplier</code>: Optional.orElseGet, lazy evaluation</li>
+    </ul>
+  </section>
+</section>

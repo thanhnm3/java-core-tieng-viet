@@ -1,0 +1,53 @@
+<section>
+  <h3>Wildcards — ?</h3>
+  <p>Wildcard <code>?</code> biểu thị "kiểu không xác định". Ba dạng: <code>?</code> (unbounded), <code>? extends T</code> (upper), <code>? super T</code> (lower).</p>
+
+  <h4>? extends T (Upper bounded)</h4>
+  <p><code>List&lt;? extends Number&gt;</code> — có thể là List&lt;Integer&gt;, List&lt;Double&gt;... Chỉ đọc (read): <code>Number n = list.get(0)</code> OK. Không ghi: <code>list.add(1)</code> — lỗi, vì không biết list thực tế là List&lt;Integer&gt; hay List&lt;Double&gt;.</p>
+
+  <h4>? super T (Lower bounded)</h4>
+  <p><code>List&lt;? super Integer&gt;</code> — có thể là List&lt;Integer&gt;, List&lt;Number&gt;, List&lt;Object&gt;. Chỉ ghi (write): <code>list.add(1)</code> OK. Đọc ra Object: <code>Object o = list.get(0)</code> — không biết kiểu cụ thể.</p>
+
+  <pre><code>// extends — producer, read
+void printNumbers(List&lt;? extends Number&gt; list) {
+  for (Number n : list) {
+    System.out.println(n);
+  }
+  // list.add(1);  // Compile error!
+}
+
+// super — consumer, write
+void addIntegers(List&lt;? super Integer&gt; list) {
+  list.add(1);
+  list.add(2);
+  // Integer i = list.get(0);  // Error — chỉ biết Object
+}</code></pre>
+
+  <table class="comparison-table">
+    <caption>Wildcard — read vs write</caption>
+    <thead>
+      <tr>
+        <th>Wildcard</th>
+        <th>Read</th>
+        <th>Write</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>? extends T</code></td>
+        <td>OK — lấy ra T</td>
+        <td>Không (trừ null)</td>
+      </tr>
+      <tr>
+        <td><code>? super T</code></td>
+        <td>Chỉ Object</td>
+        <td>OK — thêm T</td>
+      </tr>
+      <tr>
+        <td><code>?</code></td>
+        <td>Object</td>
+        <td>Không</td>
+      </tr>
+    </tbody>
+  </table>
+</section>

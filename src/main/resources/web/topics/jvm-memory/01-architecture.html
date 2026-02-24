@@ -1,0 +1,51 @@
+<h2>JVM &amp; Memory — Đầu não của Java</h2>
+
+<p>Hiểu JVM và quản lý bộ nhớ giúp giải quyết <code>OutOfMemoryError</code>, <code>StackOverflowError</code> và tối ưu hiệu năng. JVM chia làm 3 phân vùng chính.</p>
+
+<section>
+  <h3>Kiến trúc tổng quan JVM</h3>
+
+  <h4>1. Class Loader Subsystem</h4>
+  <p><strong>Load:</strong> Đọc file .class thành byte array, tạo <code>Class</code> object trong Heap. <strong>Link</strong> gồm 3 bước: <em>Verify</em> (bytecode hợp lệ, không vi phạm type), <em>Prepare</em> (cấp phát bộ nhớ cho static, gán default), <em>Resolve</em> (chuyển symbolic reference thành direct reference — có thể lazy). <strong>Initialize:</strong> Thực thi <code>&lt;clinit&gt;</code> (static block, static field init).</p>
+
+  <h4>Parent Delegation Model</h4>
+  <p>Class loader con ủy quyền cha load trước. Bootstrap (null) → Extension → Application. Đảm bảo class từ rt.jar luôn do Bootstrap load — tránh override core class. <code>findClass()</code> chỉ gọi khi cha không tìm thấy.</p>
+
+  <h4>2. Runtime Data Areas</h4>
+  <p>Heap, Metaspace, Stack, PC Register, Native Method Stack. Chi tiết ở section sau.</p>
+
+  <h4>3. Execution Engine</h4>
+  <p><strong>Interpreter:</strong> Thông dịch bytecode từng lệnh — nhanh khởi động, chậm khi chạy lâu. <strong>JIT (C1, C2):</strong> C1 (Client) compile nhanh, ít optimization; C2 (Server) compile chậm, tối ưu mạnh. Tiered compilation: C1 trước, C2 cho hot code. <strong>GC:</strong> Thu hồi Object unreachable.</p>
+
+  <table class="comparison-table">
+    <caption>Class Loading — Load, Link, Initialize</caption>
+    <thead>
+      <tr>
+        <th>Phase</th>
+        <th>Nội dung</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Load</td>
+        <td>Đọc .class → byte[], tạo Class object</td>
+      </tr>
+      <tr>
+        <td>Verify</td>
+        <td>Bytecode hợp lệ, type-safe</td>
+      </tr>
+      <tr>
+        <td>Prepare</td>
+        <td>Cấp phát static, default value</td>
+      </tr>
+      <tr>
+        <td>Resolve</td>
+        <td>Symbolic → direct reference (lazy)</td>
+      </tr>
+      <tr>
+        <td>Initialize</td>
+        <td>Chạy &lt;clinit&gt;</td>
+      </tr>
+    </tbody>
+  </table>
+</section>

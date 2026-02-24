@@ -1,0 +1,47 @@
+<section>
+  <h3>PECS — Producer Extends, Consumer Super</h3>
+  <p>Quy tắc chọn wildcard: <strong>Producer</strong> (cung cấp/đọc) → <code>extends</code>; <strong>Consumer</strong> (tiêu thụ/ghi) → <code>super</code>.</p>
+
+  <h4>Ví dụ: copy</h4>
+  <p><code>Collections.copy(List&lt;? super T&gt; dest, List&lt;? extends T&gt; src)</code> — dest nhận (consumer) → super; src cung cấp (producer) → extends.</p>
+
+  <pre><code>// Đúng — PECS
+public static &lt;T&gt; void copy(List&lt;? super T&gt; dest, List&lt;? extends T&gt; src) {
+  for (T t : src) {
+    dest.add(t);
+  }
+}
+
+List&lt;Number&gt; dest = new ArrayList&lt;&gt;();
+List&lt;Integer&gt; src = List.of(1, 2, 3);
+copy(dest, src);  // OK — Integer extends Number</code></pre>
+
+  <pre><code>// SAI — dùng extends cho dest
+void copyWrong(List&lt;? extends T&gt; dest, List&lt;? extends T&gt; src) {
+  for (T t : src) {
+    dest.add(t);  // Compile error! dest là consumer
+  }
+}</code></pre>
+
+  <section class="comparison">
+    <h4>Producer vs Consumer</h4>
+    <div class="comparison-grid">
+      <div class="comparison-box comparison-box--pro">
+        <h4>Producer (extends)</h4>
+        <ul>
+          <li>Tham số cung cấp data</li>
+          <li>Chỉ đọc, iterate</li>
+          <li>Ví dụ: src trong copy</li>
+        </ul>
+      </div>
+      <div class="comparison-box comparison-box--pro">
+        <h4>Consumer (super)</h4>
+        <ul>
+          <li>Tham số nhận data</li>
+          <li>Chỉ ghi, add</li>
+          <li>Ví dụ: dest trong copy</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+</section>

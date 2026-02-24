@@ -19,10 +19,10 @@ public final class TopicRegistry {
         register(new CollectionsTopic());
         register(new IoNioTopic());
         register(new ConcurrencyTopic());
-        register(stub("jvm-memory", "JVM & Memory", "Heap, Stack, GC"));
-        register(stub("exception", "Exception", "try-catch, checked/unchecked"));
-        register(stub("generics", "Generics", "Type parameters, wildcards"));
-        register(stub("lambda", "Lambda & Stream", "Functional interface, Stream API"));
+        register(new JvmMemoryTopic());
+        register(new ExceptionTopic());
+        register(new GenericsTopic());
+        register(new LambdaStreamTopic());
     }
 
     private TopicRegistry() {
@@ -30,10 +30,6 @@ public final class TopicRegistry {
 
     private static void register(JavaCoreTopic topic) {
         BY_SLUG.put(topic.getSlug(), topic);
-    }
-
-    private static JavaCoreTopic stub(String slug, String title, String description) {
-        return new StubTopic(slug, title, description);
     }
 
     public static Optional<JavaCoreTopic> findBySlug(String slug) {

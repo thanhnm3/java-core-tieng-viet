@@ -1,0 +1,41 @@
+<section>
+  <h3>Generic Class và Method</h3>
+
+  <h4>Generic Class</h4>
+  <p>Khai báo type parameter trong class: <code>class Box&lt;T&gt; { private T value; }</code>. <code>T</code> là type variable — thay thế bằng kiểu cụ thể khi dùng: <code>Box&lt;String&gt;</code>, <code>Box&lt;Integer&gt;</code>. Có thể có nhiều parameter: <code>class Pair&lt;K, V&gt;</code>.</p>
+
+  <h4>Generic Method</h4>
+  <p>Type parameter khai báo trước return type: <code>&lt;T&gt; T getFirst(List&lt;T&gt; list)</code>. Compiler infer từ argument: <code>getFirst(stringList)</code> → T = String. Có thể dùng với class không generic.</p>
+
+  <pre><code>// Generic class
+class Box&lt;T&gt; {
+  private T value;
+  public void set(T v) { value = v; }
+  public T get() { return value; }
+}
+Box&lt;Integer&gt; box = new Box&lt;&gt;();
+box.set(42);
+int n = box.get();  // Không cast</code></pre>
+
+  <pre><code>// Generic method
+public static &lt;T&gt; T getFirst(List&lt;T&gt; list) {
+  return list.isEmpty() ? null : list.get(0);
+}
+String s = getFirst(List.of("a", "b"));  // T inferred = String</code></pre>
+
+  <table class="comparison-table">
+    <caption>Diamond operator &lt;&gt;</caption>
+    <thead>
+      <tr>
+        <th>Java 6</th>
+        <th>Java 7+</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>new ArrayList&lt;String&gt;()</code></td>
+        <td><code>new ArrayList&lt;&gt;()</code> — type inferred</td>
+      </tr>
+    </tbody>
+  </table>
+</section>

@@ -1,0 +1,42 @@
+<h2>Generics — Kiểu tham số hóa</h2>
+
+<p>Generics cho phép viết code type-safe với kiểu dữ liệu tổng quát. Thay vì <code>List</code> chứa Object (cần cast, dễ ClassCastException), dùng <code>List&lt;String&gt;</code> — compiler kiểm tra, không cần cast. Giới thiệu từ Java 5.</p>
+
+<section>
+  <h3>Tại sao cần Generics?</h3>
+  <p>Trước Generics: <code>List list = new ArrayList(); list.add("hi"); String s = (String) list.get(0);</code> — phải cast, nếu add nhầm Integer sẽ ClassCastException lúc runtime. Với Generics: <code>List&lt;String&gt; list = new ArrayList&lt;&gt;(); list.add("hi"); String s = list.get(0);</code> — compiler bắt lỗi, không cast.</p>
+
+  <table class="comparison-table">
+    <caption>Raw type vs Generic</caption>
+    <thead>
+      <tr>
+        <th>Raw type</th>
+        <th>Generic</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Cần cast</td>
+        <td>Không cần</td>
+      </tr>
+      <tr>
+        <td>Lỗi runtime</td>
+        <td>Lỗi compile-time</td>
+      </tr>
+      <tr>
+        <td>Không type-safe</td>
+        <td>Type-safe</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <pre><code>// Raw — tránh
+List list = new ArrayList();
+list.add(1);
+String s = (String) list.get(0);  // ClassCastException!
+
+// Generic
+List&lt;String&gt; list = new ArrayList&lt;&gt;();
+list.add("ok");
+String s = list.get(0);  // Không cast, an toàn</code></pre>
+</section>

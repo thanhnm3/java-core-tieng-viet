@@ -1,0 +1,53 @@
+<section>
+  <h3>Best Practices</h3>
+
+  <h4>Đừng nuốt Exception</h4>
+  <p>Không viết <code>catch (Exception e) {}</code> mà không log. Bạn đang "bịt mắt" khi hệ thống lỗi. Luôn log: <code>log.error("Failed", e)</code> hoặc rethrow.</p>
+
+  <h4>Catch cụ thể</h4>
+  <p>Thay vì <code>catch (Exception e)</code>, catch <code>FileNotFoundException</code>, <code>SQLException</code> nếu biết rõ. Xử lý chính xác hơn.</p>
+
+  <h4>Custom Exception</h4>
+  <p>Dự án lớn: tạo Exception riêng (<code>InsufficientBalanceException</code>, <code>DuplicateOrderException</code>) để định nghĩa rõ lỗi nghiệp vụ. Kế thừa <code>RuntimeException</code> (unchecked) hoặc <code>Exception</code> (checked) tùy ngữ cảnh.</p>
+
+  <h4>Global Exception Handler</h4>
+  <p>Trong Spring Boot: <code>@ControllerAdvice</code> + <code>@ExceptionHandler</code> — tập trung xử lý lỗi, trả về response thống nhất. Business code không cần try-catch dày đặc.</p>
+
+  <table class="comparison-table">
+    <caption>Clean Exception Handling</caption>
+    <thead>
+      <tr>
+        <th>Nên</th>
+        <th>Tránh</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Log + rethrow với cause</td>
+        <td>Swallow (catch rỗng)</td>
+      </tr>
+      <tr>
+        <td>Catch cụ thể</td>
+        <td>catch (Exception e) chung chung</td>
+      </tr>
+      <tr>
+        <td>Try-with-resources</td>
+        <td>finally close thủ công</td>
+      </tr>
+      <tr>
+        <td>Custom Exception cho nghiệp vụ</td>
+        <td>Dùng RuntimeException cho mọi thứ</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <pre><code>// Custom Exception
+public class InsufficientBalanceException extends RuntimeException {
+  public InsufficientBalanceException(String message) {
+    super(message);
+  }
+  public InsufficientBalanceException(String message, Throwable cause) {
+    super(message, cause);
+  }
+}</code></pre>
+</section>
