@@ -1,0 +1,118 @@
+<section>
+  <h3>List — Danh sách có thứ tự</h3>
+  <p><code>List</code> cho phép phần tử trùng lặp, có thứ tự (index). Hai implementation phổ biến: <strong>ArrayList</strong> (mảng động) và <strong>LinkedList</strong> (danh sách liên kết đôi).</p>
+
+  <h4>ArrayList — Cấu trúc nội bộ</h4>
+  <p>ArrayList lưu trong mảng <code>Object[] elementData</code>. Khi mảng đầy, tạo mảng mới lớn hơn (capacity mới = <code>oldCapacity + (oldCapacity &gt;&gt; 1)</code> — tăng ~50%), copy phần tử sang. Capacity mặc định ban đầu 10 (từ Java 8). Truy cập <code>get(i)</code> là <code>elementData[i]</code> — O(1). Thêm ở cuối <code>add(e)</code> O(1) amortized; thêm ở index i phải dịch n-i phần tử — O(n).</p>
+
+  <h4>LinkedList — Cấu trúc nội bộ</h4>
+  <p>LinkedList dùng node: mỗi node có <code>item</code>, <code>prev</code>, <code>next</code>. Có <code>first</code> và <code>last</code> trỏ đầu/cuối. Thêm/xóa đầu hoặc cuối chỉ cần cập nhật vài reference — O(1). Truy cập index i phải duyệt từ first (hoặc last nếu i gần cuối) — O(n). Mỗi node tốn thêm ~24 byte (object header + 3 reference) so với ArrayList chỉ lưu reference trong mảng.</p>
+
+  <table class="comparison-table">
+    <caption>Độ phức tạp thời gian — ArrayList vs LinkedList</caption>
+    <thead>
+      <tr>
+        <th>Thao tác</th>
+        <th>ArrayList</th>
+        <th>LinkedList</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>get(i)</code></td>
+        <td>O(1)</td>
+        <td>O(n)</td>
+      </tr>
+      <tr>
+        <td><code>add(e)</code> — thêm cuối</td>
+        <td>O(1) amortized</td>
+        <td>O(1)</td>
+      </tr>
+      <tr>
+        <td><code>add(i, e)</code> — chèn tại index</td>
+        <td>O(n)</td>
+        <td>O(n) — tìm vị trí + O(1) chèn</td>
+      </tr>
+      <tr>
+        <td><code>addFirst(e)</code> / <code>addLast(e)</code></td>
+        <td>O(n) — phải dịch toàn bộ</td>
+        <td>O(1)</td>
+      </tr>
+      <tr>
+        <td><code>remove(i)</code></td>
+        <td>O(n)</td>
+        <td>O(n)</td>
+      </tr>
+      <tr>
+        <td><code>removeFirst()</code> / <code>removeLast()</code></td>
+        <td>O(n)</td>
+        <td>O(1)</td>
+      </tr>
+      <tr>
+        <td><code>contains(o)</code></td>
+        <td>O(n)</td>
+        <td>O(n)</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <pre><code>List&lt;String&gt; list = new ArrayList&lt;&gt;();
+list.add("apple");
+list.add("banana");
+list.add("cherry");
+list.add(1, "berry");  // Chèn tại index 1 — O(n)
+
+System.out.println(list.get(2));  // cherry — O(1)
+list.remove(0);  // Xóa "apple" — O(n)
+list.set(0, "blueberry");  // Thay thế — O(1)</code></pre>
+
+  <pre><code>List&lt;Integer&gt; linked = new LinkedList&lt;&gt;();
+linked.addFirst(10);
+linked.addLast(20);
+linked.addFirst(5);  // O(1)
+
+System.out.println(linked.getFirst());  // 5 — O(1)
+linked.removeLast();  // O(1)
+linked.get(1);  // O(n) — phải duyệt từ đầu</code></pre>
+
+  <section class="comparison">
+    <h4>ArrayList vs LinkedList — Bảng so sánh</h4>
+    <table class="comparison-table">
+      <thead>
+        <tr>
+          <th>Tiêu chí</th>
+          <th>ArrayList</th>
+          <th>LinkedList</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Cấu trúc</td>
+          <td>Mảng động (Object[])</td>
+          <td>Danh sách liên kết đôi</td>
+        </tr>
+        <tr>
+          <td>Bộ nhớ</td>
+          <td>Ít hơn (chỉ mảng + reference)</td>
+          <td>Nhiều hơn (mỗi node ~40 byte)</td>
+        </tr>
+        <tr>
+          <td>Cache locality</td>
+          <td>Tốt</td>
+          <td>Kém</td>
+        </tr>
+        <tr>
+          <td>Implement</td>
+          <td>List</td>
+          <td>List, Deque</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="when-use">
+    <h4>Khi nào chọn List implementation?</h4>
+    <p class="when-use-do"><strong>ArrayList:</strong> Hầu hết trường hợp — get/set theo index nhanh; add cuối thường xuyên; ít tốn bộ nhớ; cache-friendly.</p>
+    <p class="when-use-avoid"><strong>LinkedList:</strong> Tránh khi cần get(i) thường xuyên; ưu tiên khi cần queue/stack (addFirst/addLast/removeFirst/removeLast) hoặc chèn/xóa ở đầu/cuối rất nhiều.</p>
+  </section>
+</section>

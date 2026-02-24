@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{title}}</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="topic-page">
+  <header class="site-header">
+    <h1>Java Core Learning Site</h1>
+    <p><a href="/">Trang chủ</a></p>
+  </header>
+
+  <div class="topic-layout">
+    {{topicsNav}}
+    <main class="main-content topic-main">
+      <div class="breadcrumb"><a href="/">Trang chủ</a> / {{title}}</div>
+      <article class="topic-content">
+        {{content}}
+      </article>
+    </main>
+  </div>
+
+  <footer class="site-footer">
+    <p>Built with Java 17+ · No frameworks · Pure NIO</p>
+  </footer>
+</body>
+</html>
