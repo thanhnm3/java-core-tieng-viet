@@ -1,6 +1,5 @@
 # Build static pages for GitHub Pages from src/main/resources/web
 $webRoot = "src\main\resources\web"
-$outRoot = "."
 $layout = [System.IO.File]::ReadAllText("_layout-template.html", [System.Text.Encoding]::UTF8)
 
 function Get-TopicsNav {
@@ -37,14 +36,48 @@ function Get-TopicsNav {
   $sb.ToString()
 }
 
-function Build-Page {
+$topicLabels = @{
+  "oop"         = "OOP"
+  "collections" = "Collections"
+  "io-nio"      = "I/O & NIO"
+  "concurrency" = "Concurrency"
+  "jvm-memory"  = "JVM & Memory"
+  "exception"   = "Exception"
+  "generics"    = "Generics"
+  "lambda"      = "Lambda & Stream"
+}
+$topicFirstPage = @{
+  "oop"         = "oop.html"
+  "collections" = "collections/01-intro.html"
+  "io-nio"      = "io-nio/01-intro.html"
+  "concurrency" = "concurrency/01-intro.html"
+  "jvm-memory"  = "jvm-memory/01-architecture.html"
+  "exception"   = "exception/01-hierarchy.html"
+  "generics"    = "generics/01-intro.html"
+  "lambda"      = "lambda/01-intro.html"
+}
+
+function New-Page {
   param([string]$srcFile, [string]$destFile, [string]$title, [string]$prefix, [string]$toTopics, [string]$activeSlug, [array]$subPages = @(), [string]$activeSubPage = "")
   $content = [System.IO.File]::ReadAllText($srcFile, [System.Text.Encoding]::UTF8)
   $cssPath = $prefix + "css/style.css"
   $faviconPath = $prefix + "favicon.svg"
   $homePath = $prefix + "index.html"
   $nav = Get-TopicsNav -toTopics $toTopics -active $activeSlug -subPages $subPages -activeSubPage $activeSubPage
-  $html = $layout -replace '\{\{title\}\}', $title -replace '\{\{content\}\}', $content -replace '\{\{cssPath\}\}', $cssPath -replace '\{\{faviconPath\}\}', $faviconPath -replace '\{\{homePath\}\}', $homePath -replace '\{\{topicsNav\}\}', $nav
+
+  $topicLabel = $topicLabels[$activeSlug]
+  if ($activeSlug -eq "oop") {
+    $breadcrumb = "<a href=`"$homePath`">Trang ch&#7911;</a> / OOP"
+  }
+  elseif ($topicLabel) {
+    $topicUrl = $toTopics + $topicFirstPage[$activeSlug]
+    $breadcrumb = "<a href=`"$homePath`">Trang ch&#7911;</a> / <a href=`"$topicUrl`">$topicLabel</a> / $title"
+  }
+  else {
+    $breadcrumb = "<a href=`"$homePath`">Trang ch&#7911;</a> / $title"
+  }
+
+  $html = $layout -replace '\{\{title\}\}', $title -replace '\{\{content\}\}', $content -replace '\{\{cssPath\}\}', $cssPath -replace '\{\{faviconPath\}\}', $faviconPath -replace '\{\{homePath\}\}', $homePath -replace '\{\{topicsNav\}\}', $nav -replace '\{\{breadcrumb\}\}', $breadcrumb
   $destDir = Split-Path $destFile -Parent
   if (!(Test-Path $destDir)) { New-Item -ItemType Directory -Force -Path $destDir | Out-Null }
   $utf8 = New-Object System.Text.UTF8Encoding $true
@@ -52,7 +85,7 @@ function Build-Page {
 }
 
 # topics/oop.html (prefix=../ for css/home, toTopics="" for nav links from topics/)
-Build-Page -srcFile "$webRoot\topics\oop.html" -destFile "topics\oop.html" -title "OOP" -prefix "../" -toTopics "" -activeSlug "oop"
+New-Page -srcFile "$webRoot\topics\oop.html" -destFile "topics\oop.html" -title "OOP" -prefix "../" -toTopics "" -activeSlug "oop"
 
 # Subdirs: collections, io-nio, concurrency, jvm-memory, exception, generics, lambda
 $subdirs = @("collections", "io-nio", "concurrency", "jvm-memory", "exception", "generics", "lambda")
@@ -69,7 +102,7 @@ foreach ($dir in $subdirs) {
   foreach ($f in $files) {
     $base = $f.BaseName
     $title = ($titlesObj.PSObject.Properties | Where-Object { $_.Name -eq $base }).Value; if (-not $title) { $title = $base }
-    Build-Page -srcFile $f.FullName -destFile "topics\$dir\$($f.Name)" -title $title -prefix "../../" -toTopics "../" -activeSlug $dir -subPages $subPages -activeSubPage $base
+    New-Page -srcFile $f.FullName -destFile "topics\$dir\$($f.Name)" -title $title -prefix "../../" -toTopics "../" -activeSlug $dir -subPages $subPages -activeSubPage $base
   }
 }
 Write-Host "Done. Built topic pages."

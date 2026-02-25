@@ -19,6 +19,7 @@ public class TopicPageHandler implements HttpHandler {
     private static final String TITLE_PLACEHOLDER = "{{title}}";
     private static final String CONTENT_PLACEHOLDER = "{{content}}";
     private static final String TOPICS_NAV_PLACEHOLDER = "{{topicsNav}}";
+    private static final String BREADCRUMB_PLACEHOLDER = "{{breadcrumb}}";
 
     @Override
     public void handle(HttpRequest req, HttpResponse res) {
@@ -34,7 +35,8 @@ public class TopicPageHandler implements HttpHandler {
                         topic -> {
                             String content = topic.getContentHtml();
                             String topicsNav = buildTopicsNav(slug);
-                            String html = wrapInLayout(topic.getTitle(), content, topicsNav);
+                            String breadcrumb = buildBreadcrumb(topic);
+                            String html = wrapInLayout(topic.getTitle(), content, topicsNav, breadcrumb);
                             res.setBody(html);
                         },
                         () -> {
@@ -55,7 +57,7 @@ public class TopicPageHandler implements HttpHandler {
         return slug.trim().isEmpty() ? null : slug;
     }
 
-    private String wrapInLayout(String title, String content, String topicsNav) {
+    private String wrapInLayout(String title, String content, String topicsNav, String breadcrumb) {
         String layout = loadLayout();
         if (layout == null) {
             return "<!DOCTYPE html><html><head><meta charset=\"utf-8\"><title>" + title + "</title></head><body>"
@@ -63,7 +65,18 @@ public class TopicPageHandler implements HttpHandler {
         }
         return layout.replace(TITLE_PLACEHOLDER, title != null ? title : "")
                 .replace(TOPICS_NAV_PLACEHOLDER, topicsNav != null ? topicsNav : "")
-                .replace(CONTENT_PLACEHOLDER, content != null ? content : "");
+                .replace(CONTENT_PLACEHOLDER, content != null ? content : "")
+                .replace(BREADCRUMB_PLACEHOLDER, breadcrumb != null ? breadcrumb : "");
+    }
+
+    private String buildBreadcrumb(JavaCoreTopic topic) {
+        String topicLabel = topic.getTitle();
+        int dash = topicLabel != null ? topicLabel.indexOf(" - ") : -1;
+        if (dash > 0) {
+            topicLabel = topicLabel.substring(0, dash);
+        }
+        String topicUrl = "/topics/" + topic.getSlug();
+        return "<a href=\"/\">Trang ch&#7911;</a> / <a href=\"" + topicUrl + "\">" + escapeHtml(topicLabel) + "</a>";
     }
 
     private String buildTopicsNav(String currentSlug) {
