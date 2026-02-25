@@ -1,5 +1,7 @@
 <section>
   <h3>List — Danh sách có thứ tự</h3>
+
+  <h4>Kỹ thuật</h4>
   <p><code>List</code> cho phép phần tử trùng lặp, có thứ tự (index). Hai implementation phổ biến: <strong>ArrayList</strong> (mảng động) và <strong>LinkedList</strong> (danh sách liên kết đôi).</p>
 
   <h4>ArrayList — Cấu trúc nội bộ</h4>
@@ -7,6 +9,7 @@
 
   <h4>ensureCapacity và trimToSize</h4>
   <p><code>ensureCapacity(minCapacity)</code> tăng capacity trước khi add nhiều phần tử — tránh resize nhiều lần. <code>trimToSize()</code> thu nhỏ mảng về đúng size — tiết kiệm bộ nhớ khi không còn add thêm.</p>
+  <h4>Ví dụ</h4>
   <pre><code>ArrayList&lt;String&gt; list = new ArrayList&lt;&gt;();
 list.ensureCapacity(1000);  // Tránh resize khi add 1000 phần tử
 for (int i = 0; i &lt; 1000; i++) {

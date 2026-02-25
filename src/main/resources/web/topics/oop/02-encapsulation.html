@@ -1,7 +1,7 @@
 <section>
   <h3>2. Encapsulation (Đóng gói)</h3>
 
-  <h4>Định nghĩa</h4>
+  <h4>Kỹ thuật — Định nghĩa</h4>
   <p>Đóng gói là ẩn dữ liệu bên trong class, chỉ cho phép truy cập qua các phương thức công khai (getter/setter). Dùng <code>private</code> cho thuộc tính, <code>public</code> cho phương thức cần thiết. Điều này giúp kiểm soát cách dữ liệu được đọc và ghi, có thể thêm validation trong setter.</p>
 
   <h4>Access modifiers — Phạm vi truy cập</h4>
@@ -49,6 +49,7 @@
 
   <h4>Getter và Setter — Kiểm soát truy cập</h4>
   <p>Getter trả về giá trị; setter gán giá trị và có thể validate. Quy ước đặt tên: <code>getXxx()</code>, <code>setXxx(value)</code>. Với boolean: <code>isXxx()</code>, <code>hasXxx()</code>.</p>
+  <h4>Ví dụ</h4>
   <pre><code>public class BankAccount {
   private double balance;
   private String owner;

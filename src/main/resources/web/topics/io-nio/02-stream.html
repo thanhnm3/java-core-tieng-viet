@@ -1,5 +1,7 @@
 <section>
   <h3>InputStream và OutputStream</h3>
+
+  <h4>Kỹ thuật</h4>
   <p>Đọc/ghi byte. <code>read()</code> trả về byte (0–255) hoặc -1 khi hết; <code>read(byte[] b)</code> đọc vào mảng. <code>write(int b)</code> / <code>write(byte[] b)</code> ghi. Luôn dùng try-with-resources.</p>
 
   <h4>Cấu trúc</h4>
@@ -33,6 +35,7 @@
 
   <h4>DataInputStream / DataOutputStream</h4>
   <p>Đọc/ghi primitive types: <code>readInt()</code>, <code>readDouble()</code>, <code>readUTF()</code>... Data được ghi theo format nhị phân (Java Data Format). Dùng khi cần trao đổi dữ liệu có cấu trúc.</p>
+  <h4>Ví dụ</h4>
   <pre><code>// Ghi
 try (DataOutputStream out = new DataOutputStream(
     new BufferedOutputStream(new FileOutputStream("data.bin")))) {

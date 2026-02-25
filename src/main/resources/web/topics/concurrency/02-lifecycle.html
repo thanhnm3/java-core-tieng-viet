@@ -1,8 +1,10 @@
 <section>
   <h3>Vòng đời Thread (Thread Lifecycle)</h3>
+
+  <h4>Kỹ thuật</h4>
   <p>Thread không chỉ "chạy" hay "dừng" — nó đi qua các trạng thái. Mỗi trạng thái có <code>Thread.State</code> tương ứng.</p>
 
-  <h4>Chuyển đổi trạng thái</h4>
+  <h4>Ví dụ — Chuyển đổi trạng thái</h4>
   <pre><code>NEW → start() → RUNNABLE
 RUNNABLE → synchronized block bị chiếm → BLOCKED
 RUNNABLE → wait() / join() → WAITING

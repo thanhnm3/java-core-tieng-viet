@@ -2,6 +2,7 @@
   <h3>JVM Tuning — Chi tiết kỹ thuật</h3>
   <p>Các flag quan trọng khi deploy. Luôn test trên workload thực tế.</p>
 
+  <h4>Flag Heap và Memory</h4>
   <table class="comparison-table">
     <caption>Flag Heap và Memory</caption>
     <thead>
@@ -45,6 +46,13 @@
     </tbody>
   </table>
 
+  <h4>GC Logging (Java 9+)</h4>
+  <p><code>-Xlog:gc*:file=gc.log</code> — ghi log GC. <code>-Xlog:gc*:file=gc.log:time,uptime,level,tags</code> — với timestamp. Java 8: <code>-XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:gc.log</code>.</p>
+  <pre><code>java -Xlog:gc*:file=gc.log:time,uptime -Xmx512m -jar app.jar</code></pre>
+
+  <h4>Container support</h4>
+  <p>JVM mặc định không nhận diện cgroup limit (Docker, K8s). Java 10+: <code>-XX:+UseContainerSupport</code> (mặc định) — đọc memory limit từ cgroup. Java 8: set <code>-Xmx</code> thủ công theo container limit. <code>-XX:MaxRAMPercentage=75</code> — dùng 75% RAM cho Heap.</p>
+
   <h4>G1-specific</h4>
   <p><code>-XX:MaxGCPauseMillis=200</code> — mục tiêu pause; <code>-XX:G1HeapRegionSize</code> — kích thước region (1–32MB, power of 2); <code>-XX:InitiatingHeapOccupancyPercent=45</code> — bắt đầu concurrent mark khi Old đạt 45%.</p>
 
@@ -53,7 +61,7 @@
 
   <section class="when-use">
     <h4>Lưu ý deploy</h4>
-    <p class="when-use-do"><strong>-Xms = -Xmx:</strong> Tránh resize Heap — giảm overhead. <strong>Container:</strong> JVM không nhận diện cgroup limit — dùng <code>-XX:+UseContainerSupport</code> (Java 10+) hoặc set -Xmx thủ công theo limit.</p>
+    <p class="when-use-do"><strong>-Xms = -Xmx:</strong> Tránh resize Heap — giảm overhead. <strong>Container:</strong> Dùng UseContainerSupport hoặc set -Xmx theo limit.</p>
     <p class="when-use-avoid"><strong>Tránh:</strong> -Xmx quá lớn so với RAM vật lý; quên -XX:MaxMetaspaceSize (có thể OOM Native).</p>
   </section>
 </section>

@@ -54,7 +54,9 @@
       <article class="topic-content">
         <section>
   <h3>Wildcards — ?</h3>
-  <p>Wildcard <code>?</code> biểu thị "kiểu không xác định". Ba dạng: <code>?</code> (unbounded), <code>? extends T</code> (upper), <code>? super T</code> (lower).</p>
+
+  <h4>Kỹ thuật</h4>
+  <p>Wildcard <code>?</code> biểu thị "kiểu không xác định". Ba dạng: <code>?</code> (unbounded), <code>? extends T</code> (upper), <code>? super T</code> (lower). <strong>extends</strong>: read-only, lấy ra T. <strong>super</strong>: write-only, thêm T. <strong>Unbounded ?</strong>: chỉ đọc ra Object, không ghi (trừ null). Wildcard capture: dùng helper method với type parameter khi cần thao tác trên List&lt;?&gt;.</p>
 
   <h4>? extends T (Upper bounded)</h4>
   <p><code>List&lt;? extends Number&gt;</code> — có thể là List&lt;Integer&gt;, List&lt;Double&gt;... Chỉ đọc (read): <code>Number n = list.get(0)</code> OK. Không ghi: <code>list.add(1)</code> — lỗi, vì không biết list thực tế là List&lt;Integer&gt; hay List&lt;Double&gt;.</p>
@@ -62,6 +64,28 @@
   <h4>? super T (Lower bounded)</h4>
   <p><code>List&lt;? super Integer&gt;</code> — có thể là List&lt;Integer&gt;, List&lt;Number&gt;, List&lt;Object&gt;. Chỉ ghi (write): <code>list.add(1)</code> OK. Đọc ra Object: <code>Object o = list.get(0)</code> — không biết kiểu cụ thể.</p>
 
+  <h4>? (Unbounded wildcard)</h4>
+  <p><code>List&lt;?&gt;</code> — không biết kiểu. Chỉ đọc ra Object; không ghi (trừ null). Dùng khi method không quan tâm type: <code>int size(List&lt;?&gt; list)</code>. Tương đương <code>List&lt;? extends Object&gt;</code>.</p>
+  <h4>Ví dụ</h4>
+  <pre><code>void printSize(List&lt;?&gt; list) {
+  System.out.println(list.size());  // OK
+  // list.add("x");  // Error
+  list.add(null);    // OK — null là mọi type
+}</code></pre>
+
+  <h4>Kỹ thuật — Wildcard capture</h4>
+  <p>Khi cần "capture" wildcard thành type cụ thể — dùng helper method với type parameter. <code>void swap(List&lt;?&gt; list, int i, int j)</code> — không thể <code>list.set(i, list.get(j))</code> vì get trả về Object. Helper: <code>private &lt;E&gt; void swapHelper(List&lt;E&gt; list, int i, int j)</code>.</p>
+  <pre><code>// Capture helper
+public static void swap(List&lt;?&gt; list, int i, int j) {
+  swapHelper(list, i, j);
+}
+private static &lt;E&gt; void swapHelper(List&lt;E&gt; list, int i, int j) {
+  E tmp = list.get(i);
+  list.set(i, list.get(j));
+  list.set(j, tmp);
+}</code></pre>
+
+  <h4>Ví dụ — extends và super</h4>
   <pre><code>// extends — producer, read
 void printNumbers(List&lt;? extends Number&gt; list) {
   for (Number n : list) {
@@ -100,7 +124,7 @@ void addIntegers(List&lt;? super Integer&gt; list) {
       <tr>
         <td><code>?</code></td>
         <td>Object</td>
-        <td>Không</td>
+        <td>Không (trừ null)</td>
       </tr>
     </tbody>
   </table>
@@ -112,5 +136,113 @@ void addIntegers(List&lt;? super Integer&gt; list) {
   <footer class="topic-footer">
     <p>Xây dựng bằng Java 17+ · Không dùng framework · Pure NIO</p>
   </footer>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@9/dist/mermaid.min.js"></script>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      securityLevel: 'loose',
+      theme: 'base',
+      flowchart: { useMaxWidth: true, htmlLabels: true, curve: 'basis', padding: 20 },
+      themeVariables: {
+        primaryColor: '#FFFFFF',
+        primaryTextColor: '#0F172A',
+        primaryBorderColor: '#10B981',
+        secondaryColor: '#ECFDF5',
+        secondaryBorderColor: '#059669',
+        tertiaryColor: '#F8FAFC',
+        tertiaryBorderColor: '#10B981',
+        lineColor: '#64748B',
+        textColor: '#334155',
+        fontFamily: 'Inter, system-ui, sans-serif',
+        fontSize: '14px',
+        clusterBkg: '#F8FAFC',
+        clusterBorder: '#10B981',
+        titleColor: '#0F172A',
+        nodeBorder: '#10B981',
+        defaultLinkColor: '#64748B',
+        edgeLabelBackground: '#ECFDF5',
+        edgeLabelColor: '#047857',
+        mainBkg: '#FFFFFF',
+        secondBkg: '#ECFDF5'
+      }
+    });
+    window.addEventListener('load', function() {
+      var tooltipEl = document.createElement('div');
+      tooltipEl.className = 'flow-tooltip';
+      tooltipEl.innerHTML = '<div class="flow-tooltip__title"></div><div class="flow-tooltip__body"></div>';
+      document.body.appendChild(tooltipEl);
+      function getNodeIdFromElement(el) {
+        if (!el) return null;
+        var dataId = el.getAttribute && el.getAttribute('data-id');
+        if (dataId) return dataId;
+        var id = el.id;
+        if (!id) return null;
+        if (id.indexOf('flowchart-') === 0) {
+          var rest = id.slice(10);
+          var dash = rest.indexOf('-');
+          return dash >= 0 ? rest.slice(0, dash) : rest;
+        }
+        return id;
+      }
+      function attachTooltips() {
+        document.querySelectorAll('.flow-diagram svg rect').forEach(function(r) {
+          r.setAttribute('rx', '8');
+          r.setAttribute('ry', '8');
+        });
+        var attached = 0;
+        document.querySelectorAll('.flow-diagram').forEach(function(diagram, di) {
+          var script = diagram.querySelector('script[type="application/json"][data-flow-tooltips]');
+          if (!script) return;
+          var data;
+          try { data = JSON.parse(script.textContent); } catch (e) { return; }
+          var svg = diagram.querySelector('svg');
+          if (!svg) return;
+          if (diagram.hasAttribute('data-tooltip-delegated')) return;
+          diagram.setAttribute('data-tooltip-delegated', '1');
+          diagram.querySelectorAll('g.node').forEach(function(g) { g.style.pointerEvents = 'auto'; });
+          var onOver = function(e) {
+            var g = e.target.closest && e.target.closest('g.node');
+            if (!g) return;
+            var nodeId = getNodeIdFromElement(g);
+            if (!nodeId) return;
+            var tip = data[nodeId];
+            if (!tip || !tip.detail) return;
+            tooltipEl.querySelector('.flow-tooltip__title').textContent = tip.title || nodeId;
+            tooltipEl.querySelector('.flow-tooltip__body').innerHTML = tip.detail;
+            tooltipEl.style.left = '';
+            tooltipEl.style.top = '';
+            tooltipEl.classList.add('is-visible');
+            var rect = g.getBoundingClientRect();
+            var x = rect.left + rect.width / 2;
+            var y = rect.top - 10;
+            requestAnimationFrame(function() {
+              var w = tooltipEl.offsetWidth;
+              var h = tooltipEl.offsetHeight;
+              tooltipEl.style.left = Math.max(12, Math.min(x - w / 2, window.innerWidth - w - 12)) + 'px';
+              tooltipEl.style.top = Math.max(12, y - h) + 'px';
+            });
+          };
+          var onOut = function(e) {
+            var related = e.relatedTarget;
+            if (related && diagram.contains(related)) return;
+            tooltipEl.classList.remove('is-visible');
+          };
+          diagram.addEventListener('mouseover', onOver);
+          diagram.addEventListener('mouseout', onOut);
+          attached++;
+        });
+        return attached;
+      }
+      var delays = [150, 400, 800];
+      delays.forEach(function(delay, i) {
+        setTimeout(function() {
+          var n = attachTooltips();
+          if (n === 0 && i === delays.length - 1) {
+            setTimeout(attachTooltips, 500);
+          }
+        }, delay);
+      });
+    });
+  </script>
 </body>
 </html>

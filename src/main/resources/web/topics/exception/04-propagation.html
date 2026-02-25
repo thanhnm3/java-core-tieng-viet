@@ -5,8 +5,27 @@
   <h4>Stack Unwinding</h4>
   <p>JVM "unwind" Stack: pop các Frame cho đến khi tìm thấy handler. Mỗi Frame bị pop — local variable mất, nhưng Exception object vẫn giữ trong Heap. Stack trace ghi lại chuỗi Frame (call stack) tại thời điểm throw.</p>
 
-  <h4>Chained Exception</h4>
-  <p><code>throw new IOException("wrap", cause)</code> — Exception gốc được wrap. <code>getCause()</code> lấy cause. Giữ nguyên nguyên nhân khi rethrow — giúp debug.</p>
+  <h4>Stack Trace</h4>
+  <p><code>e.printStackTrace()</code> — in ra stderr. <code>e.getStackTrace()</code> — mảng StackTraceElement. <code>e.getCause()</code> — Exception gốc (khi wrap). Log đầy đủ: <code>log.error("msg", e)</code> — logger in cả stack trace.</p>
+  <pre><code>try {
+  doWork();
+} catch (Exception e) {
+  log.error("Failed", e);  // In cả stack trace
+  // e.printStackTrace();  // Tránh — dùng logger
+}</code></pre>
+
+  <h4>Chained Exception — initCause</h4>
+  <p>Constructor <code>Exception(String, Throwable)</code> — wrap cause. Hoặc <code>initCause(Throwable)</code> khi Exception không có constructor nhận cause. <code>getCause()</code> lấy cause. Giữ nguyên nguyên nhân khi rethrow — giúp debug.</p>
+  <pre><code>try {
+  parse(input);
+} catch (NumberFormatException e) {
+  ServiceException ex = new ServiceException("Parse failed");
+  ex.initCause(e);  // Khi không có constructor (cause)
+  throw ex;
+}
+
+// Hoặc dùng constructor
+throw new IOException("wrap", cause);</code></pre>
 
   <pre><code>void a() { b(); }
 void b() { c(); }

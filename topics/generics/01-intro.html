@@ -57,8 +57,113 @@
 <p>Generics cho phép viết code type-safe với kiểu dữ liệu tổng quát. Thay vì <code>List</code> chứa Object (cần cast, dễ ClassCastException), dùng <code>List&lt;String&gt;</code> — compiler kiểm tra, không cần cast. Giới thiệu từ Java 5.</p>
 
 <section>
+  <h3>Tổng quan từng phần</h3>
+  <p>Mỗi phần gồm: <strong>Kỹ thuật</strong> (định nghĩa, cú pháp, quy tắc) và <strong>Ví dụ</strong> (code minh họa).</p>
+  <table class="comparison-table">
+    <caption>Cấu trúc Generics — Kỹ thuật và Ví dụ</caption>
+    <thead>
+      <tr>
+        <th>Phần</th>
+        <th>Kỹ thuật</th>
+        <th>Ví dụ</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>01 — Giới thiệu</strong></td>
+        <td>Raw type, type safety, @SuppressWarnings</td>
+        <td>List raw vs generic, cast lỗi runtime vs compile</td>
+      </tr>
+      <tr>
+        <td><strong>02 — Class &amp; Method</strong></td>
+        <td>Generic class (Box&lt;T&gt;), generic method (&lt;T&gt; T getFirst), type inference, diamond</td>
+        <td>Box&lt;Integer&gt;, Pair&lt;K,V&gt;, getFirst(List), Collections.emptyList</td>
+      </tr>
+      <tr>
+        <td><strong>03 — Bounded</strong></td>
+        <td>extends Number, extends Comparable, multiple bounds, recursive bound</td>
+        <td>sum(List&lt;T&gt;), max(T a, T b), T extends Number &amp; Comparable</td>
+      </tr>
+      <tr>
+        <td><strong>04 — Wildcards</strong></td>
+        <td>? extends T (read), ? super T (write), ? (unbounded), wildcard capture</td>
+        <td>printNumbers(List&lt;? extends Number&gt;), addIntegers(List&lt;? super Integer&gt;), swap helper</td>
+      </tr>
+      <tr>
+        <td><strong>05 — PECS</strong></td>
+        <td>Producer Extends, Consumer Super — chọn wildcard theo vai trò tham số</td>
+        <td>Collections.copy, Comparator&lt;? super T&gt;, Stream&lt;? extends Number&gt;</td>
+      </tr>
+      <tr>
+        <td><strong>06 — Erasure &amp; Limits</strong></td>
+        <td>Type erasure, bridge method, reifiable vs non-reifiable, giới hạn (no new T[], no primitive)</td>
+        <td>Box sau erasure, Array.newInstance, instanceof List, static T</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h3>Lộ trình học — Sơ đồ flow</h3>
+  <p>Sơ đồ dưới đây thể hiện thứ tự học và mối liên hệ giữa các phần. Mỗi ô là một phần; mũi tên chỉ hướng tiếp theo.</p>
+
+  <div class="flow-diagram">
+    <script type="application/json" data-flow-tooltips>
+    {"A1":{"title":"01 Intro - Giới thiệu Generics","detail":"<p><strong>Phần này là gì?</strong> Đây là bước đầu tiên để hiểu Generics trong Java - cơ chế cho phép bạn viết code an toàn kiểu dữ liệu mà không cần cast tay.</p><p><strong>Bạn sẽ học:</strong> Trước Generics, khi dùng List bạn phải cast mỗi lần lấy phần tử, và nếu add nhầm kiểu (ví dụ add Integer vào List String) thì lỗi chỉ phát hiện lúc chạy. Với List&lt;String&gt;, compiler kiểm tra giúp bạn - không cần cast, lỗi bắt ngay khi compile.</p><p><strong>Raw type</strong> là List không có type argument; tránh dùng vì mất type safety. Khi bắt buộc dùng (legacy API), dùng @SuppressWarnings với scope nhỏ nhất.</p>"},"A2":{"title":"02 Class &amp; Method","detail":"<p><strong>Generic class</strong> cho phép bạn định nghĩa Box&lt;T&gt; - một hộp chứa bất kỳ kiểu T nào. Khi tạo Box&lt;Integer&gt;, compiler đảm bảo bạn chỉ put/get Integer.</p><p><strong>Generic method</strong> như getFirst(List&lt;T&gt;) suy ra T từ tham số, không cần khai báo khi gọi. Diamond &lt;&gt; trong new ArrayList&lt;&gt;() để compiler infer type.</p><p>Bạn sẽ thực hành với Pair&lt;K,V&gt;, Collections.emptyList(), và hiểu khi nào dùng class generic vs method generic.</p>"},"A3":{"title":"03 Bounded","detail":"<p><strong>Bounded type</strong> giới hạn T phải là kiểu con của một class/interface. Ví dụ T extends Number - T chỉ có thể là Integer, Long, Double...</p><p>Khi cần nhiều ràng buộc: T extends Number &amp; Comparable&lt;T&gt;. Recursive bound dùng cho max(T a, T b) khi T phải Comparable với chính nó.</p><p>Phần này giúp bạn viết sum(List&lt;T&gt;) an toàn khi T là Number, hoặc max() khi T là Comparable.</p>"},"A4":{"title":"04 Wildcards","detail":"<p><strong>? extends T</strong> - đọc được, ghi không an toàn. List&lt;? extends Number&gt; có thể là List&lt;Integer&gt; hoặc List&lt;Double&gt;; bạn đọc ra Number nhưng không add được vì không biết chính xác kiểu con.</p><p><strong>? super T</strong> - ghi được, đọc ra Object. List&lt;? super Integer&gt; nhận Integer; dùng khi bạn cần add vào collection.</p><p>Wildcard capture xảy ra khi compiler cần capture ? thành type cụ thể trong helper method. Hiểu để tránh lỗi compile khó hiểu.</p>"},"A5":{"title":"05 PECS","detail":"<p><strong>Producer Extends, Consumer Super</strong> - quy tắc vàng chọn wildcard. Khi tham số sản xuất dữ liệu (bạn đọc từ nó), dùng ? extends. Khi tham số tiêu thụ (bạn ghi vào nó), dùng ? super.</p><p>Ví dụ: Collections.copy(dest, src) - dest nhận ghi nên ? super T, src cho đọc nên ? extends T. Comparator&lt;? super T&gt; vì compare nhận T để so sánh.</p><p>Áp dụng PECS giúp API linh hoạt và type-safe.</p>"},"A6":{"title":"06 Erasure","detail":"<p><strong>Type erasure</strong> - sau compile, generic type bị xóa. List&lt;String&gt; và List&lt;Integer&gt; cùng bytecode List. Đây là cách Java đạt backward compatibility.</p><p><strong>Giới hạn:</strong> Không thể new T[], không instanceof T, không dùng T trong static context. Dùng Array.newInstance(Class, size) khi cần mảng generic.</p><p>Bridge method được tạo khi override với generic; hiểu erasure giúp debug và tránh reflection sai.</p>"}}
+    </script>
+    <pre class="mermaid">
+flowchart TD
+  subgraph Foundation [Foundation]
+    direction LR
+    A1("01 Intro")
+    A2("02 Class and Method")
+    A1 -->|"Raw type, type safety"| A2
+  end
+  subgraph Core ["Core - Bounded and Wildcards"]
+    direction LR
+    A3("03 Bounded")
+    A4("04 Wildcards")
+    A5("05 PECS")
+    A3 -->|"extends Number"| A4 -->|"Producer/Consumer"| A5
+  end
+  subgraph Advanced [Advanced]
+    A6("06 Erasure")
+  end
+  Foundation -->|"Box T, diamond"| Core
+  Core -->|"Type erasure, limits"| Advanced
+    </pre>
+  </div>
+
+  <table class="comparison-table">
+    <caption>Chú thích từng phần</caption>
+    <thead>
+      <tr><th>Phần</th><th>Nội dung chính</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>01</td><td>Raw type, List vs List&lt;String&gt;, @SuppressWarnings</td></tr>
+      <tr><td>02</td><td>Generic class Box&lt;T&gt;, generic method, type inference</td></tr>
+      <tr><td>03</td><td>extends Number, extends Comparable, multiple bounds</td></tr>
+      <tr><td>04</td><td>? extends (read), ? super (write), wildcard capture</td></tr>
+      <tr><td>05</td><td>PECS: Producer→extends, Consumer→super</td></tr>
+      <tr><td>06</td><td>Erasure, không new T[], Array.newInstance</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
   <h3>Tại sao cần Generics?</h3>
-  <p>Trước Generics: <code>List list = new ArrayList(); list.add("hi"); String s = (String) list.get(0);</code> — phải cast, nếu add nhầm Integer sẽ ClassCastException lúc runtime. Với Generics: <code>List&lt;String&gt; list = new ArrayList&lt;&gt;(); list.add("hi"); String s = list.get(0);</code> — compiler bắt lỗi, không cast.</p>
+
+  <h4>Kỹ thuật</h4>
+  <p>Trước Generics: <code>List list = new ArrayList(); list.add("hi"); String s = (String) list.get(0);</code> — phải cast, nếu add nhầm Integer sẽ ClassCastException lúc runtime. Với Generics: <code>List&lt;String&gt; list = new ArrayList&lt;&gt;(); list.add("hi"); String s = list.get(0);</code> — compiler bắt lỗi, không cast. Raw type là generic không có type argument — mất type safety.</p>
+
+  <h4>Raw type — Tránh dùng</h4>
+  <p>Raw type là generic không có type argument: <code>List</code> thay vì <code>List&lt;String&gt;</code>. Vẫn compile (backward compatibility) nhưng mất type safety. <code>list.add(1)</code> — compiler warning; <code>(String) list.get(0)</code> — ClassCastException tại runtime.</p>
+
+  <h4>@SuppressWarnings("unchecked")</h4>
+  <p>Khi phải dùng raw type hoặc unchecked cast (ví dụ: legacy API), compiler báo warning. <code>@SuppressWarnings("unchecked")</code> tắt warning — chỉ dùng khi chắc chắn an toàn, scope càng nhỏ càng tốt (method, không class).</p>
+  <pre><code>@SuppressWarnings("unchecked")
+List&lt;String&gt; fromLegacy = (List&lt;String&gt;) legacyGetList();
+// Chỉ dùng khi biết legacy trả về List&lt;String&gt;</code></pre>
 
   <table class="comparison-table">
     <caption>Raw type vs Generic</caption>
@@ -81,9 +186,14 @@
         <td>Không type-safe</td>
         <td>Type-safe</td>
       </tr>
+      <tr>
+        <td>Compiler warning</td>
+        <td>Không warning</td>
+      </tr>
     </tbody>
   </table>
 
+  <h4>Ví dụ</h4>
   <pre><code>// Raw — tránh
 List list = new ArrayList();
 list.add(1);
@@ -101,5 +211,113 @@ String s = list.get(0);  // Không cast, an toàn</code></pre>
   <footer class="topic-footer">
     <p>Xây dựng bằng Java 17+ · Không dùng framework · Pure NIO</p>
   </footer>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@9/dist/mermaid.min.js"></script>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      securityLevel: 'loose',
+      theme: 'base',
+      flowchart: { useMaxWidth: true, htmlLabels: true, curve: 'basis', padding: 20 },
+      themeVariables: {
+        primaryColor: '#FFFFFF',
+        primaryTextColor: '#0F172A',
+        primaryBorderColor: '#10B981',
+        secondaryColor: '#ECFDF5',
+        secondaryBorderColor: '#059669',
+        tertiaryColor: '#F8FAFC',
+        tertiaryBorderColor: '#10B981',
+        lineColor: '#64748B',
+        textColor: '#334155',
+        fontFamily: 'Inter, system-ui, sans-serif',
+        fontSize: '14px',
+        clusterBkg: '#F8FAFC',
+        clusterBorder: '#10B981',
+        titleColor: '#0F172A',
+        nodeBorder: '#10B981',
+        defaultLinkColor: '#64748B',
+        edgeLabelBackground: '#ECFDF5',
+        edgeLabelColor: '#047857',
+        mainBkg: '#FFFFFF',
+        secondBkg: '#ECFDF5'
+      }
+    });
+    window.addEventListener('load', function() {
+      var tooltipEl = document.createElement('div');
+      tooltipEl.className = 'flow-tooltip';
+      tooltipEl.innerHTML = '<div class="flow-tooltip__title"></div><div class="flow-tooltip__body"></div>';
+      document.body.appendChild(tooltipEl);
+      function getNodeIdFromElement(el) {
+        if (!el) return null;
+        var dataId = el.getAttribute && el.getAttribute('data-id');
+        if (dataId) return dataId;
+        var id = el.id;
+        if (!id) return null;
+        if (id.indexOf('flowchart-') === 0) {
+          var rest = id.slice(10);
+          var dash = rest.indexOf('-');
+          return dash >= 0 ? rest.slice(0, dash) : rest;
+        }
+        return id;
+      }
+      function attachTooltips() {
+        document.querySelectorAll('.flow-diagram svg rect').forEach(function(r) {
+          r.setAttribute('rx', '8');
+          r.setAttribute('ry', '8');
+        });
+        var attached = 0;
+        document.querySelectorAll('.flow-diagram').forEach(function(diagram, di) {
+          var script = diagram.querySelector('script[type="application/json"][data-flow-tooltips]');
+          if (!script) return;
+          var data;
+          try { data = JSON.parse(script.textContent); } catch (e) { return; }
+          var svg = diagram.querySelector('svg');
+          if (!svg) return;
+          if (diagram.hasAttribute('data-tooltip-delegated')) return;
+          diagram.setAttribute('data-tooltip-delegated', '1');
+          diagram.querySelectorAll('g.node').forEach(function(g) { g.style.pointerEvents = 'auto'; });
+          var onOver = function(e) {
+            var g = e.target.closest && e.target.closest('g.node');
+            if (!g) return;
+            var nodeId = getNodeIdFromElement(g);
+            if (!nodeId) return;
+            var tip = data[nodeId];
+            if (!tip || !tip.detail) return;
+            tooltipEl.querySelector('.flow-tooltip__title').textContent = tip.title || nodeId;
+            tooltipEl.querySelector('.flow-tooltip__body').innerHTML = tip.detail;
+            tooltipEl.style.left = '';
+            tooltipEl.style.top = '';
+            tooltipEl.classList.add('is-visible');
+            var rect = g.getBoundingClientRect();
+            var x = rect.left + rect.width / 2;
+            var y = rect.top - 10;
+            requestAnimationFrame(function() {
+              var w = tooltipEl.offsetWidth;
+              var h = tooltipEl.offsetHeight;
+              tooltipEl.style.left = Math.max(12, Math.min(x - w / 2, window.innerWidth - w - 12)) + 'px';
+              tooltipEl.style.top = Math.max(12, y - h) + 'px';
+            });
+          };
+          var onOut = function(e) {
+            var related = e.relatedTarget;
+            if (related && diagram.contains(related)) return;
+            tooltipEl.classList.remove('is-visible');
+          };
+          diagram.addEventListener('mouseover', onOver);
+          diagram.addEventListener('mouseout', onOut);
+          attached++;
+        });
+        return attached;
+      }
+      var delays = [150, 400, 800];
+      delays.forEach(function(delay, i) {
+        setTimeout(function() {
+          var n = attachTooltips();
+          if (n === 0 && i === delays.length - 1) {
+            setTimeout(attachTooltips, 500);
+          }
+        }, delay);
+      });
+    });
+  </script>
 </body>
 </html>

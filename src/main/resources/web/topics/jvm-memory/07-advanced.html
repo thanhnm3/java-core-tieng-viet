@@ -3,12 +3,41 @@
 
   <h4>String Pool (Intern)</h4>
   <p>Literal <code>"hello"</code> lưu trong String Pool (nằm Heap từ Java 7). <code>intern()</code> trả về reference từ pool nếu có, không thì thêm vào. Tránh duplicate string. Pool có thể OOM nếu intern quá nhiều string khác nhau.</p>
+  <pre><code>String a = "hello";           // Literal — trong pool
+String b = new String("hello").intern();  // intern() → trỏ pool
+assert a == b;  // Cùng object
+
+String c = new String("hello");  // Object mới, không trong pool
+assert a != c;
+
+// Cẩn thận: intern() nhiều string unique → OOM
+for (int i = 0; i < 1_000_000; i++) {
+  ("unique" + i).intern();  // Có thể OOM
+}</code></pre>
+
+  <h4>WeakHashMap</h4>
+  <p>Key là WeakReference — khi không còn strong reference tới key, entry có thể bị GC thu hồi. Dùng cho cache với key là Object (metadata, listener). Không dùng cho cache lâu dài — entry có thể mất bất ngờ.</p>
+  <pre><code>WeakHashMap&lt;Object, String&gt; cache = new WeakHashMap&lt;&gt;();
+Object key = new Object();
+cache.put(key, "value");
+// key = null; GC chạy → entry có thể bị xóa
+// Dùng khi key là Object tạm, không cần giữ lâu</code></pre>
+
+  <h4>ReferenceQueue</h4>
+  <p>Khi Soft/Weak/PhantomReference được GC thu hồi, reference được đưa vào ReferenceQueue. Poll queue để biết Object đã bị thu hồi — dùng cho cleanup, monitoring.</p>
+  <pre><code>ReferenceQueue&lt;Object&gt; queue = new ReferenceQueue&lt;&gt;();
+WeakReference&lt;Object&gt; ref = new WeakReference&lt;&gt;(new Object(), queue);
+// GC chạy → ref vào queue
+Reference&lt;?&gt; cleared = queue.poll();
+if (cleared != null) {
+  // Object đã bị thu hồi, cleanup
+}</code></pre>
 
   <h4>Reference Types</h4>
   <p><strong>Strong:</strong> Bình thường — GC không thu hồi khi còn reference. <strong>SoftReference:</strong> Thu hồi khi Heap sắp OOM — dùng cache. <strong>WeakReference:</strong> Thu hồi bất kỳ lúc nào GC chạy — dùng cho metadata. <strong>PhantomReference:</strong> Dùng với ReferenceQueue — biết khi Object sắp bị thu hồi (cleanup).</p>
 
   <h4>Compressed OOPs</h4>
-  <p>Trên 64-bit JVM, pointer 8 byte — tốn Heap. <strong>Compressed OOPs</strong> (-XX:+UseCompressedOops, mặc định): dùng 32-bit offset, scale x3 (shift left 3) để địa chỉ 8-byte aligned. Heap &lt; 32GB: dùng base + offset. Giảm ~30% memory cho Object có nhiều reference.</p>
+  <p>Trên 64-bit JVM, pointer 8 byte — tốn Heap. <strong>Compressed OOPs</strong> (-XX:+UseCompressedOops, mặc định): dùng 32-bit offset, scale x3 (shift left 3) để địa chỉ 8-byte aligned. Heap &lt; 32GB: dùng base + offset. Giảm ~30% memory cho Object có nhiều reference. Tắt khi Heap &gt; 32GB.</p>
 
   <table class="comparison-table">
     <caption>Reference types</caption>

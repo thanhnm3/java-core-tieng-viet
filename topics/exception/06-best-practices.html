@@ -56,16 +56,30 @@
   <h3>Best Practices</h3>
 
   <h4>Đừng nuốt Exception</h4>
-  <p>Không viết <code>catch (Exception e) {}</code> mà không log. Bạn đang "bịt mắt" khi hệ thống lỗi. Luôn log: <code>log.error("Failed", e)</code> hoặc rethrow.</p>
+  <p>Không viết <code>catch (Exception e) {}</code> mà không log. Bạn đang "bịt mắt" khi hệ thống lỗi. Luôn log: <code>log.error("Failed", e)</code> hoặc rethrow. <code>log.error("Failed: " + e.getMessage())</code> — mất stack trace, tránh.</p>
 
   <h4>Catch cụ thể</h4>
-  <p>Thay vì <code>catch (Exception e)</code>, catch <code>FileNotFoundException</code>, <code>SQLException</code> nếu biết rõ. Xử lý chính xác hơn.</p>
+  <p>Thay vì <code>catch (Exception e)</code>, catch <code>FileNotFoundException</code>, <code>SQLException</code> nếu biết rõ. Xử lý chính xác hơn. Catch Exception chỉ ở layer cao (controller, main) để tránh crash.</p>
+
+  <h4>Exception message — Mô tả rõ</h4>
+  <p>Message nên mô tả: <em>cái gì</em> lỗi, <em>ở đâu</em>, <em>giá trị</em> gây lỗi. Ví dụ: <code>"Invalid age: " + age + ", must be 0-150"</code>. Tránh message chung chung: "Error", "Failed".</p>
+  <pre><code>throw new IllegalArgumentException(
+  "Invalid userId: " + userId + ", must be positive");</code></pre>
 
   <h4>Custom Exception</h4>
-  <p>Dự án lớn: tạo Exception riêng (<code>InsufficientBalanceException</code>, <code>DuplicateOrderException</code>) để định nghĩa rõ lỗi nghiệp vụ. Kế thừa <code>RuntimeException</code> (unchecked) hoặc <code>Exception</code> (checked) tùy ngữ cảnh.</p>
+  <p>Dự án lớn: tạo Exception riêng (<code>InsufficientBalanceException</code>, <code>DuplicateOrderException</code>) để định nghĩa rõ lỗi nghiệp vụ. Kế thừa <code>RuntimeException</code> (unchecked) hoặc <code>Exception</code> (checked) tùy ngữ cảnh. Luôn có constructor nhận <code>(String message, Throwable cause)</code>.</p>
 
   <h4>Global Exception Handler</h4>
   <p>Trong Spring Boot: <code>@ControllerAdvice</code> + <code>@ExceptionHandler</code> — tập trung xử lý lỗi, trả về response thống nhất. Business code không cần try-catch dày đặc.</p>
+  <pre><code>@ControllerAdvice
+public class GlobalExceptionHandler {
+  @ExceptionHandler(IllegalArgumentException.class)
+  public ResponseEntity&lt;ErrorResponse&gt; handleBadRequest(
+      IllegalArgumentException e) {
+    return ResponseEntity.badRequest()
+        .body(new ErrorResponse(e.getMessage()));
+  }
+}</code></pre>
 
   <table class="comparison-table">
     <caption>Clean Exception Handling</caption>
@@ -92,6 +106,10 @@
         <td>Custom Exception cho nghiệp vụ</td>
         <td>Dùng RuntimeException cho mọi thứ</td>
       </tr>
+      <tr>
+        <td>Message mô tả rõ</td>
+        <td>Message chung chung</td>
+      </tr>
     </tbody>
   </table>
 
@@ -112,5 +130,113 @@ public class InsufficientBalanceException extends RuntimeException {
   <footer class="topic-footer">
     <p>Xây dựng bằng Java 17+ · Không dùng framework · Pure NIO</p>
   </footer>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@9/dist/mermaid.min.js"></script>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      securityLevel: 'loose',
+      theme: 'base',
+      flowchart: { useMaxWidth: true, htmlLabels: true, curve: 'basis', padding: 20 },
+      themeVariables: {
+        primaryColor: '#FFFFFF',
+        primaryTextColor: '#0F172A',
+        primaryBorderColor: '#10B981',
+        secondaryColor: '#ECFDF5',
+        secondaryBorderColor: '#059669',
+        tertiaryColor: '#F8FAFC',
+        tertiaryBorderColor: '#10B981',
+        lineColor: '#64748B',
+        textColor: '#334155',
+        fontFamily: 'Inter, system-ui, sans-serif',
+        fontSize: '14px',
+        clusterBkg: '#F8FAFC',
+        clusterBorder: '#10B981',
+        titleColor: '#0F172A',
+        nodeBorder: '#10B981',
+        defaultLinkColor: '#64748B',
+        edgeLabelBackground: '#ECFDF5',
+        edgeLabelColor: '#047857',
+        mainBkg: '#FFFFFF',
+        secondBkg: '#ECFDF5'
+      }
+    });
+    window.addEventListener('load', function() {
+      var tooltipEl = document.createElement('div');
+      tooltipEl.className = 'flow-tooltip';
+      tooltipEl.innerHTML = '<div class="flow-tooltip__title"></div><div class="flow-tooltip__body"></div>';
+      document.body.appendChild(tooltipEl);
+      function getNodeIdFromElement(el) {
+        if (!el) return null;
+        var dataId = el.getAttribute && el.getAttribute('data-id');
+        if (dataId) return dataId;
+        var id = el.id;
+        if (!id) return null;
+        if (id.indexOf('flowchart-') === 0) {
+          var rest = id.slice(10);
+          var dash = rest.indexOf('-');
+          return dash >= 0 ? rest.slice(0, dash) : rest;
+        }
+        return id;
+      }
+      function attachTooltips() {
+        document.querySelectorAll('.flow-diagram svg rect').forEach(function(r) {
+          r.setAttribute('rx', '8');
+          r.setAttribute('ry', '8');
+        });
+        var attached = 0;
+        document.querySelectorAll('.flow-diagram').forEach(function(diagram, di) {
+          var script = diagram.querySelector('script[type="application/json"][data-flow-tooltips]');
+          if (!script) return;
+          var data;
+          try { data = JSON.parse(script.textContent); } catch (e) { return; }
+          var svg = diagram.querySelector('svg');
+          if (!svg) return;
+          if (diagram.hasAttribute('data-tooltip-delegated')) return;
+          diagram.setAttribute('data-tooltip-delegated', '1');
+          diagram.querySelectorAll('g.node').forEach(function(g) { g.style.pointerEvents = 'auto'; });
+          var onOver = function(e) {
+            var g = e.target.closest && e.target.closest('g.node');
+            if (!g) return;
+            var nodeId = getNodeIdFromElement(g);
+            if (!nodeId) return;
+            var tip = data[nodeId];
+            if (!tip || !tip.detail) return;
+            tooltipEl.querySelector('.flow-tooltip__title').textContent = tip.title || nodeId;
+            tooltipEl.querySelector('.flow-tooltip__body').innerHTML = tip.detail;
+            tooltipEl.style.left = '';
+            tooltipEl.style.top = '';
+            tooltipEl.classList.add('is-visible');
+            var rect = g.getBoundingClientRect();
+            var x = rect.left + rect.width / 2;
+            var y = rect.top - 10;
+            requestAnimationFrame(function() {
+              var w = tooltipEl.offsetWidth;
+              var h = tooltipEl.offsetHeight;
+              tooltipEl.style.left = Math.max(12, Math.min(x - w / 2, window.innerWidth - w - 12)) + 'px';
+              tooltipEl.style.top = Math.max(12, y - h) + 'px';
+            });
+          };
+          var onOut = function(e) {
+            var related = e.relatedTarget;
+            if (related && diagram.contains(related)) return;
+            tooltipEl.classList.remove('is-visible');
+          };
+          diagram.addEventListener('mouseover', onOver);
+          diagram.addEventListener('mouseout', onOut);
+          attached++;
+        });
+        return attached;
+      }
+      var delays = [150, 400, 800];
+      delays.forEach(function(delay, i) {
+        setTimeout(function() {
+          var n = attachTooltips();
+          if (n === 0 && i === delays.length - 1) {
+            setTimeout(attachTooltips, 500);
+          }
+        }, delay);
+      });
+    });
+  </script>
 </body>
 </html>

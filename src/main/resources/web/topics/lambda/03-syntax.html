@@ -35,7 +35,7 @@
   </table>
 
   <h4>Method Reference</h4>
-  <p>Rút gọn lambda khi body chỉ gọi một method. Có 4 loại:</p>
+  <p>Rút gọn lambda khi body chỉ gọi một method. Có 4 loại. Method reference không thực thi ngay — chỉ tham chiếu đến method, thực thi khi được gọi.</p>
   <table class="comparison-table">
     <caption>4 loại method reference</caption>
     <thead>
@@ -69,6 +69,12 @@
     </tbody>
   </table>
 
+  <h4>Method reference — Overload resolution</h4>
+  <p>Khi có nhiều overload, compiler chọn dựa trên target type. Ví dụ: <code>String::valueOf</code> có thể là <code>IntFunction</code> (valueOf(int)) hoặc <code>Function&lt;Object,String&gt;</code> (valueOf(Object)) — tùy context.</p>
+  <pre><code>// Compiler chọn overload phù hợp target type
+IntFunction&lt;String&gt; f1 = String::valueOf;           // valueOf(int)
+Function&lt;Object, String&gt; f2 = String::valueOf;     // valueOf(Object)</code></pre>
+
   <pre><code>// Static
 List&lt;String&gt; nums = List.of("1", "2", "3");
 nums.stream().map(Integer::parseInt).toList();  // [1, 2, 3]
@@ -83,8 +89,8 @@ nums.stream().map(prefix::concat).toList();  // ["id-1", "id-2", ...]
 // Constructor
 Supplier&lt;List&lt;String&gt;&gt; listSupplier = ArrayList::new;</code></pre>
 
-  <h4>Effectively final</h4>
-  <p>Biến dùng trong lambda phải effectively final — không gán lại sau khi được capture. Compiler báo lỗi nếu vi phạm.</p>
+  <h4>Effectively final và capture scope</h4>
+  <p>Biến dùng trong lambda phải <strong>effectively final</strong> — không gán lại sau khi được capture. Khác với <code>final</code> explicit: effectively final cho phép biến chưa khai báo final nhưng không thay đổi sau khi gán. Lambda capture biến theo <em>value</em> (bản sao tham chiếu) tại thời điểm capture.</p>
   <pre><code>int count = 0;
 list.forEach(s -> {
   count++;  // Compile error! count không effectively final
@@ -92,5 +98,20 @@ list.forEach(s -> {
 
 // Cách đúng — dùng array hoặc AtomicInteger
 int[] counter = {0};
-list.forEach(s -> counter[0]++);</code></pre>
+list.forEach(s -> counter[0]++);  // Mutable reference, effectively final
+
+// Hoặc AtomicInteger (thread-safe nếu parallel)
+AtomicInteger ai = new AtomicInteger(0);
+list.forEach(s -> ai.incrementAndGet());</code></pre>
+
+  <section class="when-use">
+    <h4>Lambda vs Method reference</h4>
+    <ul class="when-use-do">
+      <li>Method reference khi body chỉ gọi 1 method — ngắn gọn hơn</li>
+      <li>Lambda khi cần truyền thêm argument: <code>n -> n * 2</code> thay vì method ref</li>
+    </ul>
+    <ul class="when-use-avoid">
+      <li>Method reference với overload phức tạp — có thể ambiguous, dùng lambda rõ ràng hơn</li>
+    </ul>
+  </section>
 </section>

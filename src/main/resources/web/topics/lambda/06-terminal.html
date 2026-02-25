@@ -1,6 +1,6 @@
 <section>
   <h3>Terminal Operations</h3>
-  <p>Kết thúc pipeline, trigger thực thi và trả về kết quả (hoặc void). Mỗi stream chỉ dùng được một terminal.</p>
+  <p>Kết thúc pipeline, trigger thực thi và trả về kết quả (hoặc void). Mỗi stream chỉ dùng được một terminal. Short-circuit: findFirst, findAny, anyMatch, allMatch, noneMatch — có thể dừng sớm.</p>
 
   <h4>forEach — Duyệt (side-effect)</h4>
   <pre><code>List.of("a", "b").forEach(System.out::println);</code></pre>
@@ -15,6 +15,21 @@ Set&lt;Integer&gt; set = List.of(1, 2, 2, 3).stream().collect(Collectors.toSet()
 // toMap
 Map&lt;String, Integer&gt; map = List.of("x", "yy", "zzz").stream()
   .collect(Collectors.toMap(String::toString, String::length));</code></pre>
+
+  <h4>collectingAndThen — Post-process kết quả</h4>
+  <p>Áp dụng function lên kết quả collector. Ví dụ: collect toList rồi wrap thành unmodifiable.</p>
+  <pre><code>List&lt;String&gt; unmodifiable = list.stream()
+  .collect(Collectors.collectingAndThen(Collectors.toList(), Collections::unmodifiableList));</code></pre>
+
+  <h4>teeing (Java 12+) — Hai collector cùng lúc</h4>
+  <p>Chạy hai collector trên cùng stream, merge kết quả bằng BiFunction.</p>
+  <pre><code>// Ví dụ: vừa sum vừa count
+var result = List.of(1, 2, 3, 4, 5).stream()
+  .collect(Collectors.teeing(
+    Collectors.summingInt(Integer::intValue),
+    Collectors.counting(),
+    (sum, count) -> "sum=" + sum + ", count=" + count
+  ));</code></pre>
 
   <h4>groupingBy — Nhóm theo key</h4>
   <pre><code>List&lt;String&gt; words = List.of("apple", "banana", "apricot", "berry");
@@ -39,14 +54,16 @@ String withPrefix = List.of("a", "b", "c").stream()
   .collect(Collectors.joining(", ", "[", "]"));  // "[a, b, c]"</code></pre>
 
   <h4>reduce — Gộp thành một giá trị</h4>
+  <p>Hai dạng: <code>reduce(accumulator)</code> trả Optional (stream rỗng → empty); <code>reduce(identity, accumulator)</code> trả T (identity là giá trị mặc định khi rỗng). Identity phải là identity của accumulator: <code>a op identity == a</code>. Với parallel cần combiner: <code>reduce(identity, accumulator, combiner)</code>.</p>
   <pre><code>Optional&lt;Integer&gt; sum = List.of(1, 2, 3).stream()
-  .reduce((a, b) -> a + b);  // Optional[6]
+  .reduce((a, b) -> a + b);  // Optional[6] — stream rỗng → Optional.empty
 
 Integer sumWithIdentity = List.of(1, 2, 3).stream().reduce(0, Integer::sum);  // 6
+// Stream rỗng → 0 (identity)
 
-// reduce với kiểu khác (ví dụ: StringBuilder)
-String concat = List.of("a", "b", "c").stream()
-  .reduce("", (acc, s) -> acc + s);</code></pre>
+// SAI — identity không đúng (0 cho multiplication)
+// reduce(0, (a,b) -> a*b)  // 0 * x = 0 — sai!
+// ĐÚNG: reduce(1, (a,b) -> a*b)</code></pre>
 
   <h4>count, min, max</h4>
   <pre><code>List&lt;Integer&gt; nums = List.of(3, 1, 4, 1, 5);
@@ -55,10 +72,15 @@ Optional&lt;Integer&gt; min = nums.stream().min(Integer::compareTo);
 Optional&lt;Integer&gt; max = nums.stream().max(Comparator.naturalOrder());</code></pre>
 
   <h4>findFirst, findAny, anyMatch, allMatch, noneMatch</h4>
+  <p>Short-circuit — dừng khi có kết quả. findAny hữu ích với parallel (không cần thứ tự). allMatch/noneMatch trên stream rỗng trả true.</p>
   <pre><code>Optional&lt;Integer&gt; first = List.of(1, 2, 3, 4).stream().findFirst();
 Optional&lt;Integer&gt; any = List.of(1, 2, 3, 4).stream().findAny();  // Hữu ích với parallel
 
 boolean hasEven = List.of(1, 3, 4).stream().anyMatch(n -> n % 2 == 0);
 boolean allPositive = List.of(1, 2, 3).stream().allMatch(n -> n &gt; 0);
-boolean noNegative = List.of(1, 2, 3).stream().noneMatch(n -> n &lt; 0);</code></pre>
+boolean noNegative = List.of(1, 2, 3).stream().noneMatch(n -> n &lt; 0);
+
+// Stream rỗng
+List.&lt;Integer&gt;of().stream().allMatch(x -> false);  // true (vacuous)
+List.&lt;Integer&gt;of().stream().anyMatch(x -> true);   // false</code></pre>
 </section>

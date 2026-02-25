@@ -2,8 +2,31 @@
   <h3>Try-with-resources (Java 7+)</h3>
   <p>Tự động đóng resource implement <code>AutoCloseable</code> (có method <code>close()</code>). Tránh memory leak khi quên close trong finally. Resource được đóng theo thứ tự ngược với khai báo.</p>
 
+  <h4>AutoCloseable vs Closeable</h4>
+  <p><code>AutoCloseable</code> (Java 7) — <code>close() throws Exception</code>. <code>Closeable</code> extends AutoCloseable — <code>close() throws IOException</code>. InputStream, Reader implement Closeable. Try-with-resources chấp nhận cả hai.</p>
+
   <h4>Cơ chế</h4>
-  <p>Compiler sinh bytecode: gọi <code>close()</code> trong block finally ẩn. Nếu cả try và close() đều ném Exception — Exception từ try được <strong>suppressed</strong>, có thể lấy qua <code>getSuppressed()</code>. Java 9+: biến trong try-with-resources có thể là effectively final.</p>
+  <p>Compiler sinh bytecode: gọi <code>close()</code> trong block finally ẩn. Nếu cả try và close() đều ném Exception — Exception từ try được <strong>suppressed</strong>, có thể lấy qua <code>getSuppressed()</code>. Java 9+: biến trong try-with-resources có thể là effectively final (không cần khai báo trong ngoặc).</p>
+
+  <h4>Suppressed Exceptions</h4>
+  <p>Khi try block ném Exception và close() cũng ném — Exception gốc được ném ra, Exception từ close() được add vào <code>getSuppressed()</code>. Log đầy đủ: <code>e.getSuppressed()</code>.</p>
+  <pre><code>try (InputStream in = new FileInputStream("x")) {
+  in.read();  // Ném IOException
+} catch (IOException e) {
+  // e: IOException từ read()
+  for (Throwable t : e.getSuppressed()) {
+    // t: IOException từ close()
+  }
+}</code></pre>
+
+  <h4>Java 9+ — Effectively final</h4>
+  <p>Biến có thể khai báo ngoài try, miễn là effectively final.</p>
+  <pre><code>// Java 9+
+InputStream in = openStream();
+OutputStream out = openStream();
+try (in; out) {
+  copy(in, out);
+}</code></pre>
 
   <pre><code>// Java 7+
 try (BufferedReader br = new BufferedReader(

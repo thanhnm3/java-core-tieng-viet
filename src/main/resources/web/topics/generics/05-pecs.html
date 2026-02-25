@@ -1,9 +1,20 @@
 <section>
   <h3>PECS — Producer Extends, Consumer Super</h3>
-  <p>Quy tắc chọn wildcard: <strong>Producer</strong> (cung cấp/đọc) → <code>extends</code>; <strong>Consumer</strong> (tiêu thụ/ghi) → <code>super</code>.</p>
+
+  <h4>Kỹ thuật</h4>
+  <p>Quy tắc chọn wildcard: <strong>Producer</strong> (cung cấp/đọc) → <code>extends</code>; <strong>Consumer</strong> (tiêu thụ/ghi) → <code>super</code>. Tham số produce element (src, Stream) → extends. Tham số consume element (dest, Comparator) → super.</p>
 
   <h4>Ví dụ: copy</h4>
   <p><code>Collections.copy(List&lt;? super T&gt; dest, List&lt;? extends T&gt; src)</code> — dest nhận (consumer) → super; src cung cấp (producer) → extends.</p>
+
+  <h4>Comparator — Consumer (super)</h4>
+  <p><code>void sort(List&lt;T&gt; list, Comparator&lt;? super T&gt; c)</code> — Comparator nhận T để so sánh (consumer). Dùng super: có thể sort List&lt;Integer&gt; với Comparator&lt;Number&gt; (so sánh Number).</p>
+  <pre><code>Comparator&lt;Number&gt; comp = Comparator.comparing(Number::intValue);
+List&lt;Integer&gt; list = new ArrayList&lt;&gt;(List.of(3, 1, 2));
+list.sort(comp);  // OK — Comparator&lt;? super Integer&gt;</code></pre>
+
+  <h4>Stream — Producer (extends)</h4>
+  <p><code>Stream&lt;T&gt;</code> produce element — khi truyền collection vào API nhận Stream, dùng extends nếu API chỉ đọc. Ví dụ: <code>void process(Stream&lt;? extends Number&gt; stream)</code>.</p>
 
   <pre><code>// Đúng — PECS
 public static &lt;T&gt; void copy(List&lt;? super T&gt; dest, List&lt;? extends T&gt; src) {
@@ -31,7 +42,7 @@ void copyWrong(List&lt;? extends T&gt; dest, List&lt;? extends T&gt; src) {
         <ul>
           <li>Tham số cung cấp data</li>
           <li>Chỉ đọc, iterate</li>
-          <li>Ví dụ: src trong copy</li>
+          <li>Ví dụ: src trong copy, Stream</li>
         </ul>
       </div>
       <div class="comparison-box comparison-box--pro">
@@ -39,7 +50,7 @@ void copyWrong(List&lt;? extends T&gt; dest, List&lt;? extends T&gt; src) {
         <ul>
           <li>Tham số nhận data</li>
           <li>Chỉ ghi, add</li>
-          <li>Ví dụ: dest trong copy</li>
+          <li>Ví dụ: dest trong copy, Comparator</li>
         </ul>
       </div>
     </div>

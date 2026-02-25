@@ -1,12 +1,32 @@
 <section>
   <h3>Generic Class và Method</h3>
 
-  <h4>Generic Class</h4>
-  <p>Khai báo type parameter trong class: <code>class Box&lt;T&gt; { private T value; }</code>. <code>T</code> là type variable — thay thế bằng kiểu cụ thể khi dùng: <code>Box&lt;String&gt;</code>, <code>Box&lt;Integer&gt;</code>. Có thể có nhiều parameter: <code>class Pair&lt;K, V&gt;</code>.</p>
+  <h4>Kỹ thuật — Generic Class</h4>
+  <p>Khai báo type parameter trong class: <code>class Box&lt;T&gt; { private T value; }</code>. <code>T</code> là type variable — thay thế bằng kiểu cụ thể khi dùng: <code>Box&lt;String&gt;</code>, <code>Box&lt;Integer&gt;</code>. Có thể có nhiều parameter: <code>class Pair&lt;K, V&gt;</code>. Quy ước đặt tên: T (type), K (key), V (value), E (element), R (return).</p>
 
-  <h4>Generic Method</h4>
+  <h4>Nhiều type parameter</h4>
+  <p><code>Map&lt;K, V&gt;</code>, <code>BiFunction&lt;T, U, R&gt;</code> — mỗi parameter độc lập. Dùng chữ in hoa: T, K, V, E (element), R (return).</p>
+  <pre><code>class Pair&lt;K, V&gt; {
+  private K key;
+  private V value;
+  public Pair(K k, V v) { key = k; value = v; }
+  public K getKey() { return key; }
+  public V getValue() { return value; }
+}
+Pair&lt;String, Integer&gt; p = new Pair&lt;&gt;("age", 30);</code></pre>
+
+  <h4>Kỹ thuật — Generic Method</h4>
   <p>Type parameter khai báo trước return type: <code>&lt;T&gt; T getFirst(List&lt;T&gt; list)</code>. Compiler infer từ argument: <code>getFirst(stringList)</code> → T = String. Có thể dùng với class không generic.</p>
 
+  <h4>Type inference</h4>
+  <p>Compiler suy ra T từ context. <code>List.of("a", "b")</code> → <code>List&lt;String&gt;</code>. <code>Collections.emptyList()</code> → cần hint: <code>Collections.&lt;String&gt;emptyList()</code> khi context không rõ. Diamond <code>new ArrayList&lt;&gt;()</code> — infer từ biến bên trái.</p>
+  <pre><code>// Inference từ argument
+String s = getFirst(List.of("a", "b"));  // T = String
+
+// Inference thất bại — cần explicit
+List&lt;String&gt; empty = Collections.&lt;String&gt;emptyList();</code></pre>
+
+  <h4>Ví dụ — Generic Class</h4>
   <pre><code>// Generic class
 class Box&lt;T&gt; {
   private T value;
@@ -17,6 +37,7 @@ Box&lt;Integer&gt; box = new Box&lt;&gt;();
 box.set(42);
 int n = box.get();  // Không cast</code></pre>
 
+  <h4>Ví dụ — Generic Method</h4>
   <pre><code>// Generic method
 public static &lt;T&gt; T getFirst(List&lt;T&gt; list) {
   return list.isEmpty() ? null : list.get(0);

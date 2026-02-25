@@ -55,7 +55,7 @@
       <article class="topic-content">
         <section>
   <h3>Terminal Operations</h3>
-  <p>Kết thúc pipeline, trigger thực thi và trả về kết quả (hoặc void). Mỗi stream chỉ dùng được một terminal.</p>
+  <p>Kết thúc pipeline, trigger thực thi và trả về kết quả (hoặc void). Mỗi stream chỉ dùng được một terminal. Short-circuit: findFirst, findAny, anyMatch, allMatch, noneMatch — có thể dừng sớm.</p>
 
   <h4>forEach — Duyệt (side-effect)</h4>
   <pre><code>List.of("a", "b").forEach(System.out::println);</code></pre>
@@ -70,6 +70,21 @@ Set&lt;Integer&gt; set = List.of(1, 2, 2, 3).stream().collect(Collectors.toSet()
 // toMap
 Map&lt;String, Integer&gt; map = List.of("x", "yy", "zzz").stream()
   .collect(Collectors.toMap(String::toString, String::length));</code></pre>
+
+  <h4>collectingAndThen — Post-process kết quả</h4>
+  <p>Áp dụng function lên kết quả collector. Ví dụ: collect toList rồi wrap thành unmodifiable.</p>
+  <pre><code>List&lt;String&gt; unmodifiable = list.stream()
+  .collect(Collectors.collectingAndThen(Collectors.toList(), Collections::unmodifiableList));</code></pre>
+
+  <h4>teeing (Java 12+) — Hai collector cùng lúc</h4>
+  <p>Chạy hai collector trên cùng stream, merge kết quả bằng BiFunction.</p>
+  <pre><code>// Ví dụ: vừa sum vừa count
+var result = List.of(1, 2, 3, 4, 5).stream()
+  .collect(Collectors.teeing(
+    Collectors.summingInt(Integer::intValue),
+    Collectors.counting(),
+    (sum, count) -> "sum=" + sum + ", count=" + count
+  ));</code></pre>
 
   <h4>groupingBy — Nhóm theo key</h4>
   <pre><code>List&lt;String&gt; words = List.of("apple", "banana", "apricot", "berry");
@@ -94,14 +109,16 @@ String withPrefix = List.of("a", "b", "c").stream()
   .collect(Collectors.joining(", ", "[", "]"));  // "[a, b, c]"</code></pre>
 
   <h4>reduce — Gộp thành một giá trị</h4>
+  <p>Hai dạng: <code>reduce(accumulator)</code> trả Optional (stream rỗng → empty); <code>reduce(identity, accumulator)</code> trả T (identity là giá trị mặc định khi rỗng). Identity phải là identity của accumulator: <code>a op identity == a</code>. Với parallel cần combiner: <code>reduce(identity, accumulator, combiner)</code>.</p>
   <pre><code>Optional&lt;Integer&gt; sum = List.of(1, 2, 3).stream()
-  .reduce((a, b) -> a + b);  // Optional[6]
+  .reduce((a, b) -> a + b);  // Optional[6] — stream rỗng → Optional.empty
 
 Integer sumWithIdentity = List.of(1, 2, 3).stream().reduce(0, Integer::sum);  // 6
+// Stream rỗng → 0 (identity)
 
-// reduce với kiểu khác (ví dụ: StringBuilder)
-String concat = List.of("a", "b", "c").stream()
-  .reduce("", (acc, s) -> acc + s);</code></pre>
+// SAI — identity không đúng (0 cho multiplication)
+// reduce(0, (a,b) -> a*b)  // 0 * x = 0 — sai!
+// ĐÚNG: reduce(1, (a,b) -> a*b)</code></pre>
 
   <h4>count, min, max</h4>
   <pre><code>List&lt;Integer&gt; nums = List.of(3, 1, 4, 1, 5);
@@ -110,12 +127,17 @@ Optional&lt;Integer&gt; min = nums.stream().min(Integer::compareTo);
 Optional&lt;Integer&gt; max = nums.stream().max(Comparator.naturalOrder());</code></pre>
 
   <h4>findFirst, findAny, anyMatch, allMatch, noneMatch</h4>
+  <p>Short-circuit — dừng khi có kết quả. findAny hữu ích với parallel (không cần thứ tự). allMatch/noneMatch trên stream rỗng trả true.</p>
   <pre><code>Optional&lt;Integer&gt; first = List.of(1, 2, 3, 4).stream().findFirst();
 Optional&lt;Integer&gt; any = List.of(1, 2, 3, 4).stream().findAny();  // Hữu ích với parallel
 
 boolean hasEven = List.of(1, 3, 4).stream().anyMatch(n -> n % 2 == 0);
 boolean allPositive = List.of(1, 2, 3).stream().allMatch(n -> n &gt; 0);
-boolean noNegative = List.of(1, 2, 3).stream().noneMatch(n -> n &lt; 0);</code></pre>
+boolean noNegative = List.of(1, 2, 3).stream().noneMatch(n -> n &lt; 0);
+
+// Stream rỗng
+List.&lt;Integer&gt;of().stream().allMatch(x -> false);  // true (vacuous)
+List.&lt;Integer&gt;of().stream().anyMatch(x -> true);   // false</code></pre>
 </section>
 
       </article>
@@ -124,5 +146,113 @@ boolean noNegative = List.of(1, 2, 3).stream().noneMatch(n -> n &lt; 0);</code><
   <footer class="topic-footer">
     <p>Xây dựng bằng Java 17+ · Không dùng framework · Pure NIO</p>
   </footer>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@9/dist/mermaid.min.js"></script>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      securityLevel: 'loose',
+      theme: 'base',
+      flowchart: { useMaxWidth: true, htmlLabels: true, curve: 'basis', padding: 20 },
+      themeVariables: {
+        primaryColor: '#FFFFFF',
+        primaryTextColor: '#0F172A',
+        primaryBorderColor: '#10B981',
+        secondaryColor: '#ECFDF5',
+        secondaryBorderColor: '#059669',
+        tertiaryColor: '#F8FAFC',
+        tertiaryBorderColor: '#10B981',
+        lineColor: '#64748B',
+        textColor: '#334155',
+        fontFamily: 'Inter, system-ui, sans-serif',
+        fontSize: '14px',
+        clusterBkg: '#F8FAFC',
+        clusterBorder: '#10B981',
+        titleColor: '#0F172A',
+        nodeBorder: '#10B981',
+        defaultLinkColor: '#64748B',
+        edgeLabelBackground: '#ECFDF5',
+        edgeLabelColor: '#047857',
+        mainBkg: '#FFFFFF',
+        secondBkg: '#ECFDF5'
+      }
+    });
+    window.addEventListener('load', function() {
+      var tooltipEl = document.createElement('div');
+      tooltipEl.className = 'flow-tooltip';
+      tooltipEl.innerHTML = '<div class="flow-tooltip__title"></div><div class="flow-tooltip__body"></div>';
+      document.body.appendChild(tooltipEl);
+      function getNodeIdFromElement(el) {
+        if (!el) return null;
+        var dataId = el.getAttribute && el.getAttribute('data-id');
+        if (dataId) return dataId;
+        var id = el.id;
+        if (!id) return null;
+        if (id.indexOf('flowchart-') === 0) {
+          var rest = id.slice(10);
+          var dash = rest.indexOf('-');
+          return dash >= 0 ? rest.slice(0, dash) : rest;
+        }
+        return id;
+      }
+      function attachTooltips() {
+        document.querySelectorAll('.flow-diagram svg rect').forEach(function(r) {
+          r.setAttribute('rx', '8');
+          r.setAttribute('ry', '8');
+        });
+        var attached = 0;
+        document.querySelectorAll('.flow-diagram').forEach(function(diagram, di) {
+          var script = diagram.querySelector('script[type="application/json"][data-flow-tooltips]');
+          if (!script) return;
+          var data;
+          try { data = JSON.parse(script.textContent); } catch (e) { return; }
+          var svg = diagram.querySelector('svg');
+          if (!svg) return;
+          if (diagram.hasAttribute('data-tooltip-delegated')) return;
+          diagram.setAttribute('data-tooltip-delegated', '1');
+          diagram.querySelectorAll('g.node').forEach(function(g) { g.style.pointerEvents = 'auto'; });
+          var onOver = function(e) {
+            var g = e.target.closest && e.target.closest('g.node');
+            if (!g) return;
+            var nodeId = getNodeIdFromElement(g);
+            if (!nodeId) return;
+            var tip = data[nodeId];
+            if (!tip || !tip.detail) return;
+            tooltipEl.querySelector('.flow-tooltip__title').textContent = tip.title || nodeId;
+            tooltipEl.querySelector('.flow-tooltip__body').innerHTML = tip.detail;
+            tooltipEl.style.left = '';
+            tooltipEl.style.top = '';
+            tooltipEl.classList.add('is-visible');
+            var rect = g.getBoundingClientRect();
+            var x = rect.left + rect.width / 2;
+            var y = rect.top - 10;
+            requestAnimationFrame(function() {
+              var w = tooltipEl.offsetWidth;
+              var h = tooltipEl.offsetHeight;
+              tooltipEl.style.left = Math.max(12, Math.min(x - w / 2, window.innerWidth - w - 12)) + 'px';
+              tooltipEl.style.top = Math.max(12, y - h) + 'px';
+            });
+          };
+          var onOut = function(e) {
+            var related = e.relatedTarget;
+            if (related && diagram.contains(related)) return;
+            tooltipEl.classList.remove('is-visible');
+          };
+          diagram.addEventListener('mouseover', onOver);
+          diagram.addEventListener('mouseout', onOut);
+          attached++;
+        });
+        return attached;
+      }
+      var delays = [150, 400, 800];
+      delays.forEach(function(delay, i) {
+        setTimeout(function() {
+          var n = attachTooltips();
+          if (n === 0 && i === delays.length - 1) {
+            setTimeout(attachTooltips, 500);
+          }
+        }, delay);
+      });
+    });
+  </script>
 </body>
 </html>

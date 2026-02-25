@@ -58,19 +58,146 @@
 <p>Hiểu JVM và quản lý bộ nhớ giúp giải quyết <code>OutOfMemoryError</code>, <code>StackOverflowError</code> và tối ưu hiệu năng. JVM chia làm 3 phân vùng chính.</p>
 
 <section>
+  <h3>Tổng quan từng phần</h3>
+  <p>Mỗi phần gồm: <strong>Kỹ thuật</strong> (định nghĩa, cơ chế) và <strong>Ví dụ</strong> (minh họa).</p>
+  <table class="comparison-table">
+    <caption>JVM &amp; Memory — Kỹ thuật và Ví dụ</caption>
+    <thead>
+      <tr>
+        <th>Phần</th>
+        <th>Kỹ thuật</th>
+        <th>Ví dụ</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>01 — Architecture</strong></td>
+        <td>Class Loader, Load/Link/Init, JIT, Parent Delegation</td>
+        <td>Sơ đồ JVM, TieredCompilation</td>
+      </tr>
+      <tr>
+        <td><strong>02 — Runtime Areas</strong></td>
+        <td>Heap, Metaspace, Stack, PC Register</td>
+        <td>Vùng nhớ từng area</td>
+      </tr>
+      <tr>
+        <td><strong>03 — Heap Generations</strong></td>
+        <td>Young/Old, Eden, Survivor</td>
+        <td>Object allocation flow</td>
+      </tr>
+      <tr>
+        <td><strong>04 — Stack vs Heap</strong></td>
+        <td>Stack: local, Heap: object</td>
+        <td>Biến primitive vs reference</td>
+      </tr>
+      <tr>
+        <td><strong>05 — GC</strong></td>
+        <td>Mark-Sweep, Generational, GC algorithms</td>
+        <td>Minor/Major GC</td>
+      </tr>
+      <tr>
+        <td><strong>06 — Tuning</strong></td>
+        <td>-Xmx, -XX flags, heap sizing</td>
+        <td>OOM debug</td>
+      </tr>
+      <tr>
+        <td><strong>07 — Advanced</strong></td>
+        <td>Metaspace, G1, ZGC</td>
+        <td>Production tuning</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h3>Lộ trình học — Sơ đồ flow</h3>
+  <p>Sơ đồ dưới đây thể hiện thứ tự học và mối liên hệ giữa các phần. Mỗi ô là một phần; mũi tên chỉ hướng tiếp theo.</p>
+
+  <div class="flow-diagram">
+    <script type="application/json" data-flow-tooltips>
+    {"D1":{"title":"01 Architecture","detail":"<p><strong>Class Loader</strong> - Load (đọc .class), Link (verify, prepare, resolve), Init (static block). Parent delegation: Bootstrap -&gt; Extension -&gt; Application.</p><p><strong>Execution Engine:</strong> Interpreter (nhanh khởi động) + JIT (compile method nóng). Tiered: C1 trước, C2 cho hot code.</p>"},"D2":{"title":"02 Runtime Areas","detail":"<p><strong>Heap</strong> - shared, chứa object. Metaspace - class metadata (thay PermGen).</p><p><strong>Stack</strong> - per-thread, frame cho mỗi method (local vars, operand stack). PC Register - địa chỉ lệnh hiện tại.</p>"},"D3":{"title":"03 Heap Generations","detail":"<p><strong>Young:</strong> Eden (object mới) + 2 Survivor. Minor GC thu Eden và Survivor, object sống sót copy sang Survivor kia hoặc promote lên Old.</p><p><strong>Old</strong> - object sống lâu. Major GC (Full GC) thu toàn bộ.</p>"},"D4":{"title":"04 Stack vs Heap","detail":"<p><strong>Stack</strong> - primitive (int, boolean) và reference (trỏ Heap). Mỗi thread một stack.</p><p><strong>Heap</strong> - object thực sự. Reference trên Stack trỏ tới. GC thu object không còn reference.</p>"},"D5":{"title":"05 GC","detail":"<p><strong>Mark-Sweep</strong> - đánh dấu reachable từ GC root, sweep unreachable.</p><p>Minor GC (Young), Major GC (Old). Stop-the-world - pause ứng dụng khi GC chạy.</p>"},"D6":{"title":"06 Tuning","detail":"<p><strong>-Xmx</strong> max heap, -Xms initial heap. Heap dump khi OOM: -XX:+HeapDumpOnOutOfMemoryError.</p><p>Phân tích dump bằng MAT, VisualVM.</p>"},"D7":{"title":"07 Advanced","detail":"<p><strong>G1</strong> - default từ Java 9, phân vùng, pause time mục tiêu.</p><p><strong>ZGC</strong> - sub-millisecond pause, scalable. Metaspace - không còn PermGen, dùng native memory.</p>"}}
+    </script>
+    <pre class="mermaid">
+flowchart TD
+  subgraph Architecture [Architecture]
+    direction LR
+    D1("01 Architecture")
+    D2("02 Runtime Areas")
+    D1 -->|"Class Loader, JIT"| D2
+  end
+  subgraph Memory [Memory Model]
+    direction LR
+    D3("03 Heap Generations")
+    D4("04 Stack vs Heap")
+    D3 -->|"Eden, Survivor, Old"| D4
+  end
+  subgraph GC [GC &amp; Tuning]
+    direction LR
+    D5("05 GC")
+    D6("06 Tuning")
+    D7("07 Advanced")
+    D5 -->|"Mark-Sweep"| D6 -->|"G1, ZGC"| D7
+  end
+  Architecture -->|"Heap, Metaspace"| Memory
+  Memory -->|"Primitive vs ref"| GC
+    </pre>
+  </div>
+
+  <table class="comparison-table">
+    <caption>Chú thích từng phần</caption>
+    <thead>
+      <tr><th>Phần</th><th>Nội dung chính</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>01</td><td>Class Loader, Load/Link/Init, JIT, Tiered</td></tr>
+      <tr><td>02</td><td>Heap, Metaspace, Stack, Object header</td></tr>
+      <tr><td>03</td><td>Eden, Survivor, Old, promotion</td></tr>
+      <tr><td>04</td><td>Stack vs Heap, primitive vs reference</td></tr>
+      <tr><td>05</td><td>Mark-Sweep, Minor GC, Major GC</td></tr>
+      <tr><td>06</td><td>-Xmx, -Xms, heap dump, OOM</td></tr>
+      <tr><td>07</td><td>Metaspace, G1, ZGC</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
   <h3>Kiến trúc tổng quan JVM</h3>
+
+  <h4>Kỹ thuật — Sơ đồ tổng quan</h4>
+  <pre><code>┌─────────────────────────────────────────────────────────┐
+│ Class Loader Subsystem (Load → Link → Initialize)       │
+├─────────────────────────────────────────────────────────┤
+│ Runtime Data Areas                                       │
+│   Heap (shared) │ Metaspace │ Stack (per-thread) │ PC   │
+├─────────────────────────────────────────────────────────┤
+│ Execution Engine (Interpreter + JIT + GC)                │
+└─────────────────────────────────────────────────────────┘</code></pre>
 
   <h4>1. Class Loader Subsystem</h4>
   <p><strong>Load:</strong> Đọc file .class thành byte array, tạo <code>Class</code> object trong Heap. <strong>Link</strong> gồm 3 bước: <em>Verify</em> (bytecode hợp lệ, không vi phạm type), <em>Prepare</em> (cấp phát bộ nhớ cho static, gán default), <em>Resolve</em> (chuyển symbolic reference thành direct reference — có thể lazy). <strong>Initialize:</strong> Thực thi <code>&lt;clinit&gt;</code> (static block, static field init).</p>
 
   <h4>Parent Delegation Model</h4>
   <p>Class loader con ủy quyền cha load trước. Bootstrap (null) → Extension → Application. Đảm bảo class từ rt.jar luôn do Bootstrap load — tránh override core class. <code>findClass()</code> chỉ gọi khi cha không tìm thấy.</p>
+  <h4>Ví dụ</h4>
+  <pre><code>// Thứ tự: Application → Extension → Bootstrap
+// Bootstrap load: java.lang.*, java.util.*...
+// Application load: class của ứng dụng
+
+// Custom ClassLoader override findClass(), không loadClass()
+// loadClass() gọi parent.loadClass() trước</code></pre>
 
   <h4>2. Runtime Data Areas</h4>
   <p>Heap, Metaspace, Stack, PC Register, Native Method Stack. Chi tiết ở section sau.</p>
 
   <h4>3. Execution Engine</h4>
-  <p><strong>Interpreter:</strong> Thông dịch bytecode từng lệnh — nhanh khởi động, chậm khi chạy lâu. <strong>JIT (C1, C2):</strong> C1 (Client) compile nhanh, ít optimization; C2 (Server) compile chậm, tối ưu mạnh. Tiered compilation: C1 trước, C2 cho hot code. <strong>GC:</strong> Thu hồi Object unreachable.</p>
+  <p><strong>Interpreter:</strong> Thông dịch bytecode từng lệnh — nhanh khởi động, chậm khi chạy lâu. <strong>JIT (Just-In-Time):</strong> Compile bytecode → native code khi method "nóng" (hot). <strong>GC:</strong> Thu hồi Object unreachable.</p>
+
+  <h4>JIT Compilation — Tiered</h4>
+  <p><strong>C1 (Client):</strong> Compile nhanh, ít optimization — dùng cho method ít gọi. <strong>C2 (Server):</strong> Compile chậm, tối ưu mạnh (inlining, loop unrolling, escape analysis). <strong>Tiered:</strong> C1 trước (level 1–3), C2 cho hot code (level 4). Threshold: <code>-XX:CompileThreshold</code> (C1: 1500, C2: 10000 invocations).</p>
+  <pre><code>// -XX:+TieredCompilation (mặc định)
+// Level 0: Interpreter
+// Level 1–3: C1 compiled
+// Level 4: C2 compiled (optimized)</code></pre>
 
   <table class="comparison-table">
     <caption>Class Loading — Load, Link, Initialize</caption>
@@ -111,5 +238,113 @@
   <footer class="topic-footer">
     <p>Xây dựng bằng Java 17+ · Không dùng framework · Pure NIO</p>
   </footer>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@9/dist/mermaid.min.js"></script>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      securityLevel: 'loose',
+      theme: 'base',
+      flowchart: { useMaxWidth: true, htmlLabels: true, curve: 'basis', padding: 20 },
+      themeVariables: {
+        primaryColor: '#FFFFFF',
+        primaryTextColor: '#0F172A',
+        primaryBorderColor: '#10B981',
+        secondaryColor: '#ECFDF5',
+        secondaryBorderColor: '#059669',
+        tertiaryColor: '#F8FAFC',
+        tertiaryBorderColor: '#10B981',
+        lineColor: '#64748B',
+        textColor: '#334155',
+        fontFamily: 'Inter, system-ui, sans-serif',
+        fontSize: '14px',
+        clusterBkg: '#F8FAFC',
+        clusterBorder: '#10B981',
+        titleColor: '#0F172A',
+        nodeBorder: '#10B981',
+        defaultLinkColor: '#64748B',
+        edgeLabelBackground: '#ECFDF5',
+        edgeLabelColor: '#047857',
+        mainBkg: '#FFFFFF',
+        secondBkg: '#ECFDF5'
+      }
+    });
+    window.addEventListener('load', function() {
+      var tooltipEl = document.createElement('div');
+      tooltipEl.className = 'flow-tooltip';
+      tooltipEl.innerHTML = '<div class="flow-tooltip__title"></div><div class="flow-tooltip__body"></div>';
+      document.body.appendChild(tooltipEl);
+      function getNodeIdFromElement(el) {
+        if (!el) return null;
+        var dataId = el.getAttribute && el.getAttribute('data-id');
+        if (dataId) return dataId;
+        var id = el.id;
+        if (!id) return null;
+        if (id.indexOf('flowchart-') === 0) {
+          var rest = id.slice(10);
+          var dash = rest.indexOf('-');
+          return dash >= 0 ? rest.slice(0, dash) : rest;
+        }
+        return id;
+      }
+      function attachTooltips() {
+        document.querySelectorAll('.flow-diagram svg rect').forEach(function(r) {
+          r.setAttribute('rx', '8');
+          r.setAttribute('ry', '8');
+        });
+        var attached = 0;
+        document.querySelectorAll('.flow-diagram').forEach(function(diagram, di) {
+          var script = diagram.querySelector('script[type="application/json"][data-flow-tooltips]');
+          if (!script) return;
+          var data;
+          try { data = JSON.parse(script.textContent); } catch (e) { return; }
+          var svg = diagram.querySelector('svg');
+          if (!svg) return;
+          if (diagram.hasAttribute('data-tooltip-delegated')) return;
+          diagram.setAttribute('data-tooltip-delegated', '1');
+          diagram.querySelectorAll('g.node').forEach(function(g) { g.style.pointerEvents = 'auto'; });
+          var onOver = function(e) {
+            var g = e.target.closest && e.target.closest('g.node');
+            if (!g) return;
+            var nodeId = getNodeIdFromElement(g);
+            if (!nodeId) return;
+            var tip = data[nodeId];
+            if (!tip || !tip.detail) return;
+            tooltipEl.querySelector('.flow-tooltip__title').textContent = tip.title || nodeId;
+            tooltipEl.querySelector('.flow-tooltip__body').innerHTML = tip.detail;
+            tooltipEl.style.left = '';
+            tooltipEl.style.top = '';
+            tooltipEl.classList.add('is-visible');
+            var rect = g.getBoundingClientRect();
+            var x = rect.left + rect.width / 2;
+            var y = rect.top - 10;
+            requestAnimationFrame(function() {
+              var w = tooltipEl.offsetWidth;
+              var h = tooltipEl.offsetHeight;
+              tooltipEl.style.left = Math.max(12, Math.min(x - w / 2, window.innerWidth - w - 12)) + 'px';
+              tooltipEl.style.top = Math.max(12, y - h) + 'px';
+            });
+          };
+          var onOut = function(e) {
+            var related = e.relatedTarget;
+            if (related && diagram.contains(related)) return;
+            tooltipEl.classList.remove('is-visible');
+          };
+          diagram.addEventListener('mouseover', onOver);
+          diagram.addEventListener('mouseout', onOut);
+          attached++;
+        });
+        return attached;
+      }
+      var delays = [150, 400, 800];
+      delays.forEach(function(delay, i) {
+        setTimeout(function() {
+          var n = attachTooltips();
+          if (n === 0 && i === delays.length - 1) {
+            setTimeout(attachTooltips, 500);
+          }
+        }, delay);
+      });
+    });
+  </script>
 </body>
 </html>
