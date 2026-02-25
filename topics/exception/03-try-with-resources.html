@@ -1,0 +1,74 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Try-with-resources - Java Core</title>
+  <link rel="stylesheet" href="../../css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="topic-page">
+  <header class="topic-header">
+    <div class="topic-header-inner">
+      <a href="../../index.html" class="topic-header-logo">Java Core</a>
+      <nav class="topic-header-nav">
+        <a href="../../index.html">Trang chủ</a>
+      </nav>
+    </div>
+  </header>
+  <div class="topic-layout">
+    <nav class="topic-sidebar"><ul>
+        <li><a href="../../index.html">Trang ch&#7911;</a></li>
+        <li><a href="../oop.html">OOP</a></li>
+        <li><a href="../collections/01-intro.html">Collections</a></li>
+        <li><a href="../io-nio/01-intro.html">I/O & NIO</a></li>
+        <li><a href="../concurrency/01-intro.html">Concurrency</a></li>
+        <li><a href="../jvm-memory/01-architecture.html">JVM & Memory</a></li>
+        <li><a href="../exception/01-hierarchy.html" class="topic-sidebar-link--active">Exception</a></li>
+        <li><a href="../generics/01-intro.html">Generics</a></li>
+        <li><a href="../lambda/01-intro.html">Lambda & Stream</a></li>
+</ul></nav>
+
+    <main class="main-content topic-main">
+      <div class="breadcrumb"><a href="../../index.html">Trang chủ</a> / Try-with-resources</div>
+      <article class="topic-content">
+        <section>
+  <h3>Try-with-resources (Java 7+)</h3>
+  <p>Tự động đóng resource implement <code>AutoCloseable</code> (có method <code>close()</code>). Tránh memory leak khi quên close trong finally. Resource được đóng theo thứ tự ngược với khai báo.</p>
+
+  <h4>Cơ chế</h4>
+  <p>Compiler sinh bytecode: gọi <code>close()</code> trong block finally ẩn. Nếu cả try và close() đều ném Exception — Exception từ try được <strong>suppressed</strong>, có thể lấy qua <code>getSuppressed()</code>. Java 9+: biến trong try-with-resources có thể là effectively final.</p>
+
+  <pre><code>// Java 7+
+try (BufferedReader br = new BufferedReader(
+    new FileReader("test.txt"))) {
+  System.out.println(br.readLine());
+} catch (IOException e) {
+  e.printStackTrace();
+}
+// br.close() tự động gọi, dù có lỗi hay không</code></pre>
+
+  <pre><code>// Nhiều resource — đóng theo thứ tự ngược
+try (InputStream in = openInput();
+     OutputStream out = openOutput()) {
+  copy(in, out);
+}
+// out.close() trước, rồi in.close()</code></pre>
+
+  <section class="when-use">
+    <h4>Khi nào dùng</h4>
+    <p class="when-use-do"><strong>Luôn dùng:</strong> InputStream, OutputStream, Reader, Writer, Connection, Socket — mọi resource cần close.</p>
+    <p class="when-use-avoid"><strong>Tránh:</strong> Gọi close() thủ công trong finally khi đã có try-with-resources — dư thừa, dễ lỗi.</p>
+  </section>
+</section>
+
+      </article>
+    </main>
+  </div>
+  <footer class="topic-footer">
+    <p>Xây dựng bằng Java 17+ · Không dùng framework · Pure NIO</p>
+  </footer>
+</body>
+</html>

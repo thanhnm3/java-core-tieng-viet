@@ -1,0 +1,81 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Heap Generations - Java Core</title>
+  <link rel="stylesheet" href="../../css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="topic-page">
+  <header class="topic-header">
+    <div class="topic-header-inner">
+      <a href="../../index.html" class="topic-header-logo">Java Core</a>
+      <nav class="topic-header-nav">
+        <a href="../../index.html">Trang chủ</a>
+      </nav>
+    </div>
+  </header>
+  <div class="topic-layout">
+    <nav class="topic-sidebar"><ul>
+        <li><a href="../../index.html">Trang ch&#7911;</a></li>
+        <li><a href="../oop.html">OOP</a></li>
+        <li><a href="../collections/01-intro.html">Collections</a></li>
+        <li><a href="../io-nio/01-intro.html">I/O & NIO</a></li>
+        <li><a href="../concurrency/01-intro.html">Concurrency</a></li>
+        <li><a href="../jvm-memory/01-architecture.html" class="topic-sidebar-link--active">JVM & Memory</a></li>
+        <li><a href="../exception/01-hierarchy.html">Exception</a></li>
+        <li><a href="../generics/01-intro.html">Generics</a></li>
+        <li><a href="../lambda/01-intro.html">Lambda & Stream</a></li>
+</ul></nav>
+
+    <main class="main-content topic-main">
+      <div class="breadcrumb"><a href="../../index.html">Trang chủ</a> / Heap Generations</div>
+      <article class="topic-content">
+        <section>
+  <h3>Generational Heap — Chi tiết</h3>
+  <p>Dựa trên <strong>Weak Generational Hypothesis</strong>: phần lớn Object chết trẻ. Young Gen nhỏ, Minor GC nhanh; Old Gen lớn, Major GC chậm nhưng ít xảy ra.</p>
+
+  <h4>TLAB (Thread-Local Allocation Buffer)</h4>
+  <p>Mỗi thread có vùng nhỏ trong Eden để allocate Object — tránh lock khi nhiều thread cùng <code>new</code>. Object lớn (vượt TLAB) allocate trực tiếp Eden. <code>-XX:+UseTLAB</code> mặc định bật.</p>
+
+  <h4>Young Generation — Eden, Survivor</h4>
+  <p><strong>Eden:</strong> Mọi allocation mới. Khi đầy → Minor GC. Object sống copy sang Survivor (Copying algorithm). <strong>S0, S1:</strong> Chỉ một active; mỗi Minor GC: copy survivor từ S0→S1 hoặc ngược lại, clear vùng cũ. Object sống qua N lần Minor GC (tenuring threshold, mặc định 15) → promote lên Old. <code>-XX:MaxTenuringThreshold</code>.</p>
+
+  <h4>Old Generation</h4>
+  <p>Object promoted từ Young. Major/Full GC dọn ở đây — thường Stop-the-World lâu hơn. G1 chia Heap thành region (1–32MB), không còn Eden/S0/S1 cố định — mỗi region có thể Eden, Survivor, hoặc Old.</p>
+
+  <table class="comparison-table">
+    <caption>Thuật toán GC theo vùng</caption>
+    <thead>
+      <tr>
+        <th>Vùng</th>
+        <th>Thuật toán</th>
+        <th>Đặc điểm</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Young (Eden, Survivor)</td>
+        <td>Copying</td>
+        <td>Copy live object, clear toàn bộ — không fragmentation</td>
+      </tr>
+      <tr>
+        <td>Old</td>
+        <td>Mark-Sweep-Compact</td>
+        <td>Mark live, sweep dead, compact để giảm fragmentation</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+      </article>
+    </main>
+  </div>
+  <footer class="topic-footer">
+    <p>Xây dựng bằng Java 17+ · Không dùng framework · Pure NIO</p>
+  </footer>
+</body>
+</html>

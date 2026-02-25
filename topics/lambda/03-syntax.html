@@ -1,0 +1,141 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Syntax - Java Core</title>
+  <link rel="stylesheet" href="../../css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="topic-page">
+  <header class="topic-header">
+    <div class="topic-header-inner">
+      <a href="../../index.html" class="topic-header-logo">Java Core</a>
+      <nav class="topic-header-nav">
+        <a href="../../index.html">Trang chủ</a>
+      </nav>
+    </div>
+  </header>
+  <div class="topic-layout">
+    <nav class="topic-sidebar"><ul>
+        <li><a href="../../index.html">Trang ch&#7911;</a></li>
+        <li><a href="../oop.html">OOP</a></li>
+        <li><a href="../collections/01-intro.html">Collections</a></li>
+        <li><a href="../io-nio/01-intro.html">I/O & NIO</a></li>
+        <li><a href="../concurrency/01-intro.html">Concurrency</a></li>
+        <li><a href="../jvm-memory/01-architecture.html">JVM & Memory</a></li>
+        <li><a href="../exception/01-hierarchy.html">Exception</a></li>
+        <li><a href="../generics/01-intro.html">Generics</a></li>
+        <li><a href="../lambda/01-intro.html" class="topic-sidebar-link--active">Lambda & Stream</a></li>
+</ul></nav>
+
+    <main class="main-content topic-main">
+      <div class="breadcrumb"><a href="../../index.html">Trang chủ</a> / Syntax</div>
+      <article class="topic-content">
+        <section>
+  <h3>Cú pháp Lambda và Method Reference</h3>
+
+  <h4>Cú pháp Lambda</h4>
+  <table class="comparison-table">
+    <caption>Các dạng cú pháp</caption>
+    <thead>
+      <tr>
+        <th>Dạng</th>
+        <th>Ví dụ</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Không tham số</td>
+        <td><code>() -> 42</code> hoặc <code>() -> { return 42; }</code></td>
+      </tr>
+      <tr>
+        <td>1 tham số (có thể bỏ ngoặc)</td>
+        <td><code>x -> x * 2</code> hoặc <code>(x) -> x * 2</code></td>
+      </tr>
+      <tr>
+        <td>Nhiều tham số</td>
+        <td><code>(a, b) -> a + b</code></td>
+      </tr>
+      <tr>
+        <td>Khai báo kiểu</td>
+        <td><code>(int x, int y) -> x + y</code></td>
+      </tr>
+      <tr>
+        <td>Block body</td>
+        <td><code>(x) -> { int r = x * 2; return r; }</code></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h4>Method Reference</h4>
+  <p>Rút gọn lambda khi body chỉ gọi một method. Có 4 loại:</p>
+  <table class="comparison-table">
+    <caption>4 loại method reference</caption>
+    <thead>
+      <tr>
+        <th>Loại</th>
+        <th>Cú pháp</th>
+        <th>Ví dụ</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Static</td>
+        <td><code>ClassName::staticMethod</code></td>
+        <td><code>Integer::parseInt</code> thay <code>s -> Integer.parseInt(s)</code></td>
+      </tr>
+      <tr>
+        <td>Instance (object cố định)</td>
+        <td><code>object::instanceMethod</code></td>
+        <td><code>str::equals</code> thay <code>s -> str.equals(s)</code></td>
+      </tr>
+      <tr>
+        <td>Instance (tham số là receiver)</td>
+        <td><code>ClassName::instanceMethod</code></td>
+        <td><code>String::length</code> thay <code>s -> s.length()</code></td>
+      </tr>
+      <tr>
+        <td>Constructor</td>
+        <td><code>ClassName::new</code></td>
+        <td><code>ArrayList::new</code> thay <code>() -> new ArrayList&lt;&gt;()</code></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <pre><code>// Static
+List&lt;String&gt; nums = List.of("1", "2", "3");
+nums.stream().map(Integer::parseInt).toList();  // [1, 2, 3]
+
+// Instance (receiver = tham số)
+nums.stream().map(String::toUpperCase).toList();
+
+// Instance (object cố định)
+String prefix = "id-";
+nums.stream().map(prefix::concat).toList();  // ["id-1", "id-2", ...]
+
+// Constructor
+Supplier&lt;List&lt;String&gt;&gt; listSupplier = ArrayList::new;</code></pre>
+
+  <h4>Effectively final</h4>
+  <p>Biến dùng trong lambda phải effectively final — không gán lại sau khi được capture. Compiler báo lỗi nếu vi phạm.</p>
+  <pre><code>int count = 0;
+list.forEach(s -> {
+  count++;  // Compile error! count không effectively final
+});
+
+// Cách đúng — dùng array hoặc AtomicInteger
+int[] counter = {0};
+list.forEach(s -> counter[0]++);</code></pre>
+</section>
+
+      </article>
+    </main>
+  </div>
+  <footer class="topic-footer">
+    <p>Xây dựng bằng Java 17+ · Không dùng framework · Pure NIO</p>
+  </footer>
+</body>
+</html>

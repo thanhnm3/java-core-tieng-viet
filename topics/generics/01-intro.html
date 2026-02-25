@@ -1,0 +1,87 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Giá»›i thiá»‡u - Java Core</title>
+  <link rel="stylesheet" href="../../css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="topic-page">
+  <header class="topic-header">
+    <div class="topic-header-inner">
+      <a href="../../index.html" class="topic-header-logo">Java Core</a>
+      <nav class="topic-header-nav">
+        <a href="../../index.html">Trang chủ</a>
+      </nav>
+    </div>
+  </header>
+  <div class="topic-layout">
+    <nav class="topic-sidebar"><ul>
+        <li><a href="../../index.html">Trang ch&#7911;</a></li>
+        <li><a href="../oop.html">OOP</a></li>
+        <li><a href="../collections/01-intro.html">Collections</a></li>
+        <li><a href="../io-nio/01-intro.html">I/O & NIO</a></li>
+        <li><a href="../concurrency/01-intro.html">Concurrency</a></li>
+        <li><a href="../jvm-memory/01-architecture.html">JVM & Memory</a></li>
+        <li><a href="../exception/01-hierarchy.html">Exception</a></li>
+        <li><a href="../generics/01-intro.html" class="topic-sidebar-link--active">Generics</a></li>
+        <li><a href="../lambda/01-intro.html">Lambda & Stream</a></li>
+</ul></nav>
+
+    <main class="main-content topic-main">
+      <div class="breadcrumb"><a href="../../index.html">Trang chủ</a> / Giá»›i thiá»‡u</div>
+      <article class="topic-content">
+        <h2>Generics — Kiểu tham số hóa</h2>
+
+<p>Generics cho phép viết code type-safe với kiểu dữ liệu tổng quát. Thay vì <code>List</code> chứa Object (cần cast, dễ ClassCastException), dùng <code>List&lt;String&gt;</code> — compiler kiểm tra, không cần cast. Giới thiệu từ Java 5.</p>
+
+<section>
+  <h3>Tại sao cần Generics?</h3>
+  <p>Trước Generics: <code>List list = new ArrayList(); list.add("hi"); String s = (String) list.get(0);</code> — phải cast, nếu add nhầm Integer sẽ ClassCastException lúc runtime. Với Generics: <code>List&lt;String&gt; list = new ArrayList&lt;&gt;(); list.add("hi"); String s = list.get(0);</code> — compiler bắt lỗi, không cast.</p>
+
+  <table class="comparison-table">
+    <caption>Raw type vs Generic</caption>
+    <thead>
+      <tr>
+        <th>Raw type</th>
+        <th>Generic</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Cần cast</td>
+        <td>Không cần</td>
+      </tr>
+      <tr>
+        <td>Lỗi runtime</td>
+        <td>Lỗi compile-time</td>
+      </tr>
+      <tr>
+        <td>Không type-safe</td>
+        <td>Type-safe</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <pre><code>// Raw — tránh
+List list = new ArrayList();
+list.add(1);
+String s = (String) list.get(0);  // ClassCastException!
+
+// Generic
+List&lt;String&gt; list = new ArrayList&lt;&gt;();
+list.add("ok");
+String s = list.get(0);  // Không cast, an toàn</code></pre>
+</section>
+
+      </article>
+    </main>
+  </div>
+  <footer class="topic-footer">
+    <p>Xây dựng bằng Java 17+ · Không dùng framework · Pure NIO</p>
+  </footer>
+</body>
+</html>

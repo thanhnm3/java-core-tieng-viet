@@ -1,0 +1,196 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>OOP - Java Core</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="topic-page">
+  <header class="topic-header">
+    <div class="topic-header-inner">
+      <a href="../index.html" class="topic-header-logo">Java Core</a>
+      <nav class="topic-header-nav">
+        <a href="../index.html">Trang chủ</a>
+      </nav>
+    </div>
+  </header>
+  <div class="topic-layout">
+    <nav class="topic-sidebar"><ul>
+        <li><a href="../index.html">Trang ch&#7911;</a></li>
+        <li><a href="oop.html" class="topic-sidebar-link--active">OOP</a></li>
+        <li><a href="collections/01-intro.html">Collections</a></li>
+        <li><a href="io-nio/01-intro.html">I/O & NIO</a></li>
+        <li><a href="concurrency/01-intro.html">Concurrency</a></li>
+        <li><a href="jvm-memory/01-architecture.html">JVM & Memory</a></li>
+        <li><a href="exception/01-hierarchy.html">Exception</a></li>
+        <li><a href="generics/01-intro.html">Generics</a></li>
+        <li><a href="lambda/01-intro.html">Lambda & Stream</a></li>
+</ul></nav>
+
+    <main class="main-content topic-main">
+      <div class="breadcrumb"><a href="../index.html">Trang chủ</a> / OOP</div>
+      <article class="topic-content">
+        <h2>OOP - Lập trình hướng đối tượng</h2>
+
+<p>Lập trình hướng đối tượng (OOP) là mô hình lập trình dựa trên khái niệm "đối tượng", chứa dữ liệu (thuộc tính) và mã (phương thức). Java là ngôn ngữ OOP thuần túy. OOP trong Java dựa trên bốn trụ cột: <strong>Encapsulation</strong> (đóng gói), <strong>Inheritance</strong> (kế thừa), <strong>Polymorphism</strong> (đa hình) và <strong>Abstraction</strong> (trừu tượng hóa). Phần này giúp bạn hiểu từng khái niệm và biết khi nào nên dùng, khi nào tránh.</p>
+
+<section>
+  <h3>1. Class và Object</h3>
+  <p><strong>Class</strong> là khuôn mẫu định nghĩa thuộc tính (fields) và hành vi (methods). <strong>Object</strong> là thể hiện cụ thể của class, được tạo bằng <code>new</code>. Mỗi object có vùng nhớ riêng cho các thuộc tính của nó.</p>
+  <pre><code>public class Person {
+  private String name;
+  private int age;
+
+  public Person(String name, int age) {
+    this.name = name;
+    this.age = age;
+  }
+
+  public String getName() {
+    return name;
+  }
+}
+
+Person p = new Person("Alice", 30);
+System.out.println(p.getName());</code></pre>
+
+  <section class="when-use">
+    <h4>Khi nào nên dùng class?</h4>
+    <p class="when-use-do"><strong>Nên dùng khi:</strong> Cần gom dữ liệu và hành vi liên quan; có nhiều thực thể cùng kiểu cần tái sử dụng; logic phức tạp hơn vài biến đơn lẻ.</p>
+    <p class="when-use-avoid"><strong>Tránh khi:</strong> Logic rất đơn giản chỉ cần vài biến — có thể dùng <code>record</code> (Java 16+) hoặc static method; không có state cần quản lý.</p>
+  </section>
+</section>
+
+<section>
+  <h3>2. Encapsulation (Đóng gói)</h3>
+  <p>Đóng gói là ẩn dữ liệu bên trong class, chỉ cho phép truy cập qua các phương thức công khai (getter/setter). Dùng <code>private</code> cho thuộc tính, <code>public</code> cho phương thức cần thiết. Điều này giúp kiểm soát cách dữ liệu được đọc và ghi, có thể thêm validation trong setter.</p>
+  <pre><code>public class Person {
+  private String name;
+  private int age;
+
+  public void setAge(int age) {
+    if (age >= 0 && age <= 150) {
+      this.age = age;
+    }
+  }
+
+  public int getAge() {
+    return age;
+  }
+}</code></pre>
+
+  <section class="comparison">
+    <h4>Encapsulation: Nên dùng hay không?</h4>
+    <div class="comparison-grid">
+      <div class="comparison-box comparison-box--pro">
+        <h4>Khi dùng đóng gói (private + getter/setter)</h4>
+        <ul>
+          <li>Kiểm soát gán giá trị (validation trong setter)</li>
+          <li>Dễ đổi implementation nội bộ mà không ảnh hưởng code bên ngoài</li>
+          <li>API rõ ràng, client chỉ gọi method thay vì truy cập trực tiếp field</li>
+        </ul>
+      </div>
+      <div class="comparison-box comparison-box--con">
+        <h4>Khi không đóng gói (public field)</h4>
+        <ul>
+          <li>Có thể gán <code>person.age = -100</code> từ bất kỳ đâu</li>
+          <li>Khó bảo trì khi logic thay đổi (phải sửa nhiều chỗ)</li>
+          <li>Vi phạm nguyên tắc thiết kế, dễ phát sinh bug</li>
+        </ul>
+        <pre><code>// Anti-pattern: tránh làm vậy
+person.age = -1;</code></pre>
+      </div>
+    </div>
+  </section>
+</section>
+
+<section>
+  <h3>3. Inheritance (Kế thừa)</h3>
+  <p>Class con kế thừa từ class cha bằng <code>extends</code>. Class con có thể override phương thức của cha, gọi phương thức cha bằng <code>super</code>. Quan hệ phải là "is-a": Student <em>là</em> Person.</p>
+  <pre><code>public class Student extends Person {
+  private String studentId;
+
+  public Student(String name, int age, String studentId) {
+    super(name, age);
+    this.studentId = studentId;
+  }
+
+  @Override
+  public String getName() {
+    return "Student: " + super.getName();
+  }
+}</code></pre>
+
+  <section class="when-use">
+    <h4>Khi nào nên dùng kế thừa?</h4>
+    <p class="when-use-do"><strong>Nên dùng khi:</strong> Quan hệ "is-a" thật sự (Student là Person); cần dùng chung hành vi và mở rộng; hierarchy không quá sâu.</p>
+    <p class="when-use-avoid"><strong>Tránh khi:</strong> Chỉ muốn dùng lại code — ưu tiên composition (has-a) thay vì inheritance; hierarchy sâu dễ fragile, thay đổi class cha ảnh hưởng nhiều class con.</p>
+  </section>
+
+  <section class="pro-con">
+    <h4>Ưu và nhược điểm của kế thừa</h4>
+    <div class="pro-con-list">
+      <div class="pro-con-item pro-con-item--pro">
+        <strong>Ưu điểm:</strong> Tái sử dụng code, hỗ trợ đa hình, mô hình hóa quan hệ thực tế.
+      </div>
+      <div class="pro-con-item pro-con-item--con">
+        <strong>Nhược điểm:</strong> Coupling chặt giữa cha và con; thay đổi class cha có thể phá vỡ class con; khó test riêng lẻ.
+      </div>
+    </div>
+  </section>
+</section>
+
+<section>
+  <h3>4. Polymorphism (Đa hình)</h3>
+  <p>Đa hình cho phép biến kiểu cha tham chiếu tới object kiểu con. Khi gọi phương thức, JVM sẽ gọi implementation của object thực tế (runtime polymorphism). Java dùng <strong>override</strong> (cùng signature, khác implementation) và <strong>overload</strong> (cùng tên, khác tham số).</p>
+  <pre><code>Person p = new Student("Bob", 20, "S001");
+p.getName(); // Gọi Student.getName() — đa hình runtime</code></pre>
+
+  <section class="pro-con">
+    <h4>Ưu và nhược điểm của đa hình</h4>
+    <div class="pro-con-list">
+      <div class="pro-con-item pro-con-item--pro">
+        <strong>Ưu điểm:</strong> Code linh hoạt, dễ mở rộng; dependency inversion (phụ thuộc vào abstraction); giảm điều kiện if-else.
+      </div>
+      <div class="pro-con-item pro-con-item--con">
+        <strong>Nhược điểm:</strong> Cần hiểu hierarchy; debug phức tạp hơn khi có nhiều implementation.
+      </div>
+    </div>
+  </section>
+
+  <section class="comparison">
+    <h4>Gọi qua kiểu cha vs kiểu con</h4>
+    <div class="comparison-grid">
+      <div class="comparison-box comparison-box--pro">
+        <h4>Gọi qua kiểu cha (đa hình)</h4>
+        <p>Dùng khi xử lý nhiều loại object cùng interface; code không phụ thuộc implementation cụ thể.</p>
+        <pre><code>void printName(Person p) {
+  System.out.println(p.getName());
+}
+printName(new Student(...));
+printName(new Person(...));</code></pre>
+      </div>
+      <div class="comparison-box comparison-box--con">
+        <h4>Gọi cụ thể kiểu con</h4>
+        <p>Dùng khi cần method riêng của subclass; nhưng code bị gắn chặt với implementation.</p>
+        <pre><code>Student s = new Student(...);
+s.getStudentId(); // Chỉ Student có</code></pre>
+      </div>
+    </div>
+  </section>
+</section>
+
+<p><strong>Tóm tắt:</strong> Bốn khái niệm OOP bổ trợ nhau. Encapsulation bảo vệ dữ liệu; Inheritance tái sử dụng và mở rộng; Polymorphism cho phép xử lý linh hoạt. Dùng đúng chỗ, tránh lạm dụng — đặc biệt kế thừa khi composition phù hợp hơn.</p>
+
+      </article>
+    </main>
+  </div>
+  <footer class="topic-footer">
+    <p>Xây dựng bằng Java 17+ · Không dùng framework · Pure NIO</p>
+  </footer>
+</body>
+</html>

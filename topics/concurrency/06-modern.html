@@ -1,0 +1,97 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Modern - Java Core</title>
+  <link rel="stylesheet" href="../../css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="topic-page">
+  <header class="topic-header">
+    <div class="topic-header-inner">
+      <a href="../../index.html" class="topic-header-logo">Java Core</a>
+      <nav class="topic-header-nav">
+        <a href="../../index.html">Trang chủ</a>
+      </nav>
+    </div>
+  </header>
+  <div class="topic-layout">
+    <nav class="topic-sidebar"><ul>
+        <li><a href="../../index.html">Trang ch&#7911;</a></li>
+        <li><a href="../oop.html">OOP</a></li>
+        <li><a href="../collections/01-intro.html">Collections</a></li>
+        <li><a href="../io-nio/01-intro.html">I/O & NIO</a></li>
+        <li><a href="../concurrency/01-intro.html" class="topic-sidebar-link--active">Concurrency</a></li>
+        <li><a href="../jvm-memory/01-architecture.html">JVM & Memory</a></li>
+        <li><a href="../exception/01-hierarchy.html">Exception</a></li>
+        <li><a href="../generics/01-intro.html">Generics</a></li>
+        <li><a href="../lambda/01-intro.html">Lambda & Stream</a></li>
+</ul></nav>
+
+    <main class="main-content topic-main">
+      <div class="breadcrumb"><a href="../../index.html">Trang chủ</a> / Modern</div>
+      <article class="topic-content">
+        <section>
+  <h3>Modern Java Concurrency</h3>
+
+  <h4>CompletableFuture (Java 8)</h4>
+  <p>Lập trình bất đồng bộ theo phong cách Functional. Kết chuỗi: "Làm A xong → lấy kết quả làm B → lỗi thì C". <code>thenApply</code>, <code>thenCompose</code>, <code>thenCombine</code>, <code>exceptionally</code>.</p>
+
+  <pre><code>CompletableFuture&lt;String&gt; future = CompletableFuture
+    .supplyAsync(() -> fetchData())
+    .thenApply(s -> process(s))
+    .exceptionally(ex -> "fallback");
+String result = future.get();</code></pre>
+
+  <h4>Fork/Join Framework</h4>
+  <p>Chia nhỏ tác vụ lớn thành tác vụ con, chạy song song. Thuật toán work-stealing: thread rỗi "đánh cắp" task từ thread bận. <code>ForkJoinPool</code>, <code>RecursiveTask</code>, <code>RecursiveAction</code>. Dùng trong <code>parallelStream()</code>.</p>
+
+  <h4>Virtual Threads (Java 21)</h4>
+  <p>Luồng siêu nhẹ do JVM quản lý, không phải OS. Có thể chạy hàng triệu thread trên laptop. Blocking I/O không tốn OS thread. <code>Thread.ofVirtual().start(task)</code> hoặc <code>Executors.newVirtualThreadPerTaskExecutor()</code>.</p>
+
+  <table class="comparison-table">
+    <caption>Platform Thread vs Virtual Thread</caption>
+    <thead>
+      <tr>
+        <th>Tiêu chí</th>
+        <th>Platform Thread</th>
+        <th>Virtual Thread</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Quản lý</td>
+        <td>OS</td>
+        <td>JVM</td>
+      </tr>
+      <tr>
+        <td>Stack</td>
+        <td>~1MB</td>
+        <td>KB, mở rộng khi cần</td>
+      </tr>
+      <tr>
+        <td>Số lượng</td>
+        <td>Hàng nghìn</td>
+        <td>Hàng triệu</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <section class="when-use">
+    <h4>Khi nào dùng Virtual Threads?</h4>
+    <p class="when-use-do"><strong>Nên dùng:</strong> Ứng dụng nhiều I/O blocking; server HTTP; thay thế thread pool cho task I/O-bound.</p>
+    <p class="when-use-avoid"><strong>Tránh khi:</strong> CPU-bound thuần — platform thread vẫn tốt; cần pin (synchronized với native).</p>
+  </section>
+</section>
+
+      </article>
+    </main>
+  </div>
+  <footer class="topic-footer">
+    <p>Xây dựng bằng Java 17+ · Không dùng framework · Pure NIO</p>
+  </footer>
+</body>
+</html>

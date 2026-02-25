@@ -1,0 +1,99 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Stack vs Heap - Java Core</title>
+  <link rel="stylesheet" href="../../css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="topic-page">
+  <header class="topic-header">
+    <div class="topic-header-inner">
+      <a href="../../index.html" class="topic-header-logo">Java Core</a>
+      <nav class="topic-header-nav">
+        <a href="../../index.html">Trang chủ</a>
+      </nav>
+    </div>
+  </header>
+  <div class="topic-layout">
+    <nav class="topic-sidebar"><ul>
+        <li><a href="../../index.html">Trang ch&#7911;</a></li>
+        <li><a href="../oop.html">OOP</a></li>
+        <li><a href="../collections/01-intro.html">Collections</a></li>
+        <li><a href="../io-nio/01-intro.html">I/O & NIO</a></li>
+        <li><a href="../concurrency/01-intro.html">Concurrency</a></li>
+        <li><a href="../jvm-memory/01-architecture.html" class="topic-sidebar-link--active">JVM & Memory</a></li>
+        <li><a href="../exception/01-hierarchy.html">Exception</a></li>
+        <li><a href="../generics/01-intro.html">Generics</a></li>
+        <li><a href="../lambda/01-intro.html">Lambda & Stream</a></li>
+</ul></nav>
+
+    <main class="main-content topic-main">
+      <div class="breadcrumb"><a href="../../index.html">Trang chủ</a> / Stack vs Heap</div>
+      <article class="topic-content">
+        <section>
+  <h3>Stack vs Heap — Chi tiết kỹ thuật</h3>
+  <p>Phân biệt hai vùng nhớ: Stack — quản lý bởi compiler/runtime, LIFO; Heap — quản lý bởi GC.</p>
+
+  <h4>Stack Frame Layout</h4>
+  <p>Mỗi frame: <em>Local Variable Array</em> — slot 32-bit (long/double dùng 2 slot); <em>Operand Stack</em> — max depth xác định tại compile; <em>Reference</em> tới Constant Pool của method. Kích thước frame = tổng local vars + operand stack + overhead. <code>-Xss256k</code> giới hạn stack/thread — thread nhiều = stack nhiều.</p>
+
+  <h4>Escape Analysis</h4>
+  <p>JIT phân tích Object có "escape" khỏi method không. Nếu không escape (chỉ dùng nội bộ method) → có thể <strong>Scalar Replacement</strong>: allocate trên stack thay vì Heap, hoặc bỏ allocation hoàn toàn. Giảm áp lực GC.</p>
+
+  <table class="comparison-table">
+    <caption>So sánh Stack và Heap</caption>
+    <thead>
+      <tr>
+        <th>Đặc điểm</th>
+        <th>Stack</th>
+        <th>Heap</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Đối tượng</td>
+        <td>Primitive, reference, Frame</td>
+        <td>Object (header + fields)</td>
+      </tr>
+      <tr>
+        <td>Allocation</td>
+        <td>Push frame — O(1)</td>
+        <td>Bump pointer (TLAB) hoặc free list</td>
+      </tr>
+      <tr>
+        <td>Deallocation</td>
+        <td>Pop frame — ngay khi return</td>
+        <td>GC thu hồi (bất đồng bộ)</td>
+      </tr>
+      <tr>
+        <td>Fragmentation</td>
+        <td>Không</td>
+        <td>Có — cần compact</td>
+      </tr>
+      <tr>
+        <td>Lỗi</td>
+        <td>StackOverflowError</td>
+        <td>OutOfMemoryError: Java heap space</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <pre><code>void method() {
+  int a = 1;           // a: slot trên Stack
+  Object o = new Object();  // o: reference Stack; Object: Heap
+}
+// Return: frame pop, a và o mất; Object chờ GC</code></pre>
+</section>
+
+      </article>
+    </main>
+  </div>
+  <footer class="topic-footer">
+    <p>Xây dựng bằng Java 17+ · Không dùng framework · Pure NIO</p>
+  </footer>
+</body>
+</html>

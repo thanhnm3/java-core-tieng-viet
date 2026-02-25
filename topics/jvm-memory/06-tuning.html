@@ -1,0 +1,104 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tuning - Java Core</title>
+  <link rel="stylesheet" href="../../css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="topic-page">
+  <header class="topic-header">
+    <div class="topic-header-inner">
+      <a href="../../index.html" class="topic-header-logo">Java Core</a>
+      <nav class="topic-header-nav">
+        <a href="../../index.html">Trang chủ</a>
+      </nav>
+    </div>
+  </header>
+  <div class="topic-layout">
+    <nav class="topic-sidebar"><ul>
+        <li><a href="../../index.html">Trang ch&#7911;</a></li>
+        <li><a href="../oop.html">OOP</a></li>
+        <li><a href="../collections/01-intro.html">Collections</a></li>
+        <li><a href="../io-nio/01-intro.html">I/O & NIO</a></li>
+        <li><a href="../concurrency/01-intro.html">Concurrency</a></li>
+        <li><a href="../jvm-memory/01-architecture.html" class="topic-sidebar-link--active">JVM & Memory</a></li>
+        <li><a href="../exception/01-hierarchy.html">Exception</a></li>
+        <li><a href="../generics/01-intro.html">Generics</a></li>
+        <li><a href="../lambda/01-intro.html">Lambda & Stream</a></li>
+</ul></nav>
+
+    <main class="main-content topic-main">
+      <div class="breadcrumb"><a href="../../index.html">Trang chủ</a> / Tuning</div>
+      <article class="topic-content">
+        <section>
+  <h3>JVM Tuning — Chi tiết kỹ thuật</h3>
+  <p>Các flag quan trọng khi deploy. Luôn test trên workload thực tế.</p>
+
+  <table class="comparison-table">
+    <caption>Flag Heap và Memory</caption>
+    <thead>
+      <tr>
+        <th>Flag</th>
+        <th>Ý nghĩa</th>
+        <th>Ví dụ</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>-Xms</code></td>
+        <td>Initial Heap size</td>
+        <td><code>-Xms512m</code></td>
+      </tr>
+      <tr>
+        <td><code>-Xmx</code></td>
+        <td>Max Heap size</td>
+        <td><code>-Xmx2g</code></td>
+      </tr>
+      <tr>
+        <td><code>-Xmn</code></td>
+        <td>Young Gen size (Serial/Parallel)</td>
+        <td><code>-Xmn256m</code></td>
+      </tr>
+      <tr>
+        <td><code>-Xss</code></td>
+        <td>Stack size/thread</td>
+        <td><code>-Xss256k</code></td>
+      </tr>
+      <tr>
+        <td><code>-XX:MaxMetaspaceSize</code></td>
+        <td>Giới hạn Metaspace</td>
+        <td><code>-XX:MaxMetaspaceSize=256m</code></td>
+      </tr>
+      <tr>
+        <td><code>-XX:MaxDirectMemorySize</code></td>
+        <td>Direct buffer (NIO)</td>
+        <td><code>-XX:MaxDirectMemorySize=512m</code></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h4>G1-specific</h4>
+  <p><code>-XX:MaxGCPauseMillis=200</code> — mục tiêu pause; <code>-XX:G1HeapRegionSize</code> — kích thước region (1–32MB, power of 2); <code>-XX:InitiatingHeapOccupancyPercent=45</code> — bắt đầu concurrent mark khi Old đạt 45%.</p>
+
+  <h4>ZGC-specific</h4>
+  <p><code>-XX:+UseZGC</code>; <code>-XX:ZCollectionInterval</code> — tần suất GC. ZGC không cần -Xmn — tự quản lý.</p>
+
+  <section class="when-use">
+    <h4>Lưu ý deploy</h4>
+    <p class="when-use-do"><strong>-Xms = -Xmx:</strong> Tránh resize Heap — giảm overhead. <strong>Container:</strong> JVM không nhận diện cgroup limit — dùng <code>-XX:+UseContainerSupport</code> (Java 10+) hoặc set -Xmx thủ công theo limit.</p>
+    <p class="when-use-avoid"><strong>Tránh:</strong> -Xmx quá lớn so với RAM vật lý; quên -XX:MaxMetaspaceSize (có thể OOM Native).</p>
+  </section>
+</section>
+
+      </article>
+    </main>
+  </div>
+  <footer class="topic-footer">
+    <p>Xây dựng bằng Java 17+ · Không dùng framework · Pure NIO</p>
+  </footer>
+</body>
+</html>

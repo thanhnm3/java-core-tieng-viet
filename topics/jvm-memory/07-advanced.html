@@ -1,0 +1,90 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Advanced - Java Core</title>
+  <link rel="stylesheet" href="../../css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="topic-page">
+  <header class="topic-header">
+    <div class="topic-header-inner">
+      <a href="../../index.html" class="topic-header-logo">Java Core</a>
+      <nav class="topic-header-nav">
+        <a href="../../index.html">Trang chủ</a>
+      </nav>
+    </div>
+  </header>
+  <div class="topic-layout">
+    <nav class="topic-sidebar"><ul>
+        <li><a href="../../index.html">Trang ch&#7911;</a></li>
+        <li><a href="../oop.html">OOP</a></li>
+        <li><a href="../collections/01-intro.html">Collections</a></li>
+        <li><a href="../io-nio/01-intro.html">I/O & NIO</a></li>
+        <li><a href="../concurrency/01-intro.html">Concurrency</a></li>
+        <li><a href="../jvm-memory/01-architecture.html" class="topic-sidebar-link--active">JVM & Memory</a></li>
+        <li><a href="../exception/01-hierarchy.html">Exception</a></li>
+        <li><a href="../generics/01-intro.html">Generics</a></li>
+        <li><a href="../lambda/01-intro.html">Lambda & Stream</a></li>
+</ul></nav>
+
+    <main class="main-content topic-main">
+      <div class="breadcrumb"><a href="../../index.html">Trang chủ</a> / Advanced</div>
+      <article class="topic-content">
+        <section>
+  <h3>Nâng cao — String Pool, Reference, Compressed OOPs</h3>
+
+  <h4>String Pool (Intern)</h4>
+  <p>Literal <code>"hello"</code> lưu trong String Pool (nằm Heap từ Java 7). <code>intern()</code> trả về reference từ pool nếu có, không thì thêm vào. Tránh duplicate string. Pool có thể OOM nếu intern quá nhiều string khác nhau.</p>
+
+  <h4>Reference Types</h4>
+  <p><strong>Strong:</strong> Bình thường — GC không thu hồi khi còn reference. <strong>SoftReference:</strong> Thu hồi khi Heap sắp OOM — dùng cache. <strong>WeakReference:</strong> Thu hồi bất kỳ lúc nào GC chạy — dùng cho metadata. <strong>PhantomReference:</strong> Dùng với ReferenceQueue — biết khi Object sắp bị thu hồi (cleanup).</p>
+
+  <h4>Compressed OOPs</h4>
+  <p>Trên 64-bit JVM, pointer 8 byte — tốn Heap. <strong>Compressed OOPs</strong> (-XX:+UseCompressedOops, mặc định): dùng 32-bit offset, scale x3 (shift left 3) để địa chỉ 8-byte aligned. Heap &lt; 32GB: dùng base + offset. Giảm ~30% memory cho Object có nhiều reference.</p>
+
+  <table class="comparison-table">
+    <caption>Reference types</caption>
+    <thead>
+      <tr>
+        <th>Loại</th>
+        <th>Thu hồi khi</th>
+        <th>Use case</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Strong</td>
+        <td>Không còn reference</td>
+        <td>Mặc định</td>
+      </tr>
+      <tr>
+        <td>SoftReference</td>
+        <td>Heap sắp đầy</td>
+        <td>Cache</td>
+      </tr>
+      <tr>
+        <td>WeakReference</td>
+        <td>Bất kỳ GC</td>
+        <td>WeakHashMap, metadata</td>
+      </tr>
+      <tr>
+        <td>PhantomReference</td>
+        <td>Sau khi finalize</td>
+        <td>Cleanup, monitoring</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+      </article>
+    </main>
+  </div>
+  <footer class="topic-footer">
+    <p>Xây dựng bằng Java 17+ · Không dùng framework · Pure NIO</p>
+  </footer>
+</body>
+</html>

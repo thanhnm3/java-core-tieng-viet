@@ -1,0 +1,92 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PECS - Java Core</title>
+  <link rel="stylesheet" href="../../css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="topic-page">
+  <header class="topic-header">
+    <div class="topic-header-inner">
+      <a href="../../index.html" class="topic-header-logo">Java Core</a>
+      <nav class="topic-header-nav">
+        <a href="../../index.html">Trang chủ</a>
+      </nav>
+    </div>
+  </header>
+  <div class="topic-layout">
+    <nav class="topic-sidebar"><ul>
+        <li><a href="../../index.html">Trang ch&#7911;</a></li>
+        <li><a href="../oop.html">OOP</a></li>
+        <li><a href="../collections/01-intro.html">Collections</a></li>
+        <li><a href="../io-nio/01-intro.html">I/O & NIO</a></li>
+        <li><a href="../concurrency/01-intro.html">Concurrency</a></li>
+        <li><a href="../jvm-memory/01-architecture.html">JVM & Memory</a></li>
+        <li><a href="../exception/01-hierarchy.html">Exception</a></li>
+        <li><a href="../generics/01-intro.html" class="topic-sidebar-link--active">Generics</a></li>
+        <li><a href="../lambda/01-intro.html">Lambda & Stream</a></li>
+</ul></nav>
+
+    <main class="main-content topic-main">
+      <div class="breadcrumb"><a href="../../index.html">Trang chủ</a> / PECS</div>
+      <article class="topic-content">
+        <section>
+  <h3>PECS — Producer Extends, Consumer Super</h3>
+  <p>Quy tắc chọn wildcard: <strong>Producer</strong> (cung cấp/đọc) → <code>extends</code>; <strong>Consumer</strong> (tiêu thụ/ghi) → <code>super</code>.</p>
+
+  <h4>Ví dụ: copy</h4>
+  <p><code>Collections.copy(List&lt;? super T&gt; dest, List&lt;? extends T&gt; src)</code> — dest nhận (consumer) → super; src cung cấp (producer) → extends.</p>
+
+  <pre><code>// Đúng — PECS
+public static &lt;T&gt; void copy(List&lt;? super T&gt; dest, List&lt;? extends T&gt; src) {
+  for (T t : src) {
+    dest.add(t);
+  }
+}
+
+List&lt;Number&gt; dest = new ArrayList&lt;&gt;();
+List&lt;Integer&gt; src = List.of(1, 2, 3);
+copy(dest, src);  // OK — Integer extends Number</code></pre>
+
+  <pre><code>// SAI — dùng extends cho dest
+void copyWrong(List&lt;? extends T&gt; dest, List&lt;? extends T&gt; src) {
+  for (T t : src) {
+    dest.add(t);  // Compile error! dest là consumer
+  }
+}</code></pre>
+
+  <section class="comparison">
+    <h4>Producer vs Consumer</h4>
+    <div class="comparison-grid">
+      <div class="comparison-box comparison-box--pro">
+        <h4>Producer (extends)</h4>
+        <ul>
+          <li>Tham số cung cấp data</li>
+          <li>Chỉ đọc, iterate</li>
+          <li>Ví dụ: src trong copy</li>
+        </ul>
+      </div>
+      <div class="comparison-box comparison-box--pro">
+        <h4>Consumer (super)</h4>
+        <ul>
+          <li>Tham số nhận data</li>
+          <li>Chỉ ghi, add</li>
+          <li>Ví dụ: dest trong copy</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+</section>
+
+      </article>
+    </main>
+  </div>
+  <footer class="topic-footer">
+    <p>Xây dựng bằng Java 17+ · Không dùng framework · Pure NIO</p>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,96 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GC - Java Core</title>
+  <link rel="stylesheet" href="../../css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="topic-page">
+  <header class="topic-header">
+    <div class="topic-header-inner">
+      <a href="../../index.html" class="topic-header-logo">Java Core</a>
+      <nav class="topic-header-nav">
+        <a href="../../index.html">Trang chủ</a>
+      </nav>
+    </div>
+  </header>
+  <div class="topic-layout">
+    <nav class="topic-sidebar"><ul>
+        <li><a href="../../index.html">Trang ch&#7911;</a></li>
+        <li><a href="../oop.html">OOP</a></li>
+        <li><a href="../collections/01-intro.html">Collections</a></li>
+        <li><a href="../io-nio/01-intro.html">I/O & NIO</a></li>
+        <li><a href="../concurrency/01-intro.html">Concurrency</a></li>
+        <li><a href="../jvm-memory/01-architecture.html" class="topic-sidebar-link--active">JVM & Memory</a></li>
+        <li><a href="../exception/01-hierarchy.html">Exception</a></li>
+        <li><a href="../generics/01-intro.html">Generics</a></li>
+        <li><a href="../lambda/01-intro.html">Lambda & Stream</a></li>
+</ul></nav>
+
+    <main class="main-content topic-main">
+      <div class="breadcrumb"><a href="../../index.html">Trang chủ</a> / GC</div>
+      <article class="topic-content">
+        <section>
+  <h3>Garbage Collection — Cơ chế sâu</h3>
+  <p>GC thu hồi Object unreachable. Hai loại: <strong>Tracing</strong> (mark từ root) và <strong>Reference Counting</strong> (Java không dùng — không xử lý cycle).</p>
+
+  <h4>GC Roots</h4>
+  <p>Điểm bắt đầu trace: (1) Local variable trong Stack frame đang thực thi; (2) Static variable; (3) JNI global reference; (4) Object được lock (monitor). Từ Root, trace qua reference → Object reachable. Còn lại = unreachable.</p>
+
+  <h4>Mark-Sweep-Compact</h4>
+  <p><strong>Mark:</strong> DFS/BFS từ Root, đánh dấu live. <strong>Sweep:</strong> Duyệt Heap, free unreachable. <strong>Compact:</strong> Dồn live object — giảm fragmentation, tăng locality. Compact tốn thời gian — nhiều GC tối ưu để giảm compact.</p>
+
+  <h4>G1 (Garbage First)</h4>
+  <p>Chia Heap thành region (~2048 region, mỗi region 1–32MB). Mỗi region là Eden, Survivor, hoặc Old. Ưu tiên dọn region có nhiều rác (garbage first). Evacuation: copy live object từ region này sang region khác. Mixed GC: dọn cả Young và một phần Old. Pause time mục tiêu: <code>-XX:MaxGCPauseMillis</code> (mặc định 200ms).</p>
+
+  <h4>ZGC</h4>
+  <p>Concurrent, pause &lt; 1ms bất kể Heap size. Dùng <strong>colored pointers</strong>: 64-bit pointer chứa metadata (mark, remap) trong bit cao — không cần separate mark bitmap. Load barrier khi đọc reference. Concurrent marking, concurrent relocation. Heap có thể TB.</p>
+
+  <h4>Shenandoah</h4>
+  <p>Concurrent evacuation — copy Object trong khi application chạy. Forwarding pointer: Object cũ trỏ tới bản copy mới. Read barrier. Pause không phụ thuộc Heap size.</p>
+
+  <table class="comparison-table">
+    <caption>G1 vs ZGC vs Shenandoah</caption>
+    <thead>
+      <tr>
+        <th>GC</th>
+        <th>Concurrent</th>
+        <th>Pause</th>
+        <th>Heap</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>G1</td>
+        <td>Mark concurrent, Evacuation STW</td>
+        <td>Vài ms – 200ms</td>
+        <td>Đến vài chục GB</td>
+      </tr>
+      <tr>
+        <td>ZGC</td>
+        <td>Full concurrent</td>
+        <td>&lt; 1ms</td>
+        <td>Đến TB</td>
+      </tr>
+      <tr>
+        <td>Shenandoah</td>
+        <td>Full concurrent</td>
+        <td>&lt; 1ms</td>
+        <td>Lớn</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+      </article>
+    </main>
+  </div>
+  <footer class="topic-footer">
+    <p>Xây dựng bằng Java 17+ · Không dùng framework · Pure NIO</p>
+  </footer>
+</body>
+</html>

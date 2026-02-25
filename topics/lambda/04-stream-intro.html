@@ -1,0 +1,128 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Stream Intro - Java Core</title>
+  <link rel="stylesheet" href="../../css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="topic-page">
+  <header class="topic-header">
+    <div class="topic-header-inner">
+      <a href="../../index.html" class="topic-header-logo">Java Core</a>
+      <nav class="topic-header-nav">
+        <a href="../../index.html">Trang chủ</a>
+      </nav>
+    </div>
+  </header>
+  <div class="topic-layout">
+    <nav class="topic-sidebar"><ul>
+        <li><a href="../../index.html">Trang ch&#7911;</a></li>
+        <li><a href="../oop.html">OOP</a></li>
+        <li><a href="../collections/01-intro.html">Collections</a></li>
+        <li><a href="../io-nio/01-intro.html">I/O & NIO</a></li>
+        <li><a href="../concurrency/01-intro.html">Concurrency</a></li>
+        <li><a href="../jvm-memory/01-architecture.html">JVM & Memory</a></li>
+        <li><a href="../exception/01-hierarchy.html">Exception</a></li>
+        <li><a href="../generics/01-intro.html">Generics</a></li>
+        <li><a href="../lambda/01-intro.html" class="topic-sidebar-link--active">Lambda & Stream</a></li>
+</ul></nav>
+
+    <main class="main-content topic-main">
+      <div class="breadcrumb"><a href="../../index.html">Trang chủ</a> / Stream Intro</div>
+      <article class="topic-content">
+        <section>
+  <h3>Stream API — Giới thiệu</h3>
+  <p>Stream cho phép xử lý collection theo kiểu <strong>declarative</strong> — mô tả <em>cái gì</em> cần làm, không phải <em>cách làm</em>. Hỗ trợ pipeline, lazy evaluation, và có thể chạy song song.</p>
+
+  <h4>Tạo Stream</h4>
+  <pre><code>// Từ collection
+List&lt;Integer&gt; list = List.of(1, 2, 3);
+Stream&lt;Integer&gt; s1 = list.stream();
+Stream&lt;Integer&gt; s2 = list.parallelStream();
+
+// Từ array
+int[] arr = {1, 2, 3};
+IntStream is = Arrays.stream(arr);
+
+// Từ giá trị
+Stream&lt;String&gt; s3 = Stream.of("a", "b", "c");
+
+// Vô hạn
+Stream&lt;Integer&gt; infinite = Stream.iterate(0, n -> n + 1);
+Stream&lt;Double&gt; random = Stream.generate(Math::random);</code></pre>
+
+  <h4>Intermediate vs Terminal</h4>
+  <table class="comparison-table">
+    <caption>Phân loại operation</caption>
+    <thead>
+      <tr>
+        <th>Intermediate</th>
+        <th>Terminal</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Trả về Stream, có thể chain</td>
+        <td>Trả về kết quả hoặc void</td>
+      </tr>
+      <tr>
+        <td>Lazy — không thực thi cho đến khi có terminal</td>
+        <td>Eager — trigger toàn bộ pipeline</td>
+      </tr>
+      <tr>
+        <td>filter, map, flatMap, sorted, distinct, limit, skip</td>
+        <td>forEach, collect, reduce, count, findFirst, anyMatch</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h4>Lazy Evaluation</h4>
+  <p>Intermediate operations không chạy ngay — chúng chỉ build pipeline. Khi gọi terminal, pipeline mới được thực thi từ đầu đến cuối.</p>
+  <pre><code>List&lt;Integer&gt; src = List.of(1, 2, 3, 4, 5);
+src.stream()
+   .filter(n -> {
+     System.out.println("filter:" + n);  // Chỉ in khi terminal chạy
+     return n % 2 == 0;
+   })
+   .map(n -> {
+     System.out.println("map:" + n);
+     return n * 2;
+   })
+   .findFirst();  // Terminal — trigger pipeline
+// Output: filter:1, filter:2, map:2 — dừng ngay khi có kết quả</code></pre>
+
+  <section class="comparison">
+    <h4>Stream vs for-loop</h4>
+    <div class="comparison-grid">
+      <div class="comparison-box comparison-box--pro">
+        <h4>Stream</h4>
+        <ul>
+          <li>Declarative, dễ đọc</li>
+          <li>Lazy, có thể short-circuit</li>
+          <li>Dễ parallel (parallelStream)</li>
+        </ul>
+      </div>
+      <div class="comparison-box comparison-box--con">
+        <h4>for-loop</h4>
+        <ul>
+          <li>Imperative, kiểm soát chi tiết</li>
+          <li>Overhead nhỏ hơn cho collection nhỏ</li>
+          <li>Phù hợp khi cần break/continue phức tạp</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+</section>
+
+      </article>
+    </main>
+  </div>
+  <footer class="topic-footer">
+    <p>Xây dựng bằng Java 17+ · Không dùng framework · Pure NIO</p>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,89 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>02-runtime-areas - Java Core</title>
+  <link rel="stylesheet" href="../../css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="topic-page">
+  <header class="topic-header">
+    <div class="topic-header-inner">
+      <a href="../../index.html" class="topic-header-logo">Java Core</a>
+      <nav class="topic-header-nav">
+        <a href="../../index.html">Trang chủ</a>
+      </nav>
+    </div>
+  </header>
+  <div class="topic-layout">
+    <nav class="topic-sidebar"><ul>
+        <li><a href="../../index.html">Trang ch&#7911;</a></li>
+        <li><a href="../oop.html">OOP</a></li>
+        <li><a href="../collections/01-intro.html">Collections</a></li>
+        <li><a href="../io-nio/01-intro.html">I/O & NIO</a></li>
+        <li><a href="../concurrency/01-intro.html">Concurrency</a></li>
+        <li><a href="../jvm-memory/01-architecture.html" class="topic-sidebar-link--active">JVM & Memory</a></li>
+        <li><a href="../exception/01-hierarchy.html">Exception</a></li>
+        <li><a href="../generics/01-intro.html">Generics</a></li>
+        <li><a href="../lambda/01-intro.html">Lambda & Stream</a></li>
+</ul></nav>
+
+    <main class="main-content topic-main">
+      <div class="breadcrumb"><a href="../../index.html">Trang chủ</a> / 02-runtime-areas</div>
+      <article class="topic-content">
+        <section>
+  <h3>Runtime Data Areas — Chi tiết kỹ thuật</h3>
+  <p>Bộ nhớ JVM chia 5 khu vực: Shared (Heap, Metaspace) và Per-Thread (Stack, PC Register, Native Method Stack).</p>
+
+  <h4>Heap — Cấu trúc Object</h4>
+  <p>Mỗi Object trên Heap có <strong>Object Header</strong>: <em>Mark Word</em> (8 byte trên 64-bit) — hash, GC age, lock state (biased, lightweight, heavyweight); <em>Klass Pointer</em> — trỏ tới metadata trong Metaspace. Sau header là instance fields (theo thứ tự declaration, alignment). Array có thêm length field (4 byte).</p>
+
+  <h4>Metaspace vs PermGen</h4>
+  <p>Java 8 bỏ PermGen (nằm trong Heap, giới hạn -XX:MaxPermSize). <strong>Metaspace</strong> nằm trong Native Memory — không giới hạn bởi -Xmx. Lưu: class metadata (Klass), method metadata, constant pool, annotations. Class loader bị GC → metadata tương ứng có thể unload. <code>-XX:MaxMetaspaceSize</code> giới hạn để tránh Native OOM.</p>
+
+  <h4>Stack — Stack Frame</h4>
+  <p>Mỗi lời gọi method tạo <strong>Stack Frame</strong>: <em>Local Variables</em> (slot cho biến cục bộ, slot 0 = this với instance method); <em>Operand Stack</em> (LIFO cho bytecode thao tác); <em>Frame Data</em> (return address, exception table). Kích thước frame cố định tại compile time. Stack overflow khi đệ quy sâu hoặc frame quá lớn.</p>
+
+  <h4>PC Register</h4>
+  <p>Lưu địa chỉ (offset) lệnh JVM hiện tại. Native method: PC undefined. Mỗi thread một PC.</p>
+
+  <table class="comparison-table">
+    <caption>Object Header (64-bit, compressed oops)</caption>
+    <thead>
+      <tr>
+        <th>Thành phần</th>
+        <th>Kích thước</th>
+        <th>Nội dung</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Mark Word</td>
+        <td>8 byte</td>
+        <td>Hash, GC age, lock (01=unlocked, 00=lightweight, 10=heavyweight, 11=GC)</td>
+      </tr>
+      <tr>
+        <td>Klass Pointer</td>
+        <td>4/8 byte</td>
+        <td>Compressed: 4 byte; không compress: 8 byte</td>
+      </tr>
+      <tr>
+        <td>Array length</td>
+        <td>4 byte</td>
+        <td>Chỉ với array</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+      </article>
+    </main>
+  </div>
+  <footer class="topic-footer">
+    <p>Xây dựng bằng Java 17+ · Không dùng framework · Pure NIO</p>
+  </footer>
+</body>
+</html>

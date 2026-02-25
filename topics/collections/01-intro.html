@@ -1,0 +1,125 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Giá»›i thiá»‡u - Java Core</title>
+  <link rel="stylesheet" href="../../css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="topic-page">
+  <header class="topic-header">
+    <div class="topic-header-inner">
+      <a href="../../index.html" class="topic-header-logo">Java Core</a>
+      <nav class="topic-header-nav">
+        <a href="../../index.html">Trang chủ</a>
+      </nav>
+    </div>
+  </header>
+  <div class="topic-layout">
+    <nav class="topic-sidebar"><ul>
+        <li><a href="../../index.html">Trang ch&#7911;</a></li>
+        <li><a href="../oop.html">OOP</a></li>
+        <li><a href="../collections/01-intro.html" class="topic-sidebar-link--active">Collections</a></li>
+        <li><a href="../io-nio/01-intro.html">I/O & NIO</a></li>
+        <li><a href="../concurrency/01-intro.html">Concurrency</a></li>
+        <li><a href="../jvm-memory/01-architecture.html">JVM & Memory</a></li>
+        <li><a href="../exception/01-hierarchy.html">Exception</a></li>
+        <li><a href="../generics/01-intro.html">Generics</a></li>
+        <li><a href="../lambda/01-intro.html">Lambda & Stream</a></li>
+</ul></nav>
+
+    <main class="main-content topic-main">
+      <div class="breadcrumb"><a href="../../index.html">Trang chủ</a> / Giá»›i thiá»‡u</div>
+      <article class="topic-content">
+        <h2>Collections - Bộ sưu tập</h2>
+
+<p>Java Collections Framework (JCF) nằm trong <code>java.util</code>, cung cấp các cấu trúc dữ liệu tái sử dụng để lưu trữ và xử lý nhóm đối tượng. Framework tách interface (contract) khỏi implementation (cách lưu trữ) — lập trình theo interface giúp dễ thay đổi implementation mà không đổi code gọi.</p>
+
+<section>
+  <h3>Tổng quan hierarchy</h3>
+  <p><code>Collection</code> là interface gốc cho List, Set, Queue. <code>Map</code> không kế thừa Collection vì cấu trúc key-value khác. Các interface con mở rộng contract (ví dụ List thêm index-based access).</p>
+
+  <table class="comparison-table">
+    <thead>
+      <tr>
+        <th>Interface</th>
+        <th>Thứ tự</th>
+        <th>Trùng lặp</th>
+        <th>Implementation chính</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>List</code></td>
+        <td>Có (index)</td>
+        <td>Cho phép</td>
+        <td>ArrayList, LinkedList</td>
+      </tr>
+      <tr>
+        <td><code>Set</code></td>
+        <td>Không (HashSet) / Chèn (LinkedHashSet) / Sắp xếp (TreeSet)</td>
+        <td>Không</td>
+        <td>HashSet, LinkedHashSet, TreeSet</td>
+      </tr>
+      <tr>
+        <td><code>Queue</code></td>
+        <td>FIFO hoặc Priority</td>
+        <td>Cho phép</td>
+        <td>LinkedList, ArrayDeque, PriorityQueue</td>
+      </tr>
+      <tr>
+        <td><code>Map</code></td>
+        <td>Key không trùng</td>
+        <td>Value có thể trùng</td>
+        <td>HashMap, LinkedHashMap, TreeMap</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h3>Iterator — Duyệt collection</h3>
+  <p><code>Iterator&lt;E&gt;</code> là design pattern cho phép duyệt collection mà không cần biết cấu trúc nội bộ. Interface có 3 method: <code>hasNext()</code>, <code>next()</code>, <code>remove()</code>. <code>Iterable&lt;T&gt;</code> có method <code>iterator()</code> — for-each compile thành gọi iterator().</p>
+
+  <h4>Cơ chế hoạt động</h4>
+  <p>Iterator giữ con trỏ (cursor) tới vị trí hiện tại. <code>next()</code> trả về phần tử và tiến cursor. <code>remove()</code> xóa phần tử vừa trả về bởi <code>next()</code> — gọi remove() hai lần liên tiếp không có next() ở giữa sẽ ném <code>IllegalStateException</code>.</p>
+
+  <h4>Fail-fast và ConcurrentModificationException</h4>
+  <p>Iterator của ArrayList, HashMap... là <strong>fail-fast</strong>: nếu collection bị sửa (add/remove) ngoài iterator trong lúc duyệt, sẽ ném <code>ConcurrentModificationException</code>. Cách an toàn: dùng <code>iterator.remove()</code> thay vì <code>list.remove()</code> trong vòng lặp.</p>
+
+  <pre><code>List&lt;String&gt; list = new ArrayList&lt;&gt;(List.of("a", "b", "c"));
+
+// For-each (dùng Iterator bên trong)
+for (String s : list) {
+  System.out.println(s);
+}
+
+// Iterator tường minh — remove an toàn
+Iterator&lt;String&gt; it = list.iterator();
+while (it.hasNext()) {
+  String s = it.next();
+  if (s.equals("b")) {
+    it.remove();  // OK — không gây ConcurrentModificationException
+  }
+}
+
+// SAI: list.remove(s) trong for-each → ConcurrentModificationException</code></pre>
+
+  <section class="when-use">
+    <h4>Khi nào dùng Iterator?</h4>
+    <p class="when-use-do"><strong>Nên dùng:</strong> Cần remove trong lúc duyệt; duyệt Set (không có index); tránh ConcurrentModificationException; ListIterator khi cần duyệt ngược hoặc set phần tử.</p>
+    <p class="when-use-avoid"><strong>Tránh khi:</strong> Chỉ duyệt đơn giản — for-each ngắn gọn hơn; List cần truy cập index — dùng for(i) với get(i).</p>
+  </section>
+</section>
+
+      </article>
+    </main>
+  </div>
+  <footer class="topic-footer">
+    <p>Xây dựng bằng Java 17+ · Không dùng framework · Pure NIO</p>
+  </footer>
+</body>
+</html>

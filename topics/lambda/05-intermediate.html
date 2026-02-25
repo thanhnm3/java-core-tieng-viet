@@ -1,0 +1,117 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Intermediate - Java Core</title>
+  <link rel="stylesheet" href="../../css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="topic-page">
+  <header class="topic-header">
+    <div class="topic-header-inner">
+      <a href="../../index.html" class="topic-header-logo">Java Core</a>
+      <nav class="topic-header-nav">
+        <a href="../../index.html">Trang chủ</a>
+      </nav>
+    </div>
+  </header>
+  <div class="topic-layout">
+    <nav class="topic-sidebar"><ul>
+        <li><a href="../../index.html">Trang ch&#7911;</a></li>
+        <li><a href="../oop.html">OOP</a></li>
+        <li><a href="../collections/01-intro.html">Collections</a></li>
+        <li><a href="../io-nio/01-intro.html">I/O & NIO</a></li>
+        <li><a href="../concurrency/01-intro.html">Concurrency</a></li>
+        <li><a href="../jvm-memory/01-architecture.html">JVM & Memory</a></li>
+        <li><a href="../exception/01-hierarchy.html">Exception</a></li>
+        <li><a href="../generics/01-intro.html">Generics</a></li>
+        <li><a href="../lambda/01-intro.html" class="topic-sidebar-link--active">Lambda & Stream</a></li>
+</ul></nav>
+
+    <main class="main-content topic-main">
+      <div class="breadcrumb"><a href="../../index.html">Trang chủ</a> / Intermediate</div>
+      <article class="topic-content">
+        <section>
+  <h3>Intermediate Operations</h3>
+  <p>Các operation trả về Stream, có thể chain. Thứ tự gọi ảnh hưởng hiệu năng — filter trước map để giảm số phần tử cần map.</p>
+
+  <h4>filter — Lọc theo điều kiện</h4>
+  <pre><code>List&lt;Integer&gt; evens = List.of(1, 2, 3, 4, 5)
+  .stream()
+  .filter(n -> n % 2 == 0)
+  .toList();  // [2, 4]</code></pre>
+
+  <h4>map — Chuyển đổi 1-1</h4>
+  <pre><code>List&lt;Integer&gt; lengths = List.of("a", "ab", "abc")
+  .stream()
+  .map(String::length)
+  .toList();  // [1, 2, 3]</code></pre>
+
+  <h4>flatMap — Chuyển đổi 1-nhiều, flatten</h4>
+  <p>Mỗi phần tử map thành Stream, rồi flatten thành một Stream duy nhất.</p>
+  <pre><code>List&lt;String&gt; words = List.of("hello world", "java stream");
+List&lt;String&gt; chars = words.stream()
+  .flatMap(s -> Arrays.stream(s.split(" ")))
+  .toList();  // ["hello", "world", "java", "stream"]
+
+// List of lists → flat
+List&lt;List&lt;Integer&gt;&gt; lists = List.of(List.of(1, 2), List.of(3, 4));
+List&lt;Integer&gt; flat = lists.stream()
+  .flatMap(List::stream)
+  .toList();  // [1, 2, 3, 4]</code></pre>
+
+  <h4>sorted — Sắp xếp</h4>
+  <pre><code>// Natural order (Comparable)
+List.of(3, 1, 2).stream().sorted().toList();  // [1, 2, 3]
+
+// Custom Comparator
+List.of("bb", "a", "ccc").stream()
+  .sorted(Comparator.comparingInt(String::length))
+  .toList();  // ["a", "bb", "ccc"]</code></pre>
+
+  <h4>distinct, limit, skip</h4>
+  <pre><code>List.of(1, 2, 2, 3, 3, 3).stream().distinct().toList();  // [1, 2, 3]
+
+Stream.iterate(0, n -> n + 1).limit(5).toList();  // [0, 1, 2, 3, 4]
+
+List.of(1, 2, 3, 4, 5).stream().skip(2).toList();  // [3, 4, 5]</code></pre>
+
+  <h4>peek — Debug (không thay đổi element)</h4>
+  <p>Dùng để log, debug. Không nên dùng để side-effect vì thứ tự không đảm bảo với parallel.</p>
+  <pre><code>list.stream()
+  .peek(System.out::println)
+  .map(String::toUpperCase)
+  .toList();</code></pre>
+
+  <table class="comparison-table">
+    <caption>Thứ tự tối ưu</caption>
+    <thead>
+      <tr>
+        <th>Nên</th>
+        <th>Tránh</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>filter trước map — giảm số phần tử</td>
+        <td>map trước filter khi filter loại nhiều</td>
+      </tr>
+      <tr>
+        <td>limit/skip sớm nếu có thể</td>
+        <td>sorted trên stream lớn không cần thiết</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+      </article>
+    </main>
+  </div>
+  <footer class="topic-footer">
+    <p>Xây dựng bằng Java 17+ · Không dùng framework · Pure NIO</p>
+  </footer>
+</body>
+</html>

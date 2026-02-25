@@ -1,0 +1,138 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Set - Java Core</title>
+  <link rel="stylesheet" href="../../css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="topic-page">
+  <header class="topic-header">
+    <div class="topic-header-inner">
+      <a href="../../index.html" class="topic-header-logo">Java Core</a>
+      <nav class="topic-header-nav">
+        <a href="../../index.html">Trang chủ</a>
+      </nav>
+    </div>
+  </header>
+  <div class="topic-layout">
+    <nav class="topic-sidebar"><ul>
+        <li><a href="../../index.html">Trang ch&#7911;</a></li>
+        <li><a href="../oop.html">OOP</a></li>
+        <li><a href="../collections/01-intro.html" class="topic-sidebar-link--active">Collections</a></li>
+        <li><a href="../io-nio/01-intro.html">I/O & NIO</a></li>
+        <li><a href="../concurrency/01-intro.html">Concurrency</a></li>
+        <li><a href="../jvm-memory/01-architecture.html">JVM & Memory</a></li>
+        <li><a href="../exception/01-hierarchy.html">Exception</a></li>
+        <li><a href="../generics/01-intro.html">Generics</a></li>
+        <li><a href="../lambda/01-intro.html">Lambda & Stream</a></li>
+</ul></nav>
+
+    <main class="main-content topic-main">
+      <div class="breadcrumb"><a href="../../index.html">Trang chủ</a> / Set</div>
+      <article class="topic-content">
+        <section>
+  <h3>Set — Tập hợp không trùng</h3>
+  <p><code>Set</code> không cho phép phần tử trùng lặp — xác định bằng <code>equals()</code>. Ba implementation: <strong>HashSet</strong> (hash table), <strong>LinkedHashSet</strong> (hash + linked list giữ thứ tự), <strong>TreeSet</strong> (Red-Black tree).</p>
+
+  <h4>HashSet — Cấu trúc nội bộ</h4>
+  <p>HashSet bên trong dùng <code>HashMap</code> — key là phần tử Set, value là dummy object <code>PRESENT</code>. add/contains/remove gọi put/get/remove của HashMap. Bucket index = <code>hash(key) &amp; (n-1)</code> (n = capacity, lũy thừa 2). Collision xử lý bằng chaining (linked list) hoặc tree (Java 8+: khi bucket &gt; 8 phần tử chuyển sang TreeNode). Load factor mặc định 0.75 — khi vượt quá sẽ resize (capacity x2) và rehash.</p>
+
+  <h4>equals và hashCode — Contract bắt buộc</h4>
+  <p>Với custom object trong Set/Map: <strong>equals</strong> so sánh logic; <strong>hashCode</strong> phải nhất quán với equals — nếu <code>a.equals(b)</code> thì <code>a.hashCode() == b.hashCode()</code>. Ngược lại không đúng (hash collision). Nếu hashCode sai: hai object equals nhưng hash khác nhau → có thể cả hai vào Set (vi phạm không trùng). Nếu hashCode đúng nhưng equals sai: hai object không equals nhưng hash trùng → chaining, vẫn đúng.</p>
+
+  <pre><code>// Ví dụ: class phải override equals và hashCode
+record Person(String id, String name) {
+  // record tự sinh equals/hashCode dựa trên id, name
+}
+
+Set&lt;Person&gt; set = new HashSet&lt;&gt;();
+set.add(new Person("1", "Alice"));
+set.add(new Person("1", "Alice"));  // Bị bỏ qua
+set.add(new Person("2", "Bob"));
+System.out.println(set.size());  // 2</code></pre>
+
+  <h4>LinkedHashSet</h4>
+  <p>Kế thừa HashSet, thêm doubly-linked list chạy qua các entry theo thứ tự chèn. Mỗi entry có <code>before</code>, <code>after</code>. Iteration theo thứ tự thêm vào. Overhead nhỏ so với HashSet.</p>
+
+  <h4>TreeSet</h4>
+  <p>Dùng <code>TreeMap</code> (Red-Black tree) bên trong. Phần tử phải <code>Comparable</code> hoặc truyền <code>Comparator</code>. Cây cân bằng — độ cao O(log n). first(), last(), headSet(), tailSet() — O(log n).</p>
+
+  <table class="comparison-table">
+    <caption>Độ phức tạp — HashSet vs LinkedHashSet vs TreeSet</caption>
+    <thead>
+      <tr>
+        <th>Thao tác</th>
+        <th>HashSet</th>
+        <th>LinkedHashSet</th>
+        <th>TreeSet</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>add(e)</code></td>
+        <td>O(1) avg</td>
+        <td>O(1) avg</td>
+        <td>O(log n)</td>
+      </tr>
+      <tr>
+        <td><code>contains(e)</code></td>
+        <td>O(1) avg</td>
+        <td>O(1) avg</td>
+        <td>O(log n)</td>
+      </tr>
+      <tr>
+        <td><code>remove(e)</code></td>
+        <td>O(1) avg</td>
+        <td>O(1) avg</td>
+        <td>O(log n)</td>
+      </tr>
+      <tr>
+        <td><code>first()</code> / <code>last()</code></td>
+        <td>O(n)</td>
+        <td>O(n)</td>
+        <td>O(log n)</td>
+      </tr>
+      <tr>
+        <td>Thứ tự iteration</td>
+        <td>Không đảm bảo</td>
+        <td>Insertion order</td>
+        <td>Sorted (Comparable/Comparator)</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <pre><code>Set&lt;String&gt; set = new HashSet&lt;&gt;();
+set.add("apple");
+set.add("banana");
+set.add("apple");  // Bị bỏ qua
+System.out.println(set.size());  // 2
+
+Set&lt;Integer&gt; tree = new TreeSet&lt;&gt;(Comparator.reverseOrder());
+tree.addAll(List.of(30, 10, 20));  // 30, 20, 10
+System.out.println(tree.first());  // 30</code></pre>
+
+  <section class="pro-con">
+    <h4>Set — Ưu và nhược điểm</h4>
+    <div class="pro-con-list">
+      <div class="pro-con-item pro-con-item--pro">
+        <strong>Ưu điểm:</strong> contains O(1) hoặc O(log n); đảm bảo không trùng; loại duplicate; kiểm tra tồn tại nhanh.
+      </div>
+      <div class="pro-con-item pro-con-item--con">
+        <strong>Nhược điểm:</strong> Không có index; custom object phải implement equals/hashCode đúng; TreeSet không cho null (natural order).
+      </div>
+    </div>
+  </section>
+</section>
+
+      </article>
+    </main>
+  </div>
+  <footer class="topic-footer">
+    <p>Xây dựng bằng Java 17+ · Không dùng framework · Pure NIO</p>
+  </footer>
+</body>
+</html>
