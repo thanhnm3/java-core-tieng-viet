@@ -1,0 +1,162 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gi&#7899;i thi&#7879;u - Java Core</title>
+  <link rel="icon" type="image/svg+xml" href="../../favicon.svg">
+  <link rel="stylesheet" href="../../css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="topic-page">
+  <header class="topic-header">
+    <div class="topic-header-inner">
+      <a href="../../index.html" class="topic-header-logo">Java Core</a>
+      <nav class="topic-header-nav">
+        <a href="../../index.html">Trang chủ</a>
+      </nav>
+    </div>
+  </header>
+  <div class="topic-layout">
+    <nav class="topic-sidebar"><ul>
+        <li><a href="../../index.html">Trang ch&#7911;</a>
+        </li>
+        <li><a href="../oop.html">OOP</a>
+        </li>
+        <li><a href="../collections/01-intro.html">Collections</a>
+        </li>
+        <li><a href="../io-nio/01-intro.html">I/O & NIO</a>
+        </li>
+        <li><a href="../concurrency/01-intro.html" class="topic-sidebar-link--active">Concurrency</a>
+        <ul class="topic-sub-nav">
+          <li><a href="../concurrency/01-intro.html" class="topic-sidebar-link--active">Gi&#7899;i thi&#7879;u</a></li>
+          <li><a href="../concurrency/02-lifecycle.html">Lifecycle</a></li>
+          <li><a href="../concurrency/03-sync.html">Synchronized</a></li>
+          <li><a href="../concurrency/04-executor.html">Executor</a></li>
+          <li><a href="../concurrency/05-concurrent-collections.html">Concurrent Collections</a></li>
+          <li><a href="../concurrency/06-modern.html">Modern</a></li>
+          <li><a href="../concurrency/07-pitfalls.html">Pitfalls</a></li>
+        </ul>
+        </li>
+        <li><a href="../jvm-memory/01-architecture.html">JVM & Memory</a>
+        </li>
+        <li><a href="../exception/01-hierarchy.html">Exception</a>
+        </li>
+        <li><a href="../generics/01-intro.html">Generics</a>
+        </li>
+        <li><a href="../lambda/01-intro.html">Lambda & Stream</a>
+        </li>
+</ul></nav>
+
+    <main class="main-content topic-main">
+      <div class="breadcrumb"><a href="../../index.html">Trang ch&#7911;</a> / <a href="../concurrency/01-intro.html">Concurrency</a> / Gi&#7899;i thi&#7879;u</div>
+      <article class="topic-content">
+        <h2>Concurrency — Lập trình đa luồng</h2>
+
+<p>Concurrency giúp ứng dụng tận dụng CPU nhiều nhân. Ví dụ quán cà phê: thay vì một người làm tất cả (pha chế, bưng bê, tính tiền), thuê nhiều nhân viên làm cùng lúc. Java cung cấp <code>Thread</code>, <code>Executor</code>, <code>synchronized</code>, và <code>java.util.concurrent</code> để xử lý đa luồng an toàn.</p>
+
+<section>
+  <h3>Process và Thread</h3>
+  <p><strong>Process</strong> (tiến trình) — chương trình đang chạy, có vùng nhớ riêng. Ví dụ: một instance IntelliJ IDEA là một Process. <strong>Thread</strong> (luồng) — đơn vị nhỏ nhất trong Process. Các Thread trong cùng Process chia sẻ Heap nhưng có Stack riêng.</p>
+
+  <table class="comparison-table">
+    <caption>Process vs Thread</caption>
+    <thead>
+      <tr>
+        <th>Tiêu chí</th>
+        <th>Process</th>
+        <th>Thread</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Vùng nhớ</td>
+        <td>Riêng biệt</td>
+        <td>Chia sẻ Heap, Stack riêng</td>
+      </tr>
+      <tr>
+        <td>Giao tiếp</td>
+        <td>IPC (phức tạp)</td>
+        <td>Chia sẻ biến (cần sync)</td>
+      </tr>
+      <tr>
+        <td>Chi phí tạo</td>
+        <td>Cao</td>
+        <td>Thấp hơn</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h3>Ba cách tạo Thread trong Java</h3>
+
+  <h4>1. Extends class Thread</h4>
+  <p>Đơn giản nhưng không tối ưu — Java không cho phép đa kế thừa, nên class không thể extend thêm class khác.</p>
+  <pre><code>class MyThread extends Thread {
+  @Override
+  public void run() {
+    System.out.println("Running: " + getName());
+  }
+}
+new MyThread().start();</code></pre>
+
+  <h4>2. Implements Runnable</h4>
+  <p>Cách phổ biến nhất. Tách biệt logic thực thi và quản lý luồng. Có thể implement thêm interface khác.</p>
+  <pre><code>Runnable task = () -> System.out.println("Thread: " + Thread.currentThread().getName());
+Thread t = new Thread(task);
+t.start();</code></pre>
+
+  <h4>3. Implements Callable</h4>
+  <p>Giống Runnable nhưng trả về kết quả (<code>Future</code>) và có thể ném Exception. Dùng với <code>ExecutorService.submit()</code>.</p>
+  <pre><code>Callable&lt;Integer&gt; task = () -> {
+  Thread.sleep(1000);
+  return 42;
+};
+ExecutorService exec = Executors.newSingleThreadExecutor();
+Future&lt;Integer&gt; future = exec.submit(task);
+System.out.println(future.get());  // 42</code></pre>
+
+  <table class="comparison-table">
+    <caption>So sánh 3 cách tạo Thread</caption>
+    <thead>
+      <tr>
+        <th>Cách</th>
+        <th>Trả về</th>
+        <th>Exception</th>
+        <th>Khuyến nghị</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>extends Thread</td>
+        <td>—</td>
+        <td>—</td>
+        <td>Tránh (đa kế thừa)</td>
+      </tr>
+      <tr>
+        <td>implements Runnable</td>
+        <td>—</td>
+        <td>Phải catch trong run()</td>
+        <td>Phổ biến</td>
+      </tr>
+      <tr>
+        <td>implements Callable</td>
+        <td>Future</td>
+        <td>Ném ra ngoài</td>
+        <td>Khi cần kết quả</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+      </article>
+    </main>
+  </div>
+  <footer class="topic-footer">
+    <p>Xây dựng bằng Java 17+ · Không dùng framework · Pure NIO</p>
+  </footer>
+</body>
+</html>

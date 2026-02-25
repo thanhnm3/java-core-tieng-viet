@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{{title}} - Java Core</title>
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-  <link rel="stylesheet" href="/css/style.css">
+  <link rel="icon" type="image/svg+xml" href="{{faviconPath}}">
+  <link rel="stylesheet" href="{{cssPath}}">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -13,13 +13,12 @@
 <body class="topic-page">
   <header class="topic-header">
     <div class="topic-header-inner">
-      <a href="/" class="topic-header-logo">Java Core</a>
+      <a href="{{homePath}}" class="topic-header-logo">Java Core</a>
       <nav class="topic-header-nav">
-        <a href="/">Trang chủ</a>
+        <a href="{{homePath}}">Trang chủ</a>
       </nav>
     </div>
   </header>
-
   <div class="topic-layout">
     {{topicsNav}}
     <main class="main-content topic-main">
@@ -29,7 +28,6 @@
       </article>
     </main>
   </div>
-
   <footer class="topic-footer">
     <p>Xây dựng bằng Java 17+ · Không dùng framework · Pure NIO</p>
   </footer>

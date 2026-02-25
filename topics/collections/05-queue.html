@@ -1,0 +1,201 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Queue - Java Core</title>
+  <link rel="icon" type="image/svg+xml" href="../../favicon.svg">
+  <link rel="stylesheet" href="../../css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="topic-page">
+  <header class="topic-header">
+    <div class="topic-header-inner">
+      <a href="../../index.html" class="topic-header-logo">Java Core</a>
+      <nav class="topic-header-nav">
+        <a href="../../index.html">Trang chủ</a>
+      </nav>
+    </div>
+  </header>
+  <div class="topic-layout">
+    <nav class="topic-sidebar"><ul>
+        <li><a href="../../index.html">Trang ch&#7911;</a>
+        </li>
+        <li><a href="../oop.html">OOP</a>
+        </li>
+        <li><a href="../collections/01-intro.html" class="topic-sidebar-link--active">Collections</a>
+        <ul class="topic-sub-nav">
+          <li><a href="../collections/01-intro.html">Gi&#7899;i thi&#7879;u</a></li>
+          <li><a href="../collections/02-list.html">List</a></li>
+          <li><a href="../collections/03-set.html">Set</a></li>
+          <li><a href="../collections/04-map.html">Map</a></li>
+          <li><a href="../collections/05-queue.html" class="topic-sidebar-link--active">Queue</a></li>
+        </ul>
+        </li>
+        <li><a href="../io-nio/01-intro.html">I/O & NIO</a>
+        </li>
+        <li><a href="../concurrency/01-intro.html">Concurrency</a>
+        </li>
+        <li><a href="../jvm-memory/01-architecture.html">JVM & Memory</a>
+        </li>
+        <li><a href="../exception/01-hierarchy.html">Exception</a>
+        </li>
+        <li><a href="../generics/01-intro.html">Generics</a>
+        </li>
+        <li><a href="../lambda/01-intro.html">Lambda & Stream</a>
+        </li>
+</ul></nav>
+
+    <main class="main-content topic-main">
+      <div class="breadcrumb"><a href="../../index.html">Trang ch&#7911;</a> / <a href="../collections/01-intro.html">Collections</a> / Queue</div>
+      <article class="topic-content">
+        <section>
+  <h3>Queue và Deque</h3>
+  <p><code>Queue</code> — FIFO; <code>Deque</code> — thêm/xóa cả hai đầu. Implementation: <strong>LinkedList</strong>, <strong>ArrayDeque</strong>, <strong>PriorityQueue</strong>.</p>
+
+  <h4>ArrayDeque — Mảng vòng (circular array)</h4>
+  <p>Lưu trong <code>Object[] elements</code>. Hai chỉ số <code>head</code> và <code>tail</code>. Index thực tế: <code>(head + i) &amp; (elements.length - 1)</code> — dùng bit AND vì length luôn lũy thừa 2. offerLast: ghi tail, tăng tail; offerFirst: giảm head, ghi head. Khi đầy: capacity x2, copy. Không cho phép null. Nhanh hơn LinkedList vì: không tạo node, cache locality tốt, ít allocation.</p>
+
+  <h4>PriorityQueue — Binary Heap</h4>
+  <p>Lưu trong mảng <code>Object[] queue</code> biểu diễn min-heap (hoặc max-heap với Comparator.reverseOrder()). Parent tại <code>(i-1)/2</code>, left child <code>2*i+1</code>, right child <code>2*i+2</code>. offer: thêm cuối, siftUp (heapify up); poll: lấy root, đặt phần tử cuối lên root, siftDown (heapify down). Cả hai O(log n). peek O(1). Iterator không đảm bảo thứ tự — chỉ poll mới lấy theo thứ tự.</p>
+
+  <table class="comparison-table">
+    <caption>Độ phức tạp — LinkedList vs ArrayDeque vs PriorityQueue</caption>
+    <thead>
+      <tr>
+        <th>Thao tác</th>
+        <th>LinkedList</th>
+        <th>ArrayDeque</th>
+        <th>PriorityQueue</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>offer(e)</code> / <code>poll()</code></td>
+        <td>O(1)</td>
+        <td>O(1) amortized</td>
+        <td>O(log n)</td>
+      </tr>
+      <tr>
+        <td><code>peek()</code></td>
+        <td>O(1)</td>
+        <td>O(1)</td>
+        <td>O(1)</td>
+      </tr>
+      <tr>
+        <td><code>offerFirst(e)</code> / <code>offerLast(e)</code></td>
+        <td>O(1)</td>
+        <td>O(1) amortized</td>
+        <td>—</td>
+      </tr>
+      <tr>
+        <td><code>pollFirst()</code> / <code>pollLast()</code></td>
+        <td>O(1)</td>
+        <td>O(1) amortized</td>
+        <td>—</td>
+      </tr>
+      <tr>
+        <td>Cấu trúc</td>
+        <td>Doubly-linked list</td>
+        <td>Circular array</td>
+        <td>Binary heap (array)</td>
+      </tr>
+      <tr>
+        <td>Thứ tự lấy</td>
+        <td>FIFO</td>
+        <td>FIFO</td>
+        <td>Priority (min/max)</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <pre><code>Deque&lt;Integer&gt; deque = new ArrayDeque&lt;&gt;();
+deque.offerFirst(1);
+deque.offerLast(2);
+deque.offerFirst(0);
+System.out.println(deque.pollFirst());  // 0
+System.out.println(deque.pollLast());   // 2
+
+// Stack: push = addFirst, pop = removeFirst
+Deque&lt;String&gt; stack = new ArrayDeque&lt;&gt;();
+stack.push("a");
+stack.push("b");
+System.out.println(stack.pop());  // b</code></pre>
+
+  <pre><code>Queue&lt;Integer&gt; pq = new PriorityQueue&lt;&gt;();
+pq.offer(30);
+pq.offer(10);
+pq.offer(20);
+System.out.println(pq.poll());  // 10 (min-heap)
+System.out.println(pq.poll());  // 20
+
+// Max-heap
+Queue&lt;String&gt; maxHeap = new PriorityQueue&lt;&gt;(Comparator.reverseOrder());
+maxHeap.offer("a");
+maxHeap.offer("c");
+maxHeap.offer("b");
+System.out.println(maxHeap.poll());  // c</code></pre>
+
+  <section class="comparison">
+    <h4>Queue vs Stack — Khi nào dùng</h4>
+    <table class="comparison-table">
+      <thead>
+        <tr>
+          <th>Cấu trúc</th>
+          <th>Thứ tự</th>
+          <th>Use case</th>
+          <th>Implementation</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Queue</td>
+          <td>FIFO</td>
+          <td>BFS, task queue, producer-consumer</td>
+          <td>ArrayDeque, LinkedList</td>
+        </tr>
+        <tr>
+          <td>Stack</td>
+          <td>LIFO</td>
+          <td>DFS, undo, biểu thức, parse</td>
+          <td>ArrayDeque (tránh class Stack cũ)</td>
+        </tr>
+        <tr>
+          <td>PriorityQueue</td>
+          <td>Priority</td>
+          <td>Dijkstra, A*, merge k sorted lists</td>
+          <td>PriorityQueue</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="when-use">
+    <h4>Khi nào chọn Queue implementation?</h4>
+    <p class="when-use-do"><strong>ArrayDeque:</strong> Queue hoặc stack thông thường — nhanh, ít bộ nhớ; PriorityQueue khi cần lấy theo ưu tiên (heap).</p>
+    <p class="when-use-avoid"><strong>LinkedList:</strong> Tránh khi chỉ dùng queue/stack — ArrayDeque tốt hơn; class Stack (legacy) — dùng ArrayDeque thay thế.</p>
+  </section>
+
+  <section class="pro-con">
+    <h4>Collections — Tóm tắt</h4>
+    <div class="pro-con-list">
+      <div class="pro-con-item pro-con-item--pro">
+        <strong>Ưu điểm:</strong> Không cần implement từ đầu; type-safe với generics; tối ưu, đã test kỹ; chọn implementation theo độ phức tạp và use case.
+      </div>
+      <div class="pro-con-item pro-con-item--con">
+        <strong>Lưu ý:</strong> Hiểu đặc điểm từng loại (O(1) vs O(log n)); custom object phải equals/hashCode đúng; immutable key cho Map khi có thể.
+      </div>
+    </div>
+  </section>
+</section>
+
+      </article>
+    </main>
+  </div>
+  <footer class="topic-footer">
+    <p>Xây dựng bằng Java 17+ · Không dùng framework · Pure NIO</p>
+  </footer>
+</body>
+</html>

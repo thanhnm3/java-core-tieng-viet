@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Web Engine hiệu năng cao xây dựng từ Java Core thuần: NIO, Thread Pool, Routing bằng Reflection. Học Java qua thực hành.">
+  <title>Trang chủ - Java Core</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="topic-page">
+  <header class="topic-header">
+    <div class="topic-header-inner">
+      <a href="index.html" class="topic-header-logo">Java Core</a>
+      <nav class="topic-header-nav">
+        <a href="index.html">Trang chủ</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="topic-layout">
+    <nav class="topic-sidebar">
+      <ul>
+        <li><a href="index.html" class="topic-sidebar-link--active">Trang chủ</a></li>
+        <li><a href="topics/oop.html">OOP</a></li>
+        <li><a href="topics/collections/01-intro.html">Collections</a></li>
+        <li><a href="topics/io-nio/01-intro.html">I/O & NIO</a></li>
+        <li><a href="topics/concurrency/01-intro.html">Concurrency</a></li>
+        <li><a href="topics/jvm-memory/01-architecture.html">JVM & Memory</a></li>
+        <li><a href="topics/exception/01-hierarchy.html">Exception</a></li>
+        <li><a href="topics/generics/01-intro.html">Generics</a></li>
+        <li><a href="topics/lambda/01-intro.html">Lambda & Stream</a></li>
+      </ul>
+    </nav>
+
+    <main class="main-content topic-main">
+      <div class="breadcrumb"><a href="index.html">Trang chủ</a></div>
+      <article class="topic-content">
+        <h2>Trang chủ</h2>
+        <p>Web Engine hiệu năng cao xây dựng từ Java Core thuần. Khám phá Mạng, Đa luồng và Nội bộ JVM thông qua triển khai Socket thô — không dùng Spring Boot hay framework nào. Website này chính là sản phẩm học tập: mỗi trang bạn đang xem được phục vụ bởi máy chủ HTTP tự viết, chạy trên Java Socket và NIO Selector.</p>
+
+        <section id="code-showcase">
+          <h3>Đoạn mã minh họa</h3>
+          <p>Vòng lặp chính của NioServer — một luồng duy nhất xử lý nhiều kết nối đồng thời nhờ Selector multiplexing.</p>
+          <pre><code><span class="code-keyword">while</span> (running) {
+<span class="code-keyword">  int</span> ready = selector.select(<span class="code-number">1000</span>);
+<span class="code-keyword">  if</span> (ready == <span class="code-number">0</span>) <span class="code-keyword">continue</span>;
+
+  Set&lt;SelectionKey&gt; keys = selector.selectedKeys();
+  Iterator&lt;SelectionKey&gt; it = keys.iterator();
+
+  <span class="code-keyword">while</span> (it.hasNext()) {
+    SelectionKey key = it.next();
+    it.remove();
+
+    <span class="code-keyword">if</span> (key.isAcceptable()) handleAccept(key);
+    <span class="code-keyword">else if</span> (key.isReadable()) handleRead(key);
+    <span class="code-keyword">else if</span> (key.isWritable()) handleWrite(key);
+  }
+}</code></pre>
+        </section>
+
+        <section>
+          <h3>Ba trụ cột kiến trúc</h3>
+          <p>Engine được xây dựng trên ba lớp kỹ thuật cốt lõi của Java, giúp xử lý hàng nghìn kết nối với tài nguyên tối thiểu.</p>
+          <div class="comparison-grid comparison-grid--pillars">
+            <div class="comparison-box comparison-box--pro">
+              <h4>Tầng 1: I/O không chặn (Non-blocking I/O)</h4>
+              <p>Một luồng duy nhất dùng Selector để đa hợp nhiều kết nối. Không tốn bộ nhớ cho mô hình "một luồng mỗi kết nối".</p>
+            </div>
+            <div class="comparison-box comparison-box--pro">
+              <h4>Tầng 2: Thread Pool tùy chỉnh</h4>
+              <p>Tối ưu chu kỳ CPU bằng các pool Executor chuyên biệt: xử lý request, hoàn thành I/O. Giới hạn số luồng để tránh context switch quá nhiều.</p>
+            </div>
+            <div class="comparison-box comparison-box--pro">
+              <h4>Tầng 3: Routing dựa trên Reflection</h4>
+              <p>Không phụ thuộc framework. Pure Java: ánh xạ đường dẫn tới handler, có thể mở rộng bằng cách đăng ký route mới.</p>
+            </div>
+          </div>
+        </section>
+
+        <section>
+          <h3>Chỉ số thời gian thực <span class="metrics-badge">Đang phát triển</span></h3>
+          <p>Theo dõi bộ nhớ Heap và số luồng JVM đang chạy — dữ liệu lấy từ máy chủ phục vụ trang này.</p>
+          <div class="metrics-dashboard">
+            <div class="metrics-card">
+              <div class="metrics-card-header">
+                <span class="metrics-label">Bộ nhớ Heap JVM</span>
+                <span class="metrics-value" id="heap-used">—</span>
+              </div>
+              <div class="metrics-bar">
+                <div class="metrics-bar-fill" id="heap-bar"></div>
+              </div>
+              <div class="metrics-footer">
+                <span id="heap-max">—</span> dung lượng tối đa
+              </div>
+            </div>
+            <div class="metrics-card">
+              <div class="metrics-card-header">
+                <span class="metrics-label">Số luồng đang chạy</span>
+                <span class="metrics-value" id="thread-count">—</span>
+              </div>
+              <div class="metrics-spark">
+                <span class="metrics-spark-value" id="thread-spark">—</span>
+              </div>
+            </div>
+          </div>
+        </section>
+      </article>
+    </main>
+  </div>
+
+  <footer class="topic-footer">
+    <p>Xây dựng bằng Java 17+ · Không dùng framework · Pure NIO</p>
+  </footer>
+
+  <script src="js/landing.js"></script>
+</body>
+</html>

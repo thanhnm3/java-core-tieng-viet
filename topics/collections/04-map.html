@@ -1,0 +1,147 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Map - Java Core</title>
+  <link rel="icon" type="image/svg+xml" href="../../favicon.svg">
+  <link rel="stylesheet" href="../../css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="topic-page">
+  <header class="topic-header">
+    <div class="topic-header-inner">
+      <a href="../../index.html" class="topic-header-logo">Java Core</a>
+      <nav class="topic-header-nav">
+        <a href="../../index.html">Trang chủ</a>
+      </nav>
+    </div>
+  </header>
+  <div class="topic-layout">
+    <nav class="topic-sidebar"><ul>
+        <li><a href="../../index.html">Trang ch&#7911;</a>
+        </li>
+        <li><a href="../oop.html">OOP</a>
+        </li>
+        <li><a href="../collections/01-intro.html" class="topic-sidebar-link--active">Collections</a>
+        <ul class="topic-sub-nav">
+          <li><a href="../collections/01-intro.html">Gi&#7899;i thi&#7879;u</a></li>
+          <li><a href="../collections/02-list.html">List</a></li>
+          <li><a href="../collections/03-set.html">Set</a></li>
+          <li><a href="../collections/04-map.html" class="topic-sidebar-link--active">Map</a></li>
+          <li><a href="../collections/05-queue.html">Queue</a></li>
+        </ul>
+        </li>
+        <li><a href="../io-nio/01-intro.html">I/O & NIO</a>
+        </li>
+        <li><a href="../concurrency/01-intro.html">Concurrency</a>
+        </li>
+        <li><a href="../jvm-memory/01-architecture.html">JVM & Memory</a>
+        </li>
+        <li><a href="../exception/01-hierarchy.html">Exception</a>
+        </li>
+        <li><a href="../generics/01-intro.html">Generics</a>
+        </li>
+        <li><a href="../lambda/01-intro.html">Lambda & Stream</a>
+        </li>
+</ul></nav>
+
+    <main class="main-content topic-main">
+      <div class="breadcrumb"><a href="../../index.html">Trang ch&#7911;</a> / <a href="../collections/01-intro.html">Collections</a> / Map</div>
+      <article class="topic-content">
+        <section>
+  <h3>Map — Key-Value</h3>
+  <p><code>Map</code> lưu cặp key-value; key không trùng (equals). Ba implementation: <strong>HashMap</strong> (hash table), <strong>LinkedHashMap</strong> (hash + thứ tự), <strong>TreeMap</strong> (Red-Black tree).</p>
+
+  <h4>HashMap — Cấu trúc nội bộ</h4>
+  <p>HashMap dùng mảng <code>Node[] table</code>. Mỗi bucket là Node (key, value, next) — linked list. Index: <code>(n - 1) &amp; hash(key)</code> với <code>hash = (h = key.hashCode()) ^ (h &gt;&gt;&gt; 16)</code> để trộn bit cao xuống thấp. Capacity luôn lũy thừa 2 (mặc định 16).</p>
+
+  <h4>Xử lý collision</h4>
+  <p><strong>Chaining:</strong> Nhiều entry cùng bucket nối thành linked list. <strong>Treeify (Java 8+):</strong> Khi bucket có &gt; 8 node và table.length &gt;= 64, chuyển sang TreeNode (Red-Black tree) — worst case O(log n) thay vì O(n). Untreeify khi bucket còn &lt; 6 node.</p>
+
+  <h4>Load factor và resize</h4>
+  <p>Load factor = số phần tử / capacity. Mặc định 0.75. Khi <code>size &gt; threshold (= capacity * loadFactor)</code> thì resize: capacity x2, rehash toàn bộ. Resize tốn O(n) nhưng amortized vẫn O(1) cho put.</p>
+
+  <table class="comparison-table">
+    <caption>Độ phức tạp — HashMap vs LinkedHashMap vs TreeMap</caption>
+    <thead>
+      <tr>
+        <th>Thao tác</th>
+        <th>HashMap</th>
+        <th>LinkedHashMap</th>
+        <th>TreeMap</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>get(key)</code></td>
+        <td>O(1) avg</td>
+        <td>O(1) avg</td>
+        <td>O(log n)</td>
+      </tr>
+      <tr>
+        <td><code>put(key, value)</code></td>
+        <td>O(1) avg</td>
+        <td>O(1) avg</td>
+        <td>O(log n)</td>
+      </tr>
+      <tr>
+        <td><code>remove(key)</code></td>
+        <td>O(1) avg</td>
+        <td>O(1) avg</td>
+        <td>O(log n)</td>
+      </tr>
+      <tr>
+        <td><code>firstKey()</code> / <code>lastKey()</code></td>
+        <td>O(n)</td>
+        <td>O(n)</td>
+        <td>O(log n)</td>
+      </tr>
+      <tr>
+        <td><code>subMap(from, to)</code></td>
+        <td>—</td>
+        <td>—</td>
+        <td>O(log n) để lấy view</td>
+      </tr>
+      <tr>
+        <td>Null key</td>
+        <td>Cho phép (1 cái)</td>
+        <td>Cho phép</td>
+        <td>Không (natural order)</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h4>LinkedHashMap — Access order</h4>
+  <p>Constructor <code>LinkedHashMap(capacity, loadFactor, true)</code> — tham số thứ 3 = accessOrder. Khi true: mỗi lần get/put, entry được chuyển về cuối linked list. Dùng cho LRU cache: entry ít dùng ở đầu, có thể removeEldestEntry khi vượt capacity.</p>
+
+  <pre><code>Map&lt;String, Integer&gt; map = new HashMap&lt;&gt;();
+map.put("apple", 1);
+map.put("banana", 2);
+map.put("banana", 20);  // Ghi đè
+
+// LRU cache với max 3 phần tử
+Map&lt;String, String&gt; lru = new LinkedHashMap&lt;&gt;(3, 0.75f, true) {
+  @Override
+  protected boolean removeEldestEntry(Map.Entry&lt;String, String&gt; e) {
+    return size() &gt; 3;
+  }
+};</code></pre>
+
+  <section class="when-use">
+    <h4>Khi nào chọn Map implementation?</h4>
+    <p class="when-use-do"><strong>HashMap:</strong> Mặc định — O(1) lookup; LinkedHashMap khi cần thứ tự chèn hoặc LRU; TreeMap khi cần range query (subMap, firstKey, lastKey) hoặc iteration theo thứ tự key.</p>
+    <p class="when-use-avoid"><strong>TreeMap:</strong> Tránh khi không cần thứ tự — HashMap nhanh hơn; key phải Comparable hoặc truyền Comparator; null key gây NPE với natural order.</p>
+  </section>
+</section>
+
+      </article>
+    </main>
+  </div>
+  <footer class="topic-footer">
+    <p>Xây dựng bằng Java 17+ · Không dùng framework · Pure NIO</p>
+  </footer>
+</body>
+</html>

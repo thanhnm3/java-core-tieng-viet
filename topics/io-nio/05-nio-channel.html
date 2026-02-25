@@ -1,0 +1,127 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NIO Channel - Java Core</title>
+  <link rel="icon" type="image/svg+xml" href="../../favicon.svg">
+  <link rel="stylesheet" href="../../css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="topic-page">
+  <header class="topic-header">
+    <div class="topic-header-inner">
+      <a href="../../index.html" class="topic-header-logo">Java Core</a>
+      <nav class="topic-header-nav">
+        <a href="../../index.html">Trang chủ</a>
+      </nav>
+    </div>
+  </header>
+  <div class="topic-layout">
+    <nav class="topic-sidebar"><ul>
+        <li><a href="../../index.html">Trang ch&#7911;</a>
+        </li>
+        <li><a href="../oop.html">OOP</a>
+        </li>
+        <li><a href="../collections/01-intro.html">Collections</a>
+        </li>
+        <li><a href="../io-nio/01-intro.html" class="topic-sidebar-link--active">I/O & NIO</a>
+        <ul class="topic-sub-nav">
+          <li><a href="../io-nio/01-intro.html">Gi&#7899;i thi&#7879;u</a></li>
+          <li><a href="../io-nio/02-stream.html">Stream</a></li>
+          <li><a href="../io-nio/03-file.html">File</a></li>
+          <li><a href="../io-nio/04-nio-buffer.html">NIO Buffer</a></li>
+          <li><a href="../io-nio/05-nio-channel.html" class="topic-sidebar-link--active">NIO Channel</a></li>
+          <li><a href="../io-nio/06-path-files.html">Path & Files</a></li>
+          <li><a href="../io-nio/07-selector.html">Selector</a></li>
+        </ul>
+        </li>
+        <li><a href="../concurrency/01-intro.html">Concurrency</a>
+        </li>
+        <li><a href="../jvm-memory/01-architecture.html">JVM & Memory</a>
+        </li>
+        <li><a href="../exception/01-hierarchy.html">Exception</a>
+        </li>
+        <li><a href="../generics/01-intro.html">Generics</a>
+        </li>
+        <li><a href="../lambda/01-intro.html">Lambda & Stream</a>
+        </li>
+</ul></nav>
+
+    <main class="main-content topic-main">
+      <div class="breadcrumb"><a href="../../index.html">Trang ch&#7911;</a> / <a href="../io-nio/01-intro.html">I/O & NIO</a> / NIO Channel</div>
+      <article class="topic-content">
+        <section>
+  <h3>Channel — java.nio.channels</h3>
+  <p><code>Channel</code> là kết nối tới nguồn/đích. Đọc/ghi qua <code>Buffer</code>. <code>FileChannel</code> — file; <code>SocketChannel</code> — TCP; <code>ServerSocketChannel</code> — TCP server; <code>DatagramChannel</code> — UDP.</p>
+
+  <h4>FileChannel</h4>
+  <p>Lấy từ <code>FileInputStream.getChannel()</code>, <code>FileOutputStream.getChannel()</code>, hoặc <code>RandomAccessFile.getChannel()</code>. <code>read(ByteBuffer)</code> đọc vào buffer; <code>write(ByteBuffer)</code> ghi. <code>transferTo</code> / <code>transferFrom</code> — zero-copy giữa channel (OS hỗ trợ sendfile).</p>
+
+  <table class="comparison-table">
+    <caption>FileChannel vs Stream</caption>
+    <thead>
+      <tr>
+        <th>Tiêu chí</th>
+        <th>FileInputStream</th>
+        <th>FileChannel</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Mô hình</td>
+        <td>Stream byte</td>
+        <td>Buffer + Channel</td>
+      </tr>
+      <tr>
+        <td>Zero-copy</td>
+        <td>Không</td>
+        <td>transferTo/transferFrom</td>
+      </tr>
+      <tr>
+        <td>Position</td>
+        <td>skip()</td>
+        <td>position(long)</td>
+      </tr>
+      <tr>
+        <td>Lock</td>
+        <td>Không</td>
+        <td>lock() / tryLock()</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <pre><code>// Đọc file bằng FileChannel
+try (FileChannel channel = FileChannel.open(Path.of("data.txt"), StandardOpenOption.READ)) {
+  ByteBuffer buf = ByteBuffer.allocate(8192);
+  while (channel.read(buf) != -1) {
+    buf.flip();
+    process(buf);
+    buf.clear();
+  }
+}
+
+// Copy file — zero-copy
+try (FileChannel src = FileChannel.open(Path.of("a.txt"), StandardOpenOption.READ);
+     FileChannel dst = FileChannel.open(Path.of("b.txt"),
+         StandardOpenOption.WRITE, StandardOpenOption.CREATE)) {
+  src.transferTo(0, src.size(), dst);
+}</code></pre>
+
+  <section class="when-use">
+    <h4>Khi nào dùng FileChannel?</h4>
+    <p class="when-use-do"><strong>Nên dùng:</strong> Copy file lớn (transferTo); cần file lock; random access; tích hợp với Selector (SocketChannel).</p>
+    <p class="when-use-avoid"><strong>Tránh khi:</strong> Chỉ đọc file text nhỏ — BufferedReader đơn giản hơn.</p>
+  </section>
+</section>
+
+      </article>
+    </main>
+  </div>
+  <footer class="topic-footer">
+    <p>Xây dựng bằng Java 17+ · Không dùng framework · Pure NIO</p>
+  </footer>
+</body>
+</html>

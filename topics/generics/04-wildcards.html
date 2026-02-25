@@ -1,0 +1,116 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Wildcards - Java Core</title>
+  <link rel="icon" type="image/svg+xml" href="../../favicon.svg">
+  <link rel="stylesheet" href="../../css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="topic-page">
+  <header class="topic-header">
+    <div class="topic-header-inner">
+      <a href="../../index.html" class="topic-header-logo">Java Core</a>
+      <nav class="topic-header-nav">
+        <a href="../../index.html">Trang chủ</a>
+      </nav>
+    </div>
+  </header>
+  <div class="topic-layout">
+    <nav class="topic-sidebar"><ul>
+        <li><a href="../../index.html">Trang ch&#7911;</a>
+        </li>
+        <li><a href="../oop.html">OOP</a>
+        </li>
+        <li><a href="../collections/01-intro.html">Collections</a>
+        </li>
+        <li><a href="../io-nio/01-intro.html">I/O & NIO</a>
+        </li>
+        <li><a href="../concurrency/01-intro.html">Concurrency</a>
+        </li>
+        <li><a href="../jvm-memory/01-architecture.html">JVM & Memory</a>
+        </li>
+        <li><a href="../exception/01-hierarchy.html">Exception</a>
+        </li>
+        <li><a href="../generics/01-intro.html" class="topic-sidebar-link--active">Generics</a>
+        <ul class="topic-sub-nav">
+          <li><a href="../generics/01-intro.html">Gi&#7899;i thi&#7879;u</a></li>
+          <li><a href="../generics/02-class-method.html">Class & Method</a></li>
+          <li><a href="../generics/03-bounded.html">Bounded</a></li>
+          <li><a href="../generics/04-wildcards.html" class="topic-sidebar-link--active">Wildcards</a></li>
+          <li><a href="../generics/05-pecs.html">PECS</a></li>
+          <li><a href="../generics/06-erasure-limits.html">Erasure</a></li>
+        </ul>
+        </li>
+        <li><a href="../lambda/01-intro.html">Lambda & Stream</a>
+        </li>
+</ul></nav>
+
+    <main class="main-content topic-main">
+      <div class="breadcrumb"><a href="../../index.html">Trang ch&#7911;</a> / <a href="../generics/01-intro.html">Generics</a> / Wildcards</div>
+      <article class="topic-content">
+        <section>
+  <h3>Wildcards — ?</h3>
+  <p>Wildcard <code>?</code> biểu thị "kiểu không xác định". Ba dạng: <code>?</code> (unbounded), <code>? extends T</code> (upper), <code>? super T</code> (lower).</p>
+
+  <h4>? extends T (Upper bounded)</h4>
+  <p><code>List&lt;? extends Number&gt;</code> — có thể là List&lt;Integer&gt;, List&lt;Double&gt;... Chỉ đọc (read): <code>Number n = list.get(0)</code> OK. Không ghi: <code>list.add(1)</code> — lỗi, vì không biết list thực tế là List&lt;Integer&gt; hay List&lt;Double&gt;.</p>
+
+  <h4>? super T (Lower bounded)</h4>
+  <p><code>List&lt;? super Integer&gt;</code> — có thể là List&lt;Integer&gt;, List&lt;Number&gt;, List&lt;Object&gt;. Chỉ ghi (write): <code>list.add(1)</code> OK. Đọc ra Object: <code>Object o = list.get(0)</code> — không biết kiểu cụ thể.</p>
+
+  <pre><code>// extends — producer, read
+void printNumbers(List&lt;? extends Number&gt; list) {
+  for (Number n : list) {
+    System.out.println(n);
+  }
+  // list.add(1);  // Compile error!
+}
+
+// super — consumer, write
+void addIntegers(List&lt;? super Integer&gt; list) {
+  list.add(1);
+  list.add(2);
+  // Integer i = list.get(0);  // Error — chỉ biết Object
+}</code></pre>
+
+  <table class="comparison-table">
+    <caption>Wildcard — read vs write</caption>
+    <thead>
+      <tr>
+        <th>Wildcard</th>
+        <th>Read</th>
+        <th>Write</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>? extends T</code></td>
+        <td>OK — lấy ra T</td>
+        <td>Không (trừ null)</td>
+      </tr>
+      <tr>
+        <td><code>? super T</code></td>
+        <td>Chỉ Object</td>
+        <td>OK — thêm T</td>
+      </tr>
+      <tr>
+        <td><code>?</code></td>
+        <td>Object</td>
+        <td>Không</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+      </article>
+    </main>
+  </div>
+  <footer class="topic-footer">
+    <p>Xây dựng bằng Java 17+ · Không dùng framework · Pure NIO</p>
+  </footer>
+</body>
+</html>

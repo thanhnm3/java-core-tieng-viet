@@ -1,0 +1,94 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bounded - Java Core</title>
+  <link rel="icon" type="image/svg+xml" href="../../favicon.svg">
+  <link rel="stylesheet" href="../../css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="topic-page">
+  <header class="topic-header">
+    <div class="topic-header-inner">
+      <a href="../../index.html" class="topic-header-logo">Java Core</a>
+      <nav class="topic-header-nav">
+        <a href="../../index.html">Trang chủ</a>
+      </nav>
+    </div>
+  </header>
+  <div class="topic-layout">
+    <nav class="topic-sidebar"><ul>
+        <li><a href="../../index.html">Trang ch&#7911;</a>
+        </li>
+        <li><a href="../oop.html">OOP</a>
+        </li>
+        <li><a href="../collections/01-intro.html">Collections</a>
+        </li>
+        <li><a href="../io-nio/01-intro.html">I/O & NIO</a>
+        </li>
+        <li><a href="../concurrency/01-intro.html">Concurrency</a>
+        </li>
+        <li><a href="../jvm-memory/01-architecture.html">JVM & Memory</a>
+        </li>
+        <li><a href="../exception/01-hierarchy.html">Exception</a>
+        </li>
+        <li><a href="../generics/01-intro.html" class="topic-sidebar-link--active">Generics</a>
+        <ul class="topic-sub-nav">
+          <li><a href="../generics/01-intro.html">Gi&#7899;i thi&#7879;u</a></li>
+          <li><a href="../generics/02-class-method.html">Class & Method</a></li>
+          <li><a href="../generics/03-bounded.html" class="topic-sidebar-link--active">Bounded</a></li>
+          <li><a href="../generics/04-wildcards.html">Wildcards</a></li>
+          <li><a href="../generics/05-pecs.html">PECS</a></li>
+          <li><a href="../generics/06-erasure-limits.html">Erasure</a></li>
+        </ul>
+        </li>
+        <li><a href="../lambda/01-intro.html">Lambda & Stream</a>
+        </li>
+</ul></nav>
+
+    <main class="main-content topic-main">
+      <div class="breadcrumb"><a href="../../index.html">Trang ch&#7911;</a> / <a href="../generics/01-intro.html">Generics</a> / Bounded</div>
+      <article class="topic-content">
+        <section>
+  <h3>Bounded Type Parameters</h3>
+  <p>Giới hạn type parameter: <code>&lt;T extends Number&gt;</code> — T phải là Number hoặc subclass. Cho phép gọi method của Number: <code>t.intValue()</code>. <code>extends</code> dùng cho cả class và interface (Java không có <code>implements</code> trong generic bound).</p>
+
+  <h4>Multiple bounds</h4>
+  <p><code>&lt;T extends A &amp; B &amp; C&gt;</code> — T phải thỏa tất cả. Class đứng trước (nếu có): <code>&lt;T extends Number &amp; Comparable&lt;T&gt;&gt;</code>.</p>
+
+  <pre><code>// Bounded — chỉ chấp nhận Number
+public static &lt;T extends Number&gt; double sum(List&lt;T&gt; list) {
+  double total = 0;
+  for (T n : list) {
+    total += n.doubleValue();  // Có method của Number
+  }
+  return total;
+}
+sum(List.of(1, 2, 3));     // OK
+sum(List.of(1.5, 2.5));    // OK
+sum(List.of("a"));         // Compile error</code></pre>
+
+  <pre><code>// Multiple bounds
+interface Comparable&lt;T&gt; { ... }
+&lt;T extends Number &amp; Comparable&lt;T&gt;&gt; T max(T a, T b) {
+  return a.compareTo(b) &gt; 0 ? a : b;
+}</code></pre>
+
+  <section class="when-use">
+    <h4>Khi nào dùng bound?</h4>
+    <p class="when-use-do"><strong>Nên dùng:</strong> Cần gọi method trên T; giới hạn kiểu chấp nhận (Number, Comparable).</p>
+    <p class="when-use-avoid"><strong>Tránh:</strong> Bound quá chặt khi không cần — hạn chế flexibility.</p>
+  </section>
+</section>
+
+      </article>
+    </main>
+  </div>
+  <footer class="topic-footer">
+    <p>Xây dựng bằng Java 17+ · Không dùng framework · Pure NIO</p>
+  </footer>
+</body>
+</html>
