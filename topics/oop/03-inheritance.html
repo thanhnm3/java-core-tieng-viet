@@ -1,0 +1,320 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Inheritance - Java Core</title>
+  <link rel="icon" type="image/svg+xml" href="../../favicon.svg">
+  <link rel="stylesheet" href="../../css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="topic-page">
+  <header class="topic-header">
+    <div class="topic-header-inner">
+      <a href="../../index.html" class="topic-header-logo">Java Core</a>
+      <nav class="topic-header-nav">
+        <a href="../../index.html">Trang chủ</a>
+      </nav>
+    </div>
+  </header>
+  <div class="topic-layout">
+    <nav class="topic-sidebar"><ul>
+        <li><a href="../../index.html">Trang ch&#7911;</a>
+        </li>
+        <li><a href="../oop/01-intro.html" class="topic-sidebar-link--active">OOP</a>
+        <ul class="topic-sub-nav">
+          <li><a href="../oop/01-intro.html">Gi&#7899;i thi&#7879;u</a></li>
+          <li><a href="../oop/02-encapsulation.html">Encapsulation</a></li>
+          <li><a href="../oop/03-inheritance.html" class="topic-sidebar-link--active">Inheritance</a></li>
+          <li><a href="../oop/04-polymorphism.html">Polymorphism</a></li>
+          <li><a href="../oop/05-abstraction.html">Abstraction</a></li>
+        </ul>
+        </li>
+        <li><a href="../collections/01-intro.html">Collections</a>
+        </li>
+        <li><a href="../io-nio/01-intro.html">I/O & NIO</a>
+        </li>
+        <li><a href="../concurrency/01-intro.html">Concurrency</a>
+        </li>
+        <li><a href="../jvm-memory/01-architecture.html">JVM & Memory</a>
+        </li>
+        <li><a href="../exception/01-hierarchy.html">Exception</a>
+        </li>
+        <li><a href="../generics/01-intro.html">Generics</a>
+        </li>
+        <li><a href="../lambda/01-intro.html">Lambda & Stream</a>
+        </li>
+</ul></nav>
+
+    <main class="main-content topic-main">
+      <div class="breadcrumb"><a href="../../index.html">Trang ch&#7911;</a> / <a href="../oop/01-intro.html">OOP</a> / Inheritance</div>
+      <article class="topic-content">
+        <section>
+  <h3>3. Inheritance (Kế thừa)</h3>
+
+  <h4>Định nghĩa</h4>
+  <p>Class con kế thừa từ class cha bằng <code>extends</code>. Class con có thể override phương thức của cha, gọi phương thức cha bằng <code>super</code>. Quan hệ phải là "is-a": Student <em>là</em> Person. Java chỉ cho phép đơn kế thừa (một class chỉ extends một class).</p>
+
+  <h4>Ví dụ cơ bản</h4>
+  <pre><code>public class Person {
+  protected String name;
+  protected int age;
+
+  public Person(String name, int age) {
+    this.name = name;
+    this.age = age;
+  }
+
+  public String introduce() {
+    return "I am " + name + ", " + age + " years old.";
+  }
+}
+
+public class Student extends Person {
+  private String studentId;
+
+  public Student(String name, int age, String studentId) {
+    super(name, age);  // BẮT BUỘC gọi constructor cha trước
+    this.studentId = studentId;
+  }
+
+  @Override
+  public String introduce() {
+    return "Student: " + super.introduce() + " ID: " + studentId;
+  }
+}</code></pre>
+
+  <h4>Từ khóa <code>super</code></h4>
+  <p><code>super</code> tham chiếu tới class cha. Dùng để: (1) gọi constructor cha <code>super(...)</code> — phải là dòng đầu tiên trong constructor con; (2) gọi method cha <code>super.methodName()</code> khi override; (3) truy cập field cha (nếu protected).</p>
+  <pre><code>public class Animal {
+  protected String name;
+
+  public Animal(String name) {
+    this.name = name;
+  }
+
+  public void speak() {
+    System.out.println(name + " makes a sound");
+  }
+}
+
+public class Dog extends Animal {
+  public Dog(String name) {
+    super(name);  // Gọi Animal(name)
+  }
+
+  @Override
+  public void speak() {
+    super.speak();           // Gọi Animal.speak() trước
+    System.out.println("Woof!");
+  }
+}</code></pre>
+
+  <h4>Override — Ghi đè phương thức</h4>
+  <p>Override: method con có cùng signature (tên + tham số) với method cha. Dùng <code>@Override</code> để compiler kiểm tra. Quy tắc: cùng hoặc rộng hơn access modifier; cùng hoặc con hơn kiểu trả về (covariant); không throw thêm checked exception (có thể ít hơn).</p>
+  <pre><code>public class Shape {
+  public double area() {
+    return 0;
+  }
+}
+
+public class Circle extends Shape {
+  private double radius;
+
+  public Circle(double radius) {
+    this.radius = radius;
+  }
+
+  @Override
+  public double area() {
+    return Math.PI * radius * radius;
+  }
+}</code></pre>
+
+  <h4>Từ khóa <code>final</code></h4>
+  <p><code>final</code> trên class: không cho kế thừa (ví dụ <code>String</code>). <code>final</code> trên method: không cho override. <code>final</code> trên variable: không gán lại.</p>
+  <pre><code>public final class CannotExtend { }  // Không ai extends được
+
+public class Parent {
+  public final void cannotOverride() { }  // Subclass không override được
+}</code></pre>
+
+  <h4>Composition vs Inheritance</h4>
+  <p><strong>Inheritance</strong> (is-a): Student <em>là</em> Person. <strong>Composition</strong> (has-a): Car <em>có</em> Engine. Ưu tiên composition khi chỉ cần dùng lại code — linh hoạt hơn, ít coupling.</p>
+  <pre><code>// Inheritance — Car IS-A Vehicle
+public class Car extends Vehicle { }
+
+// Composition — Car HAS-A Engine (ưu tiên khi chỉ cần dùng lại)
+public class Car {
+  private Engine engine;  // Có thể thay Engine, test dễ hơn
+
+  public Car(Engine engine) {
+    this.engine = engine;
+  }
+}</code></pre>
+
+  <table class="comparison-table">
+    <caption>Inheritance vs Composition</caption>
+    <thead>
+      <tr>
+        <th>Tiêu chí</th>
+        <th>Inheritance</th>
+        <th>Composition</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Quan hệ</td>
+        <td>is-a (Student là Person)</td>
+        <td>has-a (Car có Engine)</td>
+      </tr>
+      <tr>
+        <td>Coupling</td>
+        <td>Chặt — thay đổi cha ảnh hưởng con</td>
+        <td>Lỏng — thay implementation dễ</td>
+      </tr>
+      <tr>
+        <td>Test</td>
+        <td>Khó mock cha</td>
+        <td>Dễ inject dependency</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <section class="when-use">
+    <h4>Khi nào nên dùng kế thừa?</h4>
+    <p class="when-use-do"><strong>Nên dùng khi:</strong> Quan hệ "is-a" thật sự (Student là Person); cần dùng chung hành vi và mở rộng; hierarchy không quá sâu.</p>
+    <p class="when-use-avoid"><strong>Tránh khi:</strong> Chỉ muốn dùng lại code — ưu tiên composition (has-a); hierarchy sâu dễ fragile; thay đổi class cha ảnh hưởng nhiều class con.</p>
+  </section>
+
+  <section class="pro-con">
+    <h4>Ưu và nhược điểm của kế thừa</h4>
+    <div class="pro-con-list">
+      <div class="pro-con-item pro-con-item--pro">
+        <strong>Ưu điểm:</strong> Tái sử dụng code, hỗ trợ đa hình, mô hình hóa quan hệ thực tế.
+      </div>
+      <div class="pro-con-item pro-con-item--con">
+        <strong>Nhược điểm:</strong> Coupling chặt giữa cha và con; thay đổi class cha có thể phá vỡ class con; khó test riêng lẻ.
+      </div>
+    </div>
+  </section>
+</section>
+
+      </article>
+    </main>
+  </div>
+  <footer class="topic-footer">
+    <p>Xây dựng bằng Java 17+ · Không dùng framework · Pure NIO</p>
+  </footer>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@9/dist/mermaid.min.js"></script>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      securityLevel: 'loose',
+      theme: 'base',
+      flowchart: { useMaxWidth: true, htmlLabels: true, curve: 'basis', padding: 20 },
+      themeVariables: {
+        primaryColor: '#FFFFFF',
+        primaryTextColor: '#0F172A',
+        primaryBorderColor: '#10B981',
+        secondaryColor: '#ECFDF5',
+        secondaryBorderColor: '#059669',
+        tertiaryColor: '#F8FAFC',
+        tertiaryBorderColor: '#10B981',
+        lineColor: '#64748B',
+        textColor: '#334155',
+        fontFamily: 'Inter, system-ui, sans-serif',
+        fontSize: '14px',
+        clusterBkg: '#F8FAFC',
+        clusterBorder: '#10B981',
+        titleColor: '#0F172A',
+        nodeBorder: '#10B981',
+        defaultLinkColor: '#64748B',
+        edgeLabelBackground: '#ECFDF5',
+        edgeLabelColor: '#047857',
+        mainBkg: '#FFFFFF',
+        secondBkg: '#ECFDF5'
+      }
+    });
+    window.addEventListener('load', function() {
+      var tooltipEl = document.createElement('div');
+      tooltipEl.className = 'flow-tooltip';
+      tooltipEl.innerHTML = '<div class="flow-tooltip__title"></div><div class="flow-tooltip__body"></div>';
+      document.body.appendChild(tooltipEl);
+      function getNodeIdFromElement(el) {
+        if (!el) return null;
+        var dataId = el.getAttribute && el.getAttribute('data-id');
+        if (dataId) return dataId;
+        var id = el.id;
+        if (!id) return null;
+        if (id.indexOf('flowchart-') === 0) {
+          var rest = id.slice(10);
+          var dash = rest.indexOf('-');
+          return dash >= 0 ? rest.slice(0, dash) : rest;
+        }
+        return id;
+      }
+      function attachTooltips() {
+        document.querySelectorAll('.flow-diagram svg rect').forEach(function(r) {
+          r.setAttribute('rx', '8');
+          r.setAttribute('ry', '8');
+        });
+        var attached = 0;
+        document.querySelectorAll('.flow-diagram').forEach(function(diagram, di) {
+          var script = diagram.querySelector('script[type="application/json"][data-flow-tooltips]');
+          if (!script) return;
+          var data;
+          try { data = JSON.parse(script.textContent); } catch (e) { return; }
+          var svg = diagram.querySelector('svg');
+          if (!svg) return;
+          if (diagram.hasAttribute('data-tooltip-delegated')) return;
+          diagram.setAttribute('data-tooltip-delegated', '1');
+          diagram.querySelectorAll('g.node').forEach(function(g) { g.style.pointerEvents = 'auto'; });
+          var onOver = function(e) {
+            var g = e.target.closest && e.target.closest('g.node');
+            if (!g) return;
+            var nodeId = getNodeIdFromElement(g);
+            if (!nodeId) return;
+            var tip = data[nodeId];
+            if (!tip || !tip.detail) return;
+            tooltipEl.querySelector('.flow-tooltip__title').textContent = tip.title || nodeId;
+            tooltipEl.querySelector('.flow-tooltip__body').innerHTML = tip.detail;
+            tooltipEl.style.left = '';
+            tooltipEl.style.top = '';
+            tooltipEl.classList.add('is-visible');
+            var rect = g.getBoundingClientRect();
+            var x = rect.left + rect.width / 2;
+            var y = rect.top - 10;
+            requestAnimationFrame(function() {
+              var w = tooltipEl.offsetWidth;
+              var h = tooltipEl.offsetHeight;
+              tooltipEl.style.left = Math.max(12, Math.min(x - w / 2, window.innerWidth - w - 12)) + 'px';
+              tooltipEl.style.top = Math.max(12, y - h) + 'px';
+            });
+          };
+          var onOut = function(e) {
+            var related = e.relatedTarget;
+            if (related && diagram.contains(related)) return;
+            tooltipEl.classList.remove('is-visible');
+          };
+          diagram.addEventListener('mouseover', onOver);
+          diagram.addEventListener('mouseout', onOut);
+          attached++;
+        });
+        return attached;
+      }
+      var delays = [150, 400, 800];
+      delays.forEach(function(delay, i) {
+        setTimeout(function() {
+          var n = attachTooltips();
+          if (n === 0 && i === delays.length - 1) {
+            setTimeout(attachTooltips, 500);
+          }
+        }, delay);
+      });
+    });
+  </script>
+</body>
+</html>

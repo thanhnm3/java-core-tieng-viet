@@ -23,7 +23,7 @@
     <nav class="topic-sidebar"><ul>
         <li><a href="../../index.html">Trang ch&#7911;</a>
         </li>
-        <li><a href="../oop.html">OOP</a>
+        <li><a href="../oop/01-intro.html">OOP</a>
         </li>
         <li><a href="../collections/01-intro.html">Collections</a>
         </li>
@@ -58,13 +58,47 @@
   <p>Thay vì dùng <code>Vector</code>, <code>Hashtable</code> (cũ, lock toàn bộ), dùng <code>java.util.concurrent</code> — tối ưu cho đa luồng.</p>
 
   <h4>ConcurrentHashMap</h4>
-  <p>Cho phép nhiều thread đọc/ghi đồng thời. Không khóa toàn bộ — phân đoạn (segment) hoặc lock per-bucket (Java 8+). <code>putIfAbsent</code>, <code>compute</code>, <code>merge</code> — atomic. Không cho phép null key/value.</p>
+  <p>Cho phép nhiều thread đọc/ghi đồng thời. Không khóa toàn bộ — lock per-bucket (Java 8+). <code>putIfAbsent</code>, <code>compute</code>, <code>computeIfAbsent</code>, <code>merge</code> — atomic. Không cho phép null key/value.</p>
+
+  <h4>ConcurrentHashMap — Atomic operations</h4>
+  <pre><code>ConcurrentHashMap&lt;String, Integer&gt; map = new ConcurrentHashMap&lt;&gt;();
+
+// Đếm — atomic
+map.merge("key", 1, Integer::sum);
+
+// Compute nếu chưa có
+map.computeIfAbsent("key", k -> expensiveCompute(k));
+
+// Compute/update
+map.compute("key", (k, v) -> v == null ? 1 : v + 1);
+
+// putIfAbsent — chỉ put nếu key chưa có
+map.putIfAbsent("key", 100);</code></pre>
 
   <h4>CopyOnWriteArrayList</h4>
-  <p>Mỗi lần ghi tạo bản copy mới. Đọc không cần lock. Phù hợp: ít ghi, nhiều đọc (listener, config). Ghi tốn O(n) — copy toàn bộ.</p>
+  <p>Mỗi lần ghi (add, set, remove) tạo bản copy mới. Đọc không cần lock. Phù hợp: ít ghi, nhiều đọc (listener, config). Ghi tốn O(n) — copy toàn bộ. Iterator không throw ConcurrentModificationException — snapshot tại thời điểm tạo.</p>
+  <pre><code>List&lt;Listener&gt; listeners = new CopyOnWriteArrayList&lt;&gt;();
+listeners.add(listener);  // Copy mảng
+for (Listener l : listeners) {  // Iterator trên snapshot
+  l.onEvent();
+}</code></pre>
 
   <h4>BlockingQueue</h4>
-  <p>Queue blocking: <code>put()</code> block khi đầy; <code>take()</code> block khi rỗng. <code>ArrayBlockingQueue</code>, <code>LinkedBlockingQueue</code>, <code>LinkedTransferQueue</code>. Cực kỳ hữu ích cho Producer-Consumer.</p>
+  <p>Queue blocking: <code>put()</code> block khi đầy; <code>take()</code> block khi rỗng. <code>offer(timeout)</code>, <code>poll(timeout)</code> — block có timeout. <code>ArrayBlockingQueue</code> — capacity cố định; <code>LinkedBlockingQueue</code> — optional capacity; <code>LinkedTransferQueue</code> — unbounded.</p>
+  <pre><code>BlockingQueue&lt;Task&gt; queue = new LinkedBlockingQueue&lt;&gt;(100);
+
+// Producer
+queue.put(task);  // Block nếu đầy
+
+// Consumer
+Task t = queue.take();  // Block nếu rỗng
+
+// Với timeout
+boolean ok = queue.offer(task, 5, TimeUnit.SECONDS);
+Task t2 = queue.poll(5, TimeUnit.SECONDS);</code></pre>
+
+  <h4>ConcurrentLinkedQueue</h4>
+  <p>Non-blocking, lock-free. <code>offer()</code>, <code>poll()</code> không block. Phù hợp khi không cần producer-consumer blocking. Không có <code>size()</code> chính xác — O(n) duyệt.</p>
 
   <table class="comparison-table">
     <caption>Concurrent Collections</caption>
@@ -113,5 +147,113 @@ Task t = queue.take();  // Block nếu rỗng</code></pre>
   <footer class="topic-footer">
     <p>Xây dựng bằng Java 17+ · Không dùng framework · Pure NIO</p>
   </footer>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@9/dist/mermaid.min.js"></script>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      securityLevel: 'loose',
+      theme: 'base',
+      flowchart: { useMaxWidth: true, htmlLabels: true, curve: 'basis', padding: 20 },
+      themeVariables: {
+        primaryColor: '#FFFFFF',
+        primaryTextColor: '#0F172A',
+        primaryBorderColor: '#10B981',
+        secondaryColor: '#ECFDF5',
+        secondaryBorderColor: '#059669',
+        tertiaryColor: '#F8FAFC',
+        tertiaryBorderColor: '#10B981',
+        lineColor: '#64748B',
+        textColor: '#334155',
+        fontFamily: 'Inter, system-ui, sans-serif',
+        fontSize: '14px',
+        clusterBkg: '#F8FAFC',
+        clusterBorder: '#10B981',
+        titleColor: '#0F172A',
+        nodeBorder: '#10B981',
+        defaultLinkColor: '#64748B',
+        edgeLabelBackground: '#ECFDF5',
+        edgeLabelColor: '#047857',
+        mainBkg: '#FFFFFF',
+        secondBkg: '#ECFDF5'
+      }
+    });
+    window.addEventListener('load', function() {
+      var tooltipEl = document.createElement('div');
+      tooltipEl.className = 'flow-tooltip';
+      tooltipEl.innerHTML = '<div class="flow-tooltip__title"></div><div class="flow-tooltip__body"></div>';
+      document.body.appendChild(tooltipEl);
+      function getNodeIdFromElement(el) {
+        if (!el) return null;
+        var dataId = el.getAttribute && el.getAttribute('data-id');
+        if (dataId) return dataId;
+        var id = el.id;
+        if (!id) return null;
+        if (id.indexOf('flowchart-') === 0) {
+          var rest = id.slice(10);
+          var dash = rest.indexOf('-');
+          return dash >= 0 ? rest.slice(0, dash) : rest;
+        }
+        return id;
+      }
+      function attachTooltips() {
+        document.querySelectorAll('.flow-diagram svg rect').forEach(function(r) {
+          r.setAttribute('rx', '8');
+          r.setAttribute('ry', '8');
+        });
+        var attached = 0;
+        document.querySelectorAll('.flow-diagram').forEach(function(diagram, di) {
+          var script = diagram.querySelector('script[type="application/json"][data-flow-tooltips]');
+          if (!script) return;
+          var data;
+          try { data = JSON.parse(script.textContent); } catch (e) { return; }
+          var svg = diagram.querySelector('svg');
+          if (!svg) return;
+          if (diagram.hasAttribute('data-tooltip-delegated')) return;
+          diagram.setAttribute('data-tooltip-delegated', '1');
+          diagram.querySelectorAll('g.node').forEach(function(g) { g.style.pointerEvents = 'auto'; });
+          var onOver = function(e) {
+            var g = e.target.closest && e.target.closest('g.node');
+            if (!g) return;
+            var nodeId = getNodeIdFromElement(g);
+            if (!nodeId) return;
+            var tip = data[nodeId];
+            if (!tip || !tip.detail) return;
+            tooltipEl.querySelector('.flow-tooltip__title').textContent = tip.title || nodeId;
+            tooltipEl.querySelector('.flow-tooltip__body').innerHTML = tip.detail;
+            tooltipEl.style.left = '';
+            tooltipEl.style.top = '';
+            tooltipEl.classList.add('is-visible');
+            var rect = g.getBoundingClientRect();
+            var x = rect.left + rect.width / 2;
+            var y = rect.top - 10;
+            requestAnimationFrame(function() {
+              var w = tooltipEl.offsetWidth;
+              var h = tooltipEl.offsetHeight;
+              tooltipEl.style.left = Math.max(12, Math.min(x - w / 2, window.innerWidth - w - 12)) + 'px';
+              tooltipEl.style.top = Math.max(12, y - h) + 'px';
+            });
+          };
+          var onOut = function(e) {
+            var related = e.relatedTarget;
+            if (related && diagram.contains(related)) return;
+            tooltipEl.classList.remove('is-visible');
+          };
+          diagram.addEventListener('mouseover', onOver);
+          diagram.addEventListener('mouseout', onOut);
+          attached++;
+        });
+        return attached;
+      }
+      var delays = [150, 400, 800];
+      delays.forEach(function(delay, i) {
+        setTimeout(function() {
+          var n = attachTooltips();
+          if (n === 0 && i === delays.length - 1) {
+            setTimeout(attachTooltips, 500);
+          }
+        }, delay);
+      });
+    });
+  </script>
 </body>
 </html>

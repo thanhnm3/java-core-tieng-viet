@@ -1,9 +1,32 @@
 <section>
   <h3>Runtime Data Areas — Chi tiết kỹ thuật</h3>
+
+  <h4>Kỹ thuật</h4>
   <p>Bộ nhớ JVM chia 5 khu vực: Shared (Heap, Metaspace) và Per-Thread (Stack, PC Register, Native Method Stack).</p>
+
+  <h4>Bản đồ bộ nhớ</h4>
+  <pre><code>┌──────────────────────────────────────┐
+│ Metaspace (Native Memory)            │  ← Class metadata
+├──────────────────────────────────────┤
+│ Heap                                 │
+│   Young (Eden + S0 + S1)             │
+│   Old                                 │
+├──────────────────────────────────────┤
+│ Stack (per thread)                    │  ← Frames
+│ PC Register (per thread)             │
+│ Native Method Stack (per thread)      │
+└──────────────────────────────────────┘</code></pre>
 
   <h4>Heap — Cấu trúc Object</h4>
   <p>Mỗi Object trên Heap có <strong>Object Header</strong>: <em>Mark Word</em> (8 byte trên 64-bit) — hash, GC age, lock state (biased, lightweight, heavyweight); <em>Klass Pointer</em> — trỏ tới metadata trong Metaspace. Sau header là instance fields (theo thứ tự declaration, alignment). Array có thêm length field (4 byte).</p>
+
+  <h4>Ví dụ — Object layout</h4>
+  <pre><code>class Point {
+  int x;   // 4 byte
+  int y;   // 4 byte
+}
+// Trên Heap: [Mark 8B][Klass 4B][x 4B][y 4B] + alignment
+// Tổng: 12 (header) + 8 (fields) = 20 → align 24 byte</code></pre>
 
   <h4>Metaspace vs PermGen</h4>
   <p>Java 8 bỏ PermGen (nằm trong Heap, giới hạn -XX:MaxPermSize). <strong>Metaspace</strong> nằm trong Native Memory — không giới hạn bởi -Xmx. Lưu: class metadata (Klass), method metadata, constant pool, annotations. Class loader bị GC → metadata tương ứng có thể unload. <code>-XX:MaxMetaspaceSize</code> giới hạn để tránh Native OOM.</p>

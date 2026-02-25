@@ -5,6 +5,16 @@
   <h4>fillInStackTrace</h4>
   <p>Native method — walk stack từ PC hiện tại. O(depth) với depth = số Frame. Trong vòng lặp nhanh, throw Exception mỗi iteration có thể gây chậm đáng kể.</p>
 
+  <h4>Override fillInStackTrace — Giảm cost</h4>
+  <p>Custom Exception có thể override <code>fillInStackTrace()</code> trả về <code>this</code> (không fill) — nhanh hơn nhưng mất stack trace. Chỉ dùng khi Exception dùng cho control flow (không khuyến nghị) hoặc hot path cực kỳ nhạy cảm.</p>
+  <pre><code>public class FastException extends RuntimeException {
+  @Override
+  public synchronized Throwable fillInStackTrace() {
+    return this;  // Bỏ qua — không có stack trace
+  }
+}
+// Tránh dùng — mất thông tin debug</code></pre>
+
   <h4>Khi nào nên tránh</h4>
   <p>Đừng dùng Exception để điều khiển logic nghiệp vụ. Ví dụ: User không tìm thấy — trả về <code>Optional.empty()</code> hoặc <code>null</code>, không throw <code>UserNotFoundException</code> trong path bình thường. Exception cho tình huống "bất thường".</p>
 
@@ -32,6 +42,11 @@
         <td>Validation fail</td>
         <td>return Result</td>
         <td>throw mỗi lần validate</td>
+      </tr>
+      <tr>
+        <td>Vòng lặp thoát</td>
+        <td>break, flag</td>
+        <td>throw để break</td>
       </tr>
     </tbody>
   </table>

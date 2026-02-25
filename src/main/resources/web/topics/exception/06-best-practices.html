@@ -2,16 +2,30 @@
   <h3>Best Practices</h3>
 
   <h4>Đừng nuốt Exception</h4>
-  <p>Không viết <code>catch (Exception e) {}</code> mà không log. Bạn đang "bịt mắt" khi hệ thống lỗi. Luôn log: <code>log.error("Failed", e)</code> hoặc rethrow.</p>
+  <p>Không viết <code>catch (Exception e) {}</code> mà không log. Bạn đang "bịt mắt" khi hệ thống lỗi. Luôn log: <code>log.error("Failed", e)</code> hoặc rethrow. <code>log.error("Failed: " + e.getMessage())</code> — mất stack trace, tránh.</p>
 
   <h4>Catch cụ thể</h4>
-  <p>Thay vì <code>catch (Exception e)</code>, catch <code>FileNotFoundException</code>, <code>SQLException</code> nếu biết rõ. Xử lý chính xác hơn.</p>
+  <p>Thay vì <code>catch (Exception e)</code>, catch <code>FileNotFoundException</code>, <code>SQLException</code> nếu biết rõ. Xử lý chính xác hơn. Catch Exception chỉ ở layer cao (controller, main) để tránh crash.</p>
+
+  <h4>Exception message — Mô tả rõ</h4>
+  <p>Message nên mô tả: <em>cái gì</em> lỗi, <em>ở đâu</em>, <em>giá trị</em> gây lỗi. Ví dụ: <code>"Invalid age: " + age + ", must be 0-150"</code>. Tránh message chung chung: "Error", "Failed".</p>
+  <pre><code>throw new IllegalArgumentException(
+  "Invalid userId: " + userId + ", must be positive");</code></pre>
 
   <h4>Custom Exception</h4>
-  <p>Dự án lớn: tạo Exception riêng (<code>InsufficientBalanceException</code>, <code>DuplicateOrderException</code>) để định nghĩa rõ lỗi nghiệp vụ. Kế thừa <code>RuntimeException</code> (unchecked) hoặc <code>Exception</code> (checked) tùy ngữ cảnh.</p>
+  <p>Dự án lớn: tạo Exception riêng (<code>InsufficientBalanceException</code>, <code>DuplicateOrderException</code>) để định nghĩa rõ lỗi nghiệp vụ. Kế thừa <code>RuntimeException</code> (unchecked) hoặc <code>Exception</code> (checked) tùy ngữ cảnh. Luôn có constructor nhận <code>(String message, Throwable cause)</code>.</p>
 
   <h4>Global Exception Handler</h4>
   <p>Trong Spring Boot: <code>@ControllerAdvice</code> + <code>@ExceptionHandler</code> — tập trung xử lý lỗi, trả về response thống nhất. Business code không cần try-catch dày đặc.</p>
+  <pre><code>@ControllerAdvice
+public class GlobalExceptionHandler {
+  @ExceptionHandler(IllegalArgumentException.class)
+  public ResponseEntity&lt;ErrorResponse&gt; handleBadRequest(
+      IllegalArgumentException e) {
+    return ResponseEntity.badRequest()
+        .body(new ErrorResponse(e.getMessage()));
+  }
+}</code></pre>
 
   <table class="comparison-table">
     <caption>Clean Exception Handling</caption>
@@ -37,6 +51,10 @@
       <tr>
         <td>Custom Exception cho nghiệp vụ</td>
         <td>Dùng RuntimeException cho mọi thứ</td>
+      </tr>
+      <tr>
+        <td>Message mô tả rõ</td>
+        <td>Message chung chung</td>
       </tr>
     </tbody>
   </table>

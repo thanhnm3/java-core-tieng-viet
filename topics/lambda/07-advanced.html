@@ -23,7 +23,7 @@
     <nav class="topic-sidebar"><ul>
         <li><a href="../../index.html">Trang ch&#7911;</a>
         </li>
-        <li><a href="../oop.html">OOP</a>
+        <li><a href="../oop/01-intro.html">OOP</a>
         </li>
         <li><a href="../collections/01-intro.html">Collections</a>
         </li>
@@ -57,6 +57,8 @@
   <h3>Optional</h3>
   <p>Container chứa 0 hoặc 1 phần tử — tránh NullPointerException. Không dùng Optional cho parameter, field collection; dùng cho return type khi có thể null.</p>
 
+  <h4>Optional chaining</h4>
+  <p>Chain map, flatMap, filter để xử lý nested Optional. flatMap khi function trả Optional — tránh Optional&lt;Optional&lt;T&gt;&gt;.</p>
   <pre><code>// Tạo
 Optional&lt;String&gt; opt = Optional.of("value");      // Non-null
 Optional&lt;String&gt; empty = Optional.empty();
@@ -69,7 +71,14 @@ opt.ifPresent(System.out::println);
 
 // Chuyển đổi
 Optional&lt;Integer&gt; len = opt.map(String::length);
-Optional&lt;Integer&gt; flat = opt.flatMap(s -> Optional.of(s.length()));</code></pre>
+Optional&lt;Integer&gt; flat = opt.flatMap(s -> Optional.of(s.length()));
+
+// Chain — lấy length nếu có, filter &gt; 3
+Optional&lt;Integer&gt; result = opt.map(String::length).filter(l -> l &gt; 3);
+
+// Nested Optional — flatMap
+Optional&lt;User&gt; user = findUser(id);
+Optional&lt;String&gt; addr = user.flatMap(User::getAddress);  // getAddress trả Optional</code></pre>
 
   <section class="when-use">
     <h4>Optional — Nên và không nên</h4>
@@ -88,11 +97,18 @@ Optional&lt;Integer&gt; flat = opt.flatMap(s -> Optional.of(s.length()));</code>
 
 <section>
   <h3>Parallel Stream</h3>
-  <p><code>parallelStream()</code> hoặc <code>stream().parallel()</code> — chia công việc cho nhiều thread. Chỉ có lợi khi:</p>
+  <p><code>parallelStream()</code> hoặc <code>stream().parallel()</code> — chia công việc cho nhiều thread (ForkJoinPool.commonPool()). Chỉ có lợi khi:</p>
   <ul>
     <li>Dữ liệu lớn (hàng nghìn phần tử trở lên)</li>
     <li>Operation tốn CPU, không bị I/O block</li>
     <li>Không có shared mutable state</li>
+  </ul>
+
+  <h4>Parallel pitfalls</h4>
+  <ul>
+    <li><strong>Shared mutable state</strong>: Biến capture trong lambda không được thay đổi — race condition. Dùng collect/reduce thay vì forEach với biến ngoài.</li>
+    <li><strong>Reduce combiner</strong>: Với parallel, reduce(identity, accumulator, combiner) — combiner phải associative. identity phải đúng.</li>
+    <li><strong>Ordering</strong>: findFirst giữ thứ tự; findAny không — parallel thường dùng findAny.</li>
   </ul>
 
   <pre><code>// Cẩn thận — reduce cần combiner associative
@@ -100,7 +116,11 @@ int sum = list.parallelStream().reduce(0, Integer::sum, Integer::sum);
 
 // Collectors đã thread-safe
 Map&lt;String, Long&gt; map = list.parallelStream()
-  .collect(Collectors.groupingByConcurrent(Function.identity(), Collectors.counting()));</code></pre>
+  .collect(Collectors.groupingByConcurrent(Function.identity(), Collectors.counting()));
+
+// SAI — shared mutable
+int[] total = {0};
+list.parallelStream().forEach(x -> total[0] += x);  // Race condition!</code></pre>
 
   <section class="pro-con">
     <h4>Parallel Stream — Ưu nhược</h4>
@@ -110,6 +130,17 @@ Map&lt;String, Long&gt; map = list.parallelStream()
       <li class="pro-con-item pro-con-item--con">Shared mutable state → race condition</li>
     </ul>
   </section>
+</section>
+
+<section>
+  <h3>Custom Collector</h3>
+  <p>Implement <code>Collector&lt;T, A, R&gt;</code>: supplier (tạo container), accumulator (thêm phần tử), combiner (merge parallel), finisher (chuyển A→R). Ví dụ: collect thành String với delimiter.</p>
+  <pre><code>Collector&lt;String, StringBuilder, String&gt; customJoin = Collector.of(
+  StringBuilder::new,
+  (sb, s) -> sb.append(s).append(","),
+  StringBuilder::append,
+  sb -> sb.length() &gt; 0 ? sb.deleteCharAt(sb.length()-1).toString() : ""
+);</code></pre>
 </section>
 
 <section>
@@ -139,6 +170,10 @@ Map&lt;String, Long&gt; map = list.parallelStream()
         <td>Boxing overhead (IntStream)</td>
         <td>Dùng IntStream, LongStream, DoubleStream khi có thể</td>
       </tr>
+      <tr>
+        <td>Parallel + mutable state</td>
+        <td>Dùng collect/reduce, không capture biến thay đổi</td>
+      </tr>
     </tbody>
   </table>
 
@@ -158,5 +193,113 @@ long c = list.stream().count();</code></pre>
   <footer class="topic-footer">
     <p>Xây dựng bằng Java 17+ · Không dùng framework · Pure NIO</p>
   </footer>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@9/dist/mermaid.min.js"></script>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      securityLevel: 'loose',
+      theme: 'base',
+      flowchart: { useMaxWidth: true, htmlLabels: true, curve: 'basis', padding: 20 },
+      themeVariables: {
+        primaryColor: '#FFFFFF',
+        primaryTextColor: '#0F172A',
+        primaryBorderColor: '#10B981',
+        secondaryColor: '#ECFDF5',
+        secondaryBorderColor: '#059669',
+        tertiaryColor: '#F8FAFC',
+        tertiaryBorderColor: '#10B981',
+        lineColor: '#64748B',
+        textColor: '#334155',
+        fontFamily: 'Inter, system-ui, sans-serif',
+        fontSize: '14px',
+        clusterBkg: '#F8FAFC',
+        clusterBorder: '#10B981',
+        titleColor: '#0F172A',
+        nodeBorder: '#10B981',
+        defaultLinkColor: '#64748B',
+        edgeLabelBackground: '#ECFDF5',
+        edgeLabelColor: '#047857',
+        mainBkg: '#FFFFFF',
+        secondBkg: '#ECFDF5'
+      }
+    });
+    window.addEventListener('load', function() {
+      var tooltipEl = document.createElement('div');
+      tooltipEl.className = 'flow-tooltip';
+      tooltipEl.innerHTML = '<div class="flow-tooltip__title"></div><div class="flow-tooltip__body"></div>';
+      document.body.appendChild(tooltipEl);
+      function getNodeIdFromElement(el) {
+        if (!el) return null;
+        var dataId = el.getAttribute && el.getAttribute('data-id');
+        if (dataId) return dataId;
+        var id = el.id;
+        if (!id) return null;
+        if (id.indexOf('flowchart-') === 0) {
+          var rest = id.slice(10);
+          var dash = rest.indexOf('-');
+          return dash >= 0 ? rest.slice(0, dash) : rest;
+        }
+        return id;
+      }
+      function attachTooltips() {
+        document.querySelectorAll('.flow-diagram svg rect').forEach(function(r) {
+          r.setAttribute('rx', '8');
+          r.setAttribute('ry', '8');
+        });
+        var attached = 0;
+        document.querySelectorAll('.flow-diagram').forEach(function(diagram, di) {
+          var script = diagram.querySelector('script[type="application/json"][data-flow-tooltips]');
+          if (!script) return;
+          var data;
+          try { data = JSON.parse(script.textContent); } catch (e) { return; }
+          var svg = diagram.querySelector('svg');
+          if (!svg) return;
+          if (diagram.hasAttribute('data-tooltip-delegated')) return;
+          diagram.setAttribute('data-tooltip-delegated', '1');
+          diagram.querySelectorAll('g.node').forEach(function(g) { g.style.pointerEvents = 'auto'; });
+          var onOver = function(e) {
+            var g = e.target.closest && e.target.closest('g.node');
+            if (!g) return;
+            var nodeId = getNodeIdFromElement(g);
+            if (!nodeId) return;
+            var tip = data[nodeId];
+            if (!tip || !tip.detail) return;
+            tooltipEl.querySelector('.flow-tooltip__title').textContent = tip.title || nodeId;
+            tooltipEl.querySelector('.flow-tooltip__body').innerHTML = tip.detail;
+            tooltipEl.style.left = '';
+            tooltipEl.style.top = '';
+            tooltipEl.classList.add('is-visible');
+            var rect = g.getBoundingClientRect();
+            var x = rect.left + rect.width / 2;
+            var y = rect.top - 10;
+            requestAnimationFrame(function() {
+              var w = tooltipEl.offsetWidth;
+              var h = tooltipEl.offsetHeight;
+              tooltipEl.style.left = Math.max(12, Math.min(x - w / 2, window.innerWidth - w - 12)) + 'px';
+              tooltipEl.style.top = Math.max(12, y - h) + 'px';
+            });
+          };
+          var onOut = function(e) {
+            var related = e.relatedTarget;
+            if (related && diagram.contains(related)) return;
+            tooltipEl.classList.remove('is-visible');
+          };
+          diagram.addEventListener('mouseover', onOver);
+          diagram.addEventListener('mouseout', onOut);
+          attached++;
+        });
+        return attached;
+      }
+      var delays = [150, 400, 800];
+      delays.forEach(function(delay, i) {
+        setTimeout(function() {
+          var n = attachTooltips();
+          if (n === 0 && i === delays.length - 1) {
+            setTimeout(attachTooltips, 500);
+          }
+        }, delay);
+      });
+    });
+  </script>
 </body>
 </html>

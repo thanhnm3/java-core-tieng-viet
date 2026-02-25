@@ -23,7 +23,7 @@
     <nav class="topic-sidebar"><ul>
         <li><a href="../../index.html">Trang ch&#7911;</a>
         </li>
-        <li><a href="../oop.html">OOP</a>
+        <li><a href="../oop/01-intro.html">OOP</a>
         </li>
         <li><a href="../collections/01-intro.html">Collections</a>
         </li>
@@ -58,7 +58,109 @@
 <p>Java cung cấp hai mô hình I/O: <strong>java.io</strong> (Stream-based, blocking) và <strong>java.nio</strong> (Buffer/Channel-based, hỗ trợ non-blocking). I/O cũ dùng stream byte/char; NIO dùng buffer và channel, phù hợp high-throughput và multiplexing.</p>
 
 <section>
+  <h3>Tổng quan từng phần</h3>
+  <p>Mỗi phần gồm: <strong>Kỹ thuật</strong> (định nghĩa, API) và <strong>Ví dụ</strong> (code minh họa).</p>
+  <table class="comparison-table">
+    <caption>I/O &amp; NIO — Kỹ thuật và Ví dụ</caption>
+    <thead>
+      <tr>
+        <th>Phần</th>
+        <th>Kỹ thuật</th>
+        <th>Ví dụ</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>01 — Intro</strong></td>
+        <td>Stream vs Buffer/Channel, blocking vs non-blocking</td>
+        <td>InputStream hierarchy, use case</td>
+      </tr>
+      <tr>
+        <td><strong>02 — Stream</strong></td>
+        <td>InputStream/OutputStream, Reader/Writer</td>
+        <td>FileInputStream, BufferedReader</td>
+      </tr>
+      <tr>
+        <td><strong>03 — File</strong></td>
+        <td>File API, đọc ghi file</td>
+        <td>FileReader, BufferedInputStream</td>
+      </tr>
+      <tr>
+        <td><strong>04 — NIO Buffer</strong></td>
+        <td>ByteBuffer, position, limit, flip</td>
+        <td>allocate, put, get</td>
+      </tr>
+      <tr>
+        <td><strong>05 — NIO Channel</strong></td>
+        <td>FileChannel, transferTo, SocketChannel</td>
+        <td>Copy file, scatter/gather</td>
+      </tr>
+      <tr>
+        <td><strong>06 — Path &amp; Files</strong></td>
+        <td>Path, Files API, NIO.2</td>
+        <td>Files.readAllLines, walk</td>
+      </tr>
+      <tr>
+        <td><strong>07 — Selector</strong></td>
+        <td>Multiplexing, non-blocking server</td>
+        <td>SelectableChannel, select()</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h3>Lộ trình học — Sơ đồ flow</h3>
+  <p>Sơ đồ dưới đây thể hiện thứ tự học và mối liên hệ giữa các phần. Mỗi ô là một phần; mũi tên chỉ hướng tiếp theo.</p>
+
+  <div class="flow-diagram">
+    <script type="application/json" data-flow-tooltips>
+    {"F1":{"title":"01 Intro - io vs nio","detail":"<p><strong>java.io</strong> - Stream, đọc/ghi byte hoặc char tuần tự. Blocking - thread chờ I/O xong.</p><p><strong>java.nio</strong> - Buffer + Channel. Hỗ trợ non-blocking, Selector multiplexing. Dùng cho file đơn giản: io. Server nhiều kết nối: nio.</p>"},"F2":{"title":"02 Stream","detail":"<p><strong>InputStream/OutputStream</strong> - byte. Reader/Writer - char. BufferedInputStream giảm system call.</p><p>InputStreamReader(stream, Charset) - chuyển byte sang char với encoding. DataInputStream cho primitive.</p>"},"F3":{"title":"03 File","detail":"<p>FileInputStream, FileReader. BufferedReader.readLine() cho text. Luôn dùng try-with-resources.</p><p>Pattern: mở stream -&gt; đọc/ghi loop -&gt; đóng. Buffered cho performance.</p>"},"F4":{"title":"04 NIO Buffer","detail":"<p><strong>ByteBuffer</strong> - position, limit, capacity. put() tăng position. flip() chuyển write mode sang read (limit=position, position=0).</p><p>clear() reset. compact() đẩy unread lên đầu. Direct buffer - ngoài heap, zero-copy với I/O.</p>"},"F5":{"title":"05 NIO Channel","detail":"<p>FileChannel - read(ByteBuffer), write(ByteBuffer). transferTo() copy file hiệu quả (zero-copy khi có thể).</p><p>SocketChannel cho network. Scatter/gather - nhiều buffer một lần.</p>"},"F6":{"title":"06 Path &amp; Files","detail":"<p><strong>Path</strong> thay File. Paths.get(). Files.readAllBytes(), readAllLines(), write().</p><p>Files.walk() duyệt cây thư mục. FileVisitor cho custom logic.</p>"},"F7":{"title":"07 Selector","detail":"<p><strong>Multiplexing</strong> - một thread theo dõi nhiều Channel. SelectableChannel.configureBlocking(false), register(selector, ops).</p><p>select() block đến khi có channel sẵn sàng. selectedKeys() - channel có event. Dùng cho server socket nhiều client.</p>"}}
+    </script>
+    <pre class="mermaid">
+flowchart TD
+  subgraph JavaIO ["java.io - Stream"]
+    direction LR
+    F1("01 Intro")
+    F2("02 Stream")
+    F3("03 File")
+    F1 -->|"Blocking"| F2 -->|"InputStream, Reader"| F3
+  end
+  subgraph JavaNIO ["java.nio - Buffer and Channel"]
+    direction LR
+    F4("04 Buffer")
+    F5("05 Channel")
+    F6("06 Path and Files")
+    F4 -->|"ByteBuffer, flip"| F5 -->|"FileChannel"| F6
+  end
+  subgraph Advanced [Advanced]
+    F7("07 Selector")
+  end
+  JavaIO -->|"BufferedReader"| JavaNIO
+  JavaNIO -->|"Multiplexing"| Advanced
+    </pre>
+  </div>
+
+  <table class="comparison-table">
+    <caption>Chú thích từng phần</caption>
+    <thead>
+      <tr><th>Phần</th><th>Nội dung chính</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>01</td><td>Stream vs Buffer/Channel, blocking vs non-blocking</td></tr>
+      <tr><td>02</td><td>InputStream, OutputStream, Reader, Writer</td></tr>
+      <tr><td>03</td><td>File API, FileInputStream, BufferedInputStream</td></tr>
+      <tr><td>04</td><td>ByteBuffer, position, limit, flip</td></tr>
+      <tr><td>05</td><td>FileChannel, transferTo, SocketChannel</td></tr>
+      <tr><td>06</td><td>Path, Files.readAllLines, walk</td></tr>
+      <tr><td>07</td><td>Selector, non-blocking, multiplexing</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
   <h3>Tổng quan I/O vs NIO</h3>
+  <h4>Kỹ thuật</h4>
   <table class="comparison-table">
     <caption>So sánh java.io và java.nio</caption>
     <thead>
@@ -96,14 +198,77 @@
       </tr>
     </tbody>
   </table>
+
+  <h4>Ví dụ — Luồng dữ liệu</h4>
+  <pre><code>// java.io — Stream
+Source → InputStream/Reader → [process] → OutputStream/Writer → Destination
+
+// java.nio — Buffer + Channel
+Source → Channel.read(ByteBuffer) → Buffer → [process] → Buffer → Channel.write(ByteBuffer) → Destination</code></pre>
 </section>
 
 <section>
   <h3>Hierarchy java.io</h3>
   <p><strong>InputStream / OutputStream</strong> — byte stream. <strong>Reader / Writer</strong> — character stream (Unicode). Các subclass: FileInputStream, BufferedInputStream, FileReader, BufferedReader... Luôn đóng stream bằng try-with-resources để tránh rò rỉ file descriptor.</p>
 
+  <h4>Sơ đồ phân cấp</h4>
+  <pre><code>InputStream
+  ├── FileInputStream
+  ├── ByteArrayInputStream
+  ├── FilterInputStream
+  │     ├── BufferedInputStream
+  │     ├── DataInputStream
+  │     └── GZIPInputStream (via InflaterInputStream)
+  └── ObjectInputStream
+
+Reader
+  ├── FileReader
+  ├── InputStreamReader  ← bridge byte → char (encoding)
+  └── BufferedReader</code></pre>
+
   <h4>Hierarchy java.nio</h4>
   <p><strong>Buffer</strong> — ByteBuffer, CharBuffer, IntBuffer... Container cho dữ liệu. <strong>Channel</strong> — FileChannel, SocketChannel, ServerSocketChannel... Kết nối tới nguồn/đích. <strong>Selector</strong> — multiplexing nhiều channel non-blocking.</p>
+
+  <pre><code>Buffer (ByteBuffer, CharBuffer...)
+Channel
+  ├── FileChannel
+  ├── SocketChannel
+  ├── ServerSocketChannel
+  └── DatagramChannel
+
+Selector — quản lý nhiều SelectableChannel</code></pre>
+
+  <h4>Use case — Khi nào dùng gì</h4>
+  <table class="comparison-table">
+    <thead>
+      <tr>
+        <th>Use case</th>
+        <th>Gợi ý</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Đọc file text nhỏ</td>
+        <td>Files.readAllLines() hoặc BufferedReader</td>
+      </tr>
+      <tr>
+        <td>Đọc file binary</td>
+        <td>BufferedInputStream + FileInputStream</td>
+      </tr>
+      <tr>
+        <td>Copy file lớn</td>
+        <td>FileChannel.transferTo()</td>
+      </tr>
+      <tr>
+        <td>Server nhiều kết nối</td>
+        <td>Selector + SocketChannel</td>
+      </tr>
+      <tr>
+        <td>Duyệt thư mục</td>
+        <td>Files.walk() hoặc FileVisitor</td>
+      </tr>
+    </tbody>
+  </table>
 
   <section class="when-use">
     <h4>Khi nào dùng I/O vs NIO?</h4>
@@ -118,5 +283,113 @@
   <footer class="topic-footer">
     <p>Xây dựng bằng Java 17+ · Không dùng framework · Pure NIO</p>
   </footer>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@9/dist/mermaid.min.js"></script>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      securityLevel: 'loose',
+      theme: 'base',
+      flowchart: { useMaxWidth: true, htmlLabels: true, curve: 'basis', padding: 20 },
+      themeVariables: {
+        primaryColor: '#FFFFFF',
+        primaryTextColor: '#0F172A',
+        primaryBorderColor: '#10B981',
+        secondaryColor: '#ECFDF5',
+        secondaryBorderColor: '#059669',
+        tertiaryColor: '#F8FAFC',
+        tertiaryBorderColor: '#10B981',
+        lineColor: '#64748B',
+        textColor: '#334155',
+        fontFamily: 'Inter, system-ui, sans-serif',
+        fontSize: '14px',
+        clusterBkg: '#F8FAFC',
+        clusterBorder: '#10B981',
+        titleColor: '#0F172A',
+        nodeBorder: '#10B981',
+        defaultLinkColor: '#64748B',
+        edgeLabelBackground: '#ECFDF5',
+        edgeLabelColor: '#047857',
+        mainBkg: '#FFFFFF',
+        secondBkg: '#ECFDF5'
+      }
+    });
+    window.addEventListener('load', function() {
+      var tooltipEl = document.createElement('div');
+      tooltipEl.className = 'flow-tooltip';
+      tooltipEl.innerHTML = '<div class="flow-tooltip__title"></div><div class="flow-tooltip__body"></div>';
+      document.body.appendChild(tooltipEl);
+      function getNodeIdFromElement(el) {
+        if (!el) return null;
+        var dataId = el.getAttribute && el.getAttribute('data-id');
+        if (dataId) return dataId;
+        var id = el.id;
+        if (!id) return null;
+        if (id.indexOf('flowchart-') === 0) {
+          var rest = id.slice(10);
+          var dash = rest.indexOf('-');
+          return dash >= 0 ? rest.slice(0, dash) : rest;
+        }
+        return id;
+      }
+      function attachTooltips() {
+        document.querySelectorAll('.flow-diagram svg rect').forEach(function(r) {
+          r.setAttribute('rx', '8');
+          r.setAttribute('ry', '8');
+        });
+        var attached = 0;
+        document.querySelectorAll('.flow-diagram').forEach(function(diagram, di) {
+          var script = diagram.querySelector('script[type="application/json"][data-flow-tooltips]');
+          if (!script) return;
+          var data;
+          try { data = JSON.parse(script.textContent); } catch (e) { return; }
+          var svg = diagram.querySelector('svg');
+          if (!svg) return;
+          if (diagram.hasAttribute('data-tooltip-delegated')) return;
+          diagram.setAttribute('data-tooltip-delegated', '1');
+          diagram.querySelectorAll('g.node').forEach(function(g) { g.style.pointerEvents = 'auto'; });
+          var onOver = function(e) {
+            var g = e.target.closest && e.target.closest('g.node');
+            if (!g) return;
+            var nodeId = getNodeIdFromElement(g);
+            if (!nodeId) return;
+            var tip = data[nodeId];
+            if (!tip || !tip.detail) return;
+            tooltipEl.querySelector('.flow-tooltip__title').textContent = tip.title || nodeId;
+            tooltipEl.querySelector('.flow-tooltip__body').innerHTML = tip.detail;
+            tooltipEl.style.left = '';
+            tooltipEl.style.top = '';
+            tooltipEl.classList.add('is-visible');
+            var rect = g.getBoundingClientRect();
+            var x = rect.left + rect.width / 2;
+            var y = rect.top - 10;
+            requestAnimationFrame(function() {
+              var w = tooltipEl.offsetWidth;
+              var h = tooltipEl.offsetHeight;
+              tooltipEl.style.left = Math.max(12, Math.min(x - w / 2, window.innerWidth - w - 12)) + 'px';
+              tooltipEl.style.top = Math.max(12, y - h) + 'px';
+            });
+          };
+          var onOut = function(e) {
+            var related = e.relatedTarget;
+            if (related && diagram.contains(related)) return;
+            tooltipEl.classList.remove('is-visible');
+          };
+          diagram.addEventListener('mouseover', onOver);
+          diagram.addEventListener('mouseout', onOut);
+          attached++;
+        });
+        return attached;
+      }
+      var delays = [150, 400, 800];
+      delays.forEach(function(delay, i) {
+        setTimeout(function() {
+          var n = attachTooltips();
+          if (n === 0 && i === delays.length - 1) {
+            setTimeout(attachTooltips, 500);
+          }
+        }, delay);
+      });
+    });
+  </script>
 </body>
 </html>

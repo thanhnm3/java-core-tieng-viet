@@ -4,14 +4,64 @@
   <h4>Deadlock</h4>
   <p>Thread A giữ Lock 1 đợi Lock 2; Thread B giữ Lock 2 đợi Lock 1. Cả hai đứng mãi. <strong>Cách tránh:</strong> Luôn lấy lock theo thứ tự cố định (A rồi B); dùng <code>tryLock</code> với timeout.</p>
 
+  <pre><code>// Ví dụ deadlock
+Object lock1 = new Object();
+Object lock2 = new Object();
+
+Thread t1 = new Thread(() -> {
+  synchronized (lock1) {
+    try { Thread.sleep(10); } catch (InterruptedException e) { }
+    synchronized (lock2) { }  // Đợi lock2
+  }
+});
+Thread t2 = new Thread(() -> {
+  synchronized (lock2) {
+    try { Thread.sleep(10); } catch (InterruptedException e) { }
+    synchronized (lock1) { }  // Đợi lock1 — DEADLOCK
+  }
+});
+
+// Tránh: luôn lấy lock1 trước lock2
+synchronized (lock1) {
+  synchronized (lock2) {
+    // ...
+  }
+}</code></pre>
+
   <h4>Livelock</h4>
   <p>Hai thread liên tục nhường nhịn nhau, không việc gì hoàn thành. Ví dụ: hai người qua cửa, cả hai lùi rồi tiến lại. <strong>Cách tránh:</strong> Thêm randomness hoặc backoff.</p>
 
   <h4>Starvation</h4>
-  <p>Thread "đói" tài nguyên vì thread ưu tiên cao chiếm hết CPU. <strong>Cách tránh:</strong> Dùng <code>Fair</code> lock; cân bằng priority.</p>
+  <p>Thread "đói" tài nguyên vì thread ưu tiên cao chiếm hết CPU. <strong>Cách tránh:</strong> Dùng <code>ReentrantLock(true)</code> — fair lock; cân bằng priority.</p>
 
   <h4>Race Condition</h4>
-  <p>Kết quả phụ thuộc thứ tự thực thi — thread nào chạy trước. Ví dụ: <code>i++</code> không atomic. <strong>Cách tránh:</strong> <code>synchronized</code>, <code>AtomicInteger</code>, <code>volatile</code> (chỉ visibility).</p>
+  <p>Kết quả phụ thuộc thứ tự thực thi — thread nào chạy trước. Ví dụ: <code>i++</code> không atomic (read-modify-write). <strong>Cách tránh:</strong> <code>synchronized</code>, <code>AtomicInteger</code>, <code>volatile</code> (chỉ visibility).</p>
+
+  <h4>Memory Visibility</h4>
+  <p>Thread A ghi biến; Thread B có thể đọc giá trị cũ từ CPU cache. <code>volatile</code> đảm bảo ghi visible cho mọi thread. <code>synchronized</code> cũng tạo memory barrier. Happens-before: ghi trong synchronized block visible cho đọc trong block sau khi cùng lock.</p>
+  <pre><code>// SAI — không volatile, B có thể không thấy flag = true
+boolean ready = false;
+// Thread A: ready = true;
+// Thread B: while (!ready) {} — có thể loop vô hạn
+
+// Đúng
+volatile boolean ready = false;</code></pre>
+
+  <h4>Double-Checked Locking (sai)</h4>
+  <p>Pattern singleton với lazy init có thể sai nếu không dùng volatile. Từ Java 5+, <code>volatile</code> fix vấn đề. Tốt hơn: dùng <code>Holder</code> class hoặc enum singleton.</p>
+  <pre><code>// Sai (trước Java 5) — có thể thấy object chưa init xong
+private static Singleton instance;
+public static Singleton getInstance() {
+  if (instance == null) {
+    synchronized (Singleton.class) {
+      if (instance == null) {
+        instance = new Singleton();  // Có thể reorder
+      }
+    }
+  }
+  return instance;
+}
+// Đúng: private static volatile Singleton instance;</code></pre>
 
   <table class="comparison-table">
     <caption>Tóm tắt lỗi và cách tránh</caption>
@@ -42,6 +92,11 @@
         <td>Race Condition</td>
         <td>Shared state không sync</td>
         <td>synchronized, Atomic*</td>
+      </tr>
+      <tr>
+        <td>Visibility</td>
+        <td>CPU cache</td>
+        <td>volatile, synchronized</td>
       </tr>
     </tbody>
   </table>

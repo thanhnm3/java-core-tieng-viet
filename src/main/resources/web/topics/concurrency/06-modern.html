@@ -2,19 +2,74 @@
   <h3>Modern Java Concurrency</h3>
 
   <h4>CompletableFuture (Java 8)</h4>
-  <p>Lập trình bất đồng bộ theo phong cách Functional. Kết chuỗi: "Làm A xong → lấy kết quả làm B → lỗi thì C". <code>thenApply</code>, <code>thenCompose</code>, <code>thenCombine</code>, <code>exceptionally</code>.</p>
+  <p>Lập trình bất đồng bộ theo phong cách Functional. Kết chuỗi: "Làm A xong → lấy kết quả làm B → lỗi thì C". <code>supplyAsync</code>, <code>thenApply</code>, <code>thenCompose</code>, <code>thenCombine</code>, <code>exceptionally</code>, <code>handle</code>.</p>
 
   <pre><code>CompletableFuture&lt;String&gt; future = CompletableFuture
-    .supplyAsync(() -> fetchData())
-    .thenApply(s -> process(s))
-    .exceptionally(ex -> "fallback");
-String result = future.get();</code></pre>
+  .supplyAsync(() -> fetchData())
+  .thenApply(s -> process(s))
+  .exceptionally(ex -> "fallback");
+
+String result = future.get();
+
+// Kết hợp 2 future
+CompletableFuture&lt;Integer&gt; a = CompletableFuture.supplyAsync(() -> 1);
+CompletableFuture&lt;Integer&gt; b = CompletableFuture.supplyAsync(() -> 2);
+CompletableFuture&lt;Integer&gt; sum = a.thenCombine(b, Integer::sum);  // 3
+
+// Chạy song song nhiều task
+CompletableFuture.allOf(f1, f2, f3).join();</code></pre>
 
   <h4>Fork/Join Framework</h4>
-  <p>Chia nhỏ tác vụ lớn thành tác vụ con, chạy song song. Thuật toán work-stealing: thread rỗi "đánh cắp" task từ thread bận. <code>ForkJoinPool</code>, <code>RecursiveTask</code>, <code>RecursiveAction</code>. Dùng trong <code>parallelStream()</code>.</p>
+  <p>Chia nhỏ tác vụ lớn thành tác vụ con, chạy song song. Thuật toán work-stealing: thread rỗi "đánh cắp" task từ thread bận. <code>ForkJoinPool</code>, <code>RecursiveTask&lt;T&gt;</code> (có return), <code>RecursiveAction</code> (không return). Dùng trong <code>parallelStream()</code>.</p>
+
+  <pre><code>class SumTask extends RecursiveTask&lt;Long&gt; {
+  private final int[] arr;
+  private final int from, to;
+
+  SumTask(int[] arr, int from, int to) {
+    this.arr = arr;
+    this.from = from;
+    this.to = to;
+  }
+
+  @Override
+  protected Long compute() {
+    if (to - from &lt;= 1000) {
+      long sum = 0;
+      for (int i = from; i < to; i++) sum += arr[i];
+      return sum;
+    }
+    int mid = (from + to) / 2;
+    SumTask left = new SumTask(arr, from, mid);
+    SumTask right = new SumTask(arr, mid, to);
+    left.fork();
+    return right.compute() + left.join();
+  }
+}
+
+ForkJoinPool pool = new ForkJoinPool();
+long result = pool.invoke(new SumTask(arr, 0, arr.length));</code></pre>
 
   <h4>Virtual Threads (Java 21)</h4>
-  <p>Luồng siêu nhẹ do JVM quản lý, không phải OS. Có thể chạy hàng triệu thread trên laptop. Blocking I/O không tốn OS thread. <code>Thread.ofVirtual().start(task)</code> hoặc <code>Executors.newVirtualThreadPerTaskExecutor()</code>.</p>
+  <p>Luồng siêu nhẹ do JVM quản lý, không phải OS. Có thể chạy hàng triệu thread trên laptop. Blocking I/O không tốn OS thread — JVM unmount platform thread khi block. <code>Thread.ofVirtual().start(task)</code> hoặc <code>Executors.newVirtualThreadPerTaskExecutor()</code>.</p>
+
+  <pre><code>// Tạo virtual thread
+Thread.ofVirtual().start(() -> System.out.println("Virtual thread"));
+
+// Executor với virtual thread
+ExecutorService exec = Executors.newVirtualThreadPerTaskExecutor();
+exec.submit(() -> doIO());  // Mỗi task = 1 virtual thread
+exec.shutdown();
+
+// Tương thích với existing code — dùng như thread thường
+try (var exec = Executors.newVirtualThreadPerTaskExecutor()) {
+  IntStream.range(0, 10_000).forEach(i ->
+    exec.submit(() -> {
+      Thread.sleep(1000);  // Không block platform thread
+      return i;
+    })
+  );
+}</code></pre>
 
   <table class="comparison-table">
     <caption>Platform Thread vs Virtual Thread</caption>
@@ -41,12 +96,17 @@ String result = future.get();</code></pre>
         <td>Hàng nghìn</td>
         <td>Hàng triệu</td>
       </tr>
+      <tr>
+        <td>Blocking I/O</td>
+        <td>Chiếm OS thread</td>
+        <td>Unmount, không tốn</td>
+      </tr>
     </tbody>
   </table>
 
   <section class="when-use">
     <h4>Khi nào dùng Virtual Threads?</h4>
     <p class="when-use-do"><strong>Nên dùng:</strong> Ứng dụng nhiều I/O blocking; server HTTP; thay thế thread pool cho task I/O-bound.</p>
-    <p class="when-use-avoid"><strong>Tránh khi:</strong> CPU-bound thuần — platform thread vẫn tốt; cần pin (synchronized với native).</p>
+    <p class="when-use-avoid"><strong>Tránh khi:</strong> CPU-bound thuần — platform thread vẫn tốt; cần pin (synchronized với native); thread-local với số lượng lớn.</p>
   </section>
 </section>

@@ -2,11 +2,24 @@
   <h3>Garbage Collection — Cơ chế sâu</h3>
   <p>GC thu hồi Object unreachable. Hai loại: <strong>Tracing</strong> (mark từ root) và <strong>Reference Counting</strong> (Java không dùng — không xử lý cycle).</p>
 
-  <h4>GC Roots</h4>
-  <p>Điểm bắt đầu trace: (1) Local variable trong Stack frame đang thực thi; (2) Static variable; (3) JNI global reference; (4) Object được lock (monitor). Từ Root, trace qua reference → Object reachable. Còn lại = unreachable.</p>
+  <h4>GC Roots — Điểm bắt đầu</h4>
+  <p>Từ Root, trace qua reference → Object reachable. Còn lại = unreachable (có thể thu hồi).</p>
+  <ul>
+    <li><strong>Stack:</strong> Local variable trong frame đang thực thi</li>
+    <li><strong>Static:</strong> Biến static trong class đã load</li>
+    <li><strong>JNI:</strong> Global reference từ native code</li>
+    <li><strong>Monitor:</strong> Object đang được synchronized</li>
+  </ul>
+  <pre><code>// Root: local ref
+void method() {
+  Object o = new Object();  // o là root khi method đang chạy
+}  // o mất → Object unreachable</code></pre>
 
   <h4>Mark-Sweep-Compact</h4>
   <p><strong>Mark:</strong> DFS/BFS từ Root, đánh dấu live. <strong>Sweep:</strong> Duyệt Heap, free unreachable. <strong>Compact:</strong> Dồn live object — giảm fragmentation, tăng locality. Compact tốn thời gian — nhiều GC tối ưu để giảm compact.</p>
+
+  <h4>Serial vs Parallel GC</h4>
+  <p><strong>Serial:</strong> 1 thread GC — pause toàn bộ. <strong>Parallel (Throughput):</strong> Nhiều thread GC — nhanh hơn nhưng vẫn STW. <code>-XX:+UseParallelGC</code>. Phù hợp batch, ít yêu cầu latency.</p>
 
   <h4>G1 (Garbage First)</h4>
   <p>Chia Heap thành region (~2048 region, mỗi region 1–32MB). Mỗi region là Eden, Survivor, hoặc Old. Ưu tiên dọn region có nhiều rác (garbage first). Evacuation: copy live object từ region này sang region khác. Mixed GC: dọn cả Young và một phần Old. Pause time mục tiêu: <code>-XX:MaxGCPauseMillis</code> (mặc định 200ms).</p>

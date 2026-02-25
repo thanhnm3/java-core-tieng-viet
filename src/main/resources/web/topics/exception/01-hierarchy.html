@@ -3,7 +3,115 @@
 <p>Exception Handling là quản lý luồng điều khiển (control flow) để ứng dụng không "sập" bất ngờ và cung cấp đủ thông tin để truy vết lỗi trong Production. Mọi lỗi trong Java bắt nguồn từ <code>java.lang.Throwable</code>.</p>
 
 <section>
+  <h3>Tổng quan từng phần</h3>
+  <p>Mỗi phần gồm: <strong>Kỹ thuật</strong> (định nghĩa, cú pháp, quy tắc) và <strong>Ví dụ</strong> (code minh họa).</p>
+  <table class="comparison-table">
+    <caption>Exception — Kỹ thuật và Ví dụ</caption>
+    <thead>
+      <tr>
+        <th>Phần</th>
+        <th>Kỹ thuật</th>
+        <th>Ví dụ</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>01 — Hierarchy</strong></td>
+        <td>Throwable, Error, Checked vs Unchecked</td>
+        <td>Sơ đồ phân cấp, throws IOException, IllegalArgumentException</td>
+      </tr>
+      <tr>
+        <td><strong>02 — Keywords</strong></td>
+        <td>try-catch-finally, throw, throws</td>
+        <td>Multi-catch, rethrow, finally cleanup</td>
+      </tr>
+      <tr>
+        <td><strong>03 — Try-with-resources</strong></td>
+        <td>AutoCloseable, ARM, suppressed</td>
+        <td>try (InputStream in = ...)</td>
+      </tr>
+      <tr>
+        <td><strong>04 — Propagation</strong></td>
+        <td>Lan truyền exception, stack trace</td>
+        <td>method1 → method2 → method3</td>
+      </tr>
+      <tr>
+        <td><strong>05 — JVM Cost</strong></td>
+        <td>Chi phí throw, fillInStackTrace</td>
+        <td>So sánh performance</td>
+      </tr>
+      <tr>
+        <td><strong>06 — Best Practices</strong></td>
+        <td>Khi catch, khi throw, logging</td>
+        <td>Early return, specific catch</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h3>Lộ trình học — Sơ đồ flow</h3>
+  <p>Sơ đồ dưới đây thể hiện thứ tự học và mối liên hệ giữa các phần. Mỗi ô là một phần; mũi tên chỉ hướng tiếp theo.</p>
+
+  <div class="flow-diagram">
+    <script type="application/json" data-flow-tooltips>
+    {"C1":{"title":"01 Hierarchy","detail":"<p><strong>Throwable</strong> là gốc. Hai nhánh: Error (lỗi hệ thống, không nên catch) và Exception (có thể xử lý).</p><p><strong>Error:</strong> OutOfMemoryError, StackOverflowError - JVM gặp vấn đề nghiêm trọng. Để chương trình thoát.</p><p><strong>Checked:</strong> IOException, SQLException - compiler bắt try-catch hoặc throws.</p><p><strong>Unchecked (RuntimeException):</strong> NullPointerException, IllegalArgumentException - thường do bug, không bắt buộc khai báo.</p>"},"C2":{"title":"02 Keywords","detail":"<p><strong>try-catch</strong> - bắt exception. Catch cụ thể trước, chung sau. Multi-catch: catch (A | B e).</p><p><strong>finally</strong> - luôn chạy (trừ System.exit). Dùng cleanup. Lưu ý: không return trong finally.</p><p><strong>throw</strong> - ném exception. throws - khai báo method có thể ném.</p>"},"C3":{"title":"03 Try-with-resources","detail":"<p><strong>AutoCloseable</strong> - interface với close(). try (Resource r = ...) tự gọi close() khi thoát block.</p><p>Không cần finally close. Suppressed exceptions - nếu cả try và close đều throw, close exception bị suppressed, có thể lấy qua getSuppressed().</p>"},"C4":{"title":"04 Propagation","detail":"<p>Exception lan truyền lên caller nếu không bắt. Mỗi method pop khỏi stack khi throw.</p><p><strong>Stack trace</strong> - đọc từ dưới lên: nơi throw trước, caller sau. Giúp debug nhanh.</p>"},"C5":{"title":"05 JVM Cost","detail":"<p><strong>fillInStackTrace()</strong> - tốn chi phí vì phải walk stack. Throw nhiều lần trong vòng lặp có thể chậm.</p><p>Tránh dùng exception cho control flow. Dùng khi thực sự exceptional.</p>"},"C6":{"title":"06 Best Practices","detail":"<p>Catch cụ thể (IOException) thay vì Exception. Early return sau khi xử lý. Log đầy đủ với stack trace.</p><p>Không catch rồi bỏ trống. Wrap exception khi cần (cause).</p>"}}
+    </script>
+    <pre class="mermaid">
+flowchart TD
+  subgraph Foundation [Foundation]
+    direction LR
+    C1("01 Hierarchy")
+    C2("02 Keywords")
+    C1 -->|"Error, Checked, Unchecked"| C2
+  end
+  subgraph Resources [Resources]
+    C3("03 Try-with-resources")
+  end
+  subgraph Deep [Deep Dive]
+    direction LR
+    C4("04 Propagation")
+    C5("05 JVM Cost")
+    C6("06 Best Practices")
+    C4 -->|"Stack trace"| C5 -->|"Catch cụ thể"| C6
+  end
+  Foundation -->|"try-catch-finally"| Resources
+  Resources -->|"AutoCloseable"| Deep
+    </pre>
+  </div>
+
+  <table class="comparison-table">
+    <caption>Chú thích từng phần</caption>
+    <thead>
+      <tr><th>Phần</th><th>Nội dung chính</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>01</td><td>Throwable, Error, Checked vs Unchecked</td></tr>
+      <tr><td>02</td><td>try-catch-finally, throw, throws, multi-catch</td></tr>
+      <tr><td>03</td><td>try (InputStream in = ...), suppressed</td></tr>
+      <tr><td>04</td><td>Lan truyền exception, đọc stack trace</td></tr>
+      <tr><td>05</td><td>Chi phí throw, fillInStackTrace</td></tr>
+      <tr><td>06</td><td>Specific catch, early return, logging</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
   <h3>Hệ thống phân cấp Throwable</h3>
+
+  <h4>Kỹ thuật — Sơ đồ phân cấp</h4>
+  <pre><code>Throwable
+├── Error (không nên catch)
+│   ├── OutOfMemoryError
+│   ├── StackOverflowError
+│   └── VirtualMachineError
+└── Exception
+    ├── RuntimeException (Unchecked)
+    │   ├── NullPointerException
+    │   ├── IllegalArgumentException
+    │   ├── ArrayIndexOutOfBoundsException
+    │   └── ...
+    └── IOException, SQLException... (Checked)</code></pre>
 
   <h4>Error</h4>
   <p>Lỗi hệ thống nghiêm trọng mà ứng dụng không nên (và thường không thể) xử lý. Ví dụ: <code>OutOfMemoryError</code>, <code>StackOverflowError</code>, <code>VirtualMachineError</code>. Khi gặp, tốt nhất để chương trình dừng — không nên catch.</p>
@@ -14,6 +122,21 @@
     <li><strong>Checked Exception:</strong> Bắt buộc xử lý tại compile-time. Kế thừa <code>Exception</code> (không phải RuntimeException). Ví dụ: <code>IOException</code>, <code>SQLException</code>, <code>ClassNotFoundException</code>. Compiler bắt buộc try-catch hoặc <code>throws</code>.</li>
     <li><strong>Unchecked Exception (Runtime):</strong> Xảy ra khi chạy. Kế thừa <code>RuntimeException</code>. Thường do lỗi logic. Ví dụ: <code>NullPointerException</code>, <code>ArrayIndexOutOfBoundsException</code>, <code>IllegalArgumentException</code>. Không bắt buộc khai báo.</li>
   </ul>
+
+  <h4>Khi nào dùng Checked vs Unchecked?</h4>
+  <p><strong>Checked:</strong> Lỗi recoverable — caller có thể xử lý (retry, fallback). Ví dụ: file không tìm thấy, network timeout. <strong>Unchecked:</strong> Lỗi programming — bug, validation fail. Caller thường không thể recover. Ví dụ: null pointer, invalid argument.</p>
+  <h4>Ví dụ</h4>
+  <pre><code>// Checked — caller phải xử lý
+public void readFile() throws IOException {
+  Files.readAllBytes(path);
+}
+
+// Unchecked — không bắt buộc khai báo
+public void setAge(int age) {
+  if (age &lt; 0 || age > 150) {
+    throw new IllegalArgumentException("Invalid age: " + age);
+  }
+}</code></pre>
 
   <table class="comparison-table">
     <caption>Error vs Checked vs Unchecked</caption>

@@ -1,6 +1,6 @@
 <section>
   <h3>Stream API — Giới thiệu</h3>
-  <p>Stream cho phép xử lý collection theo kiểu <strong>declarative</strong> — mô tả <em>cái gì</em> cần làm, không phải <em>cách làm</em>. Hỗ trợ pipeline, lazy evaluation, và có thể chạy song song.</p>
+  <p>Stream cho phép xử lý collection theo kiểu <strong>declarative</strong> — mô tả <em>cái gì</em> cần làm, không phải <em>cách làm</em>. Hỗ trợ pipeline, lazy evaluation, và có thể chạy song song. Stream không lưu trữ data — nó wrap source (collection, array, generator) và xử lý on-demand.</p>
 
   <h4>Tạo Stream</h4>
   <pre><code>// Từ collection
@@ -15,9 +15,52 @@ IntStream is = Arrays.stream(arr);
 // Từ giá trị
 Stream&lt;String&gt; s3 = Stream.of("a", "b", "c");
 
-// Vô hạn
+// Finite — iterate với predicate (Java 9+)
+Stream&lt;Integer&gt; finite = Stream.iterate(0, n -> n &lt; 10, n -> n + 1);
+
+// Vô hạn — cần limit()
 Stream&lt;Integer&gt; infinite = Stream.iterate(0, n -> n + 1);
 Stream&lt;Double&gt; random = Stream.generate(Math::random);</code></pre>
+
+  <h4>Stream characteristics</h4>
+  <p>Mỗi stream có các đặc tính ảnh hưởng tối ưu hóa: <strong>ORDERED</strong> (thứ tự xác định), <strong>SIZED</strong> (biết trước size), <strong>DISTINCT</strong>, <strong>SORTED</strong>. Một số operation thay đổi characteristics — ví dụ: <code>sorted()</code> thêm ORDERED, <code>unordered()</code> bỏ ORDERED (có thể tăng tốc parallel).</p>
+  <table class="comparison-table">
+    <caption>Một số characteristics</caption>
+    <thead>
+      <tr>
+        <th>Characteristic</th>
+        <th>Ý nghĩa</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>ORDERED</td>
+        <td>Thứ tự phần tử xác định (encounter order)</td>
+      </tr>
+      <tr>
+        <td>SIZED</td>
+        <td>Biết trước số phần tử (List, array)</td>
+      </tr>
+      <tr>
+        <td>DISTINCT</td>
+        <td>Không trùng lặp (Set)</td>
+      </tr>
+      <tr>
+        <td>SORTED</td>
+        <td>Đã sắp xếp (sau sorted())</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h4>Finite vs Infinite stream</h4>
+  <p>Stream có thể finite (List.stream()) hoặc infinite (Stream.iterate, Stream.generate). Với infinite stream, <strong>phải</strong> dùng <code>limit()</code> hoặc short-circuit terminal (findFirst, anyMatch) — nếu không sẽ chạy vô hạn.</p>
+  <pre><code>// Infinite — OK vì findFirst short-circuit
+Optional&lt;Integer&gt; first = Stream.iterate(0, n -> n + 1)
+  .filter(n -> n * n &gt; 100)
+  .findFirst();
+
+// Infinite — cần limit
+List&lt;Integer&gt; first10 = Stream.iterate(0, n -> n + 1).limit(10).toList();</code></pre>
 
   <h4>Intermediate vs Terminal</h4>
   <table class="comparison-table">
@@ -45,7 +88,7 @@ Stream&lt;Double&gt; random = Stream.generate(Math::random);</code></pre>
   </table>
 
   <h4>Lazy Evaluation</h4>
-  <p>Intermediate operations không chạy ngay — chúng chỉ build pipeline. Khi gọi terminal, pipeline mới được thực thi từ đầu đến cuối.</p>
+  <p>Intermediate operations không chạy ngay — chúng chỉ build pipeline. Khi gọi terminal, pipeline mới được thực thi từ đầu đến cuối. Short-circuit (findFirst, anyMatch) dừng sớm khi có kết quả.</p>
   <pre><code>List&lt;Integer&gt; src = List.of(1, 2, 3, 4, 5);
 src.stream()
    .filter(n -> {

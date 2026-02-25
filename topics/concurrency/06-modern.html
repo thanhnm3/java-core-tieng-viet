@@ -23,7 +23,7 @@
     <nav class="topic-sidebar"><ul>
         <li><a href="../../index.html">Trang ch&#7911;</a>
         </li>
-        <li><a href="../oop.html">OOP</a>
+        <li><a href="../oop/01-intro.html">OOP</a>
         </li>
         <li><a href="../collections/01-intro.html">Collections</a>
         </li>
@@ -57,19 +57,74 @@
   <h3>Modern Java Concurrency</h3>
 
   <h4>CompletableFuture (Java 8)</h4>
-  <p>Lập trình bất đồng bộ theo phong cách Functional. Kết chuỗi: "Làm A xong → lấy kết quả làm B → lỗi thì C". <code>thenApply</code>, <code>thenCompose</code>, <code>thenCombine</code>, <code>exceptionally</code>.</p>
+  <p>Lập trình bất đồng bộ theo phong cách Functional. Kết chuỗi: "Làm A xong → lấy kết quả làm B → lỗi thì C". <code>supplyAsync</code>, <code>thenApply</code>, <code>thenCompose</code>, <code>thenCombine</code>, <code>exceptionally</code>, <code>handle</code>.</p>
 
   <pre><code>CompletableFuture&lt;String&gt; future = CompletableFuture
-    .supplyAsync(() -> fetchData())
-    .thenApply(s -> process(s))
-    .exceptionally(ex -> "fallback");
-String result = future.get();</code></pre>
+  .supplyAsync(() -> fetchData())
+  .thenApply(s -> process(s))
+  .exceptionally(ex -> "fallback");
+
+String result = future.get();
+
+// Kết hợp 2 future
+CompletableFuture&lt;Integer&gt; a = CompletableFuture.supplyAsync(() -> 1);
+CompletableFuture&lt;Integer&gt; b = CompletableFuture.supplyAsync(() -> 2);
+CompletableFuture&lt;Integer&gt; sum = a.thenCombine(b, Integer::sum);  // 3
+
+// Chạy song song nhiều task
+CompletableFuture.allOf(f1, f2, f3).join();</code></pre>
 
   <h4>Fork/Join Framework</h4>
-  <p>Chia nhỏ tác vụ lớn thành tác vụ con, chạy song song. Thuật toán work-stealing: thread rỗi "đánh cắp" task từ thread bận. <code>ForkJoinPool</code>, <code>RecursiveTask</code>, <code>RecursiveAction</code>. Dùng trong <code>parallelStream()</code>.</p>
+  <p>Chia nhỏ tác vụ lớn thành tác vụ con, chạy song song. Thuật toán work-stealing: thread rỗi "đánh cắp" task từ thread bận. <code>ForkJoinPool</code>, <code>RecursiveTask&lt;T&gt;</code> (có return), <code>RecursiveAction</code> (không return). Dùng trong <code>parallelStream()</code>.</p>
+
+  <pre><code>class SumTask extends RecursiveTask&lt;Long&gt; {
+  private final int[] arr;
+  private final int from, to;
+
+  SumTask(int[] arr, int from, int to) {
+    this.arr = arr;
+    this.from = from;
+    this.to = to;
+  }
+
+  @Override
+  protected Long compute() {
+    if (to - from &lt;= 1000) {
+      long sum = 0;
+      for (int i = from; i < to; i++) sum += arr[i];
+      return sum;
+    }
+    int mid = (from + to) / 2;
+    SumTask left = new SumTask(arr, from, mid);
+    SumTask right = new SumTask(arr, mid, to);
+    left.fork();
+    return right.compute() + left.join();
+  }
+}
+
+ForkJoinPool pool = new ForkJoinPool();
+long result = pool.invoke(new SumTask(arr, 0, arr.length));</code></pre>
 
   <h4>Virtual Threads (Java 21)</h4>
-  <p>Luồng siêu nhẹ do JVM quản lý, không phải OS. Có thể chạy hàng triệu thread trên laptop. Blocking I/O không tốn OS thread. <code>Thread.ofVirtual().start(task)</code> hoặc <code>Executors.newVirtualThreadPerTaskExecutor()</code>.</p>
+  <p>Luồng siêu nhẹ do JVM quản lý, không phải OS. Có thể chạy hàng triệu thread trên laptop. Blocking I/O không tốn OS thread — JVM unmount platform thread khi block. <code>Thread.ofVirtual().start(task)</code> hoặc <code>Executors.newVirtualThreadPerTaskExecutor()</code>.</p>
+
+  <pre><code>// Tạo virtual thread
+Thread.ofVirtual().start(() -> System.out.println("Virtual thread"));
+
+// Executor với virtual thread
+ExecutorService exec = Executors.newVirtualThreadPerTaskExecutor();
+exec.submit(() -> doIO());  // Mỗi task = 1 virtual thread
+exec.shutdown();
+
+// Tương thích với existing code — dùng như thread thường
+try (var exec = Executors.newVirtualThreadPerTaskExecutor()) {
+  IntStream.range(0, 10_000).forEach(i ->
+    exec.submit(() -> {
+      Thread.sleep(1000);  // Không block platform thread
+      return i;
+    })
+  );
+}</code></pre>
 
   <table class="comparison-table">
     <caption>Platform Thread vs Virtual Thread</caption>
@@ -96,13 +151,18 @@ String result = future.get();</code></pre>
         <td>Hàng nghìn</td>
         <td>Hàng triệu</td>
       </tr>
+      <tr>
+        <td>Blocking I/O</td>
+        <td>Chiếm OS thread</td>
+        <td>Unmount, không tốn</td>
+      </tr>
     </tbody>
   </table>
 
   <section class="when-use">
     <h4>Khi nào dùng Virtual Threads?</h4>
     <p class="when-use-do"><strong>Nên dùng:</strong> Ứng dụng nhiều I/O blocking; server HTTP; thay thế thread pool cho task I/O-bound.</p>
-    <p class="when-use-avoid"><strong>Tránh khi:</strong> CPU-bound thuần — platform thread vẫn tốt; cần pin (synchronized với native).</p>
+    <p class="when-use-avoid"><strong>Tránh khi:</strong> CPU-bound thuần — platform thread vẫn tốt; cần pin (synchronized với native); thread-local với số lượng lớn.</p>
   </section>
 </section>
 
@@ -112,5 +172,113 @@ String result = future.get();</code></pre>
   <footer class="topic-footer">
     <p>Xây dựng bằng Java 17+ · Không dùng framework · Pure NIO</p>
   </footer>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@9/dist/mermaid.min.js"></script>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      securityLevel: 'loose',
+      theme: 'base',
+      flowchart: { useMaxWidth: true, htmlLabels: true, curve: 'basis', padding: 20 },
+      themeVariables: {
+        primaryColor: '#FFFFFF',
+        primaryTextColor: '#0F172A',
+        primaryBorderColor: '#10B981',
+        secondaryColor: '#ECFDF5',
+        secondaryBorderColor: '#059669',
+        tertiaryColor: '#F8FAFC',
+        tertiaryBorderColor: '#10B981',
+        lineColor: '#64748B',
+        textColor: '#334155',
+        fontFamily: 'Inter, system-ui, sans-serif',
+        fontSize: '14px',
+        clusterBkg: '#F8FAFC',
+        clusterBorder: '#10B981',
+        titleColor: '#0F172A',
+        nodeBorder: '#10B981',
+        defaultLinkColor: '#64748B',
+        edgeLabelBackground: '#ECFDF5',
+        edgeLabelColor: '#047857',
+        mainBkg: '#FFFFFF',
+        secondBkg: '#ECFDF5'
+      }
+    });
+    window.addEventListener('load', function() {
+      var tooltipEl = document.createElement('div');
+      tooltipEl.className = 'flow-tooltip';
+      tooltipEl.innerHTML = '<div class="flow-tooltip__title"></div><div class="flow-tooltip__body"></div>';
+      document.body.appendChild(tooltipEl);
+      function getNodeIdFromElement(el) {
+        if (!el) return null;
+        var dataId = el.getAttribute && el.getAttribute('data-id');
+        if (dataId) return dataId;
+        var id = el.id;
+        if (!id) return null;
+        if (id.indexOf('flowchart-') === 0) {
+          var rest = id.slice(10);
+          var dash = rest.indexOf('-');
+          return dash >= 0 ? rest.slice(0, dash) : rest;
+        }
+        return id;
+      }
+      function attachTooltips() {
+        document.querySelectorAll('.flow-diagram svg rect').forEach(function(r) {
+          r.setAttribute('rx', '8');
+          r.setAttribute('ry', '8');
+        });
+        var attached = 0;
+        document.querySelectorAll('.flow-diagram').forEach(function(diagram, di) {
+          var script = diagram.querySelector('script[type="application/json"][data-flow-tooltips]');
+          if (!script) return;
+          var data;
+          try { data = JSON.parse(script.textContent); } catch (e) { return; }
+          var svg = diagram.querySelector('svg');
+          if (!svg) return;
+          if (diagram.hasAttribute('data-tooltip-delegated')) return;
+          diagram.setAttribute('data-tooltip-delegated', '1');
+          diagram.querySelectorAll('g.node').forEach(function(g) { g.style.pointerEvents = 'auto'; });
+          var onOver = function(e) {
+            var g = e.target.closest && e.target.closest('g.node');
+            if (!g) return;
+            var nodeId = getNodeIdFromElement(g);
+            if (!nodeId) return;
+            var tip = data[nodeId];
+            if (!tip || !tip.detail) return;
+            tooltipEl.querySelector('.flow-tooltip__title').textContent = tip.title || nodeId;
+            tooltipEl.querySelector('.flow-tooltip__body').innerHTML = tip.detail;
+            tooltipEl.style.left = '';
+            tooltipEl.style.top = '';
+            tooltipEl.classList.add('is-visible');
+            var rect = g.getBoundingClientRect();
+            var x = rect.left + rect.width / 2;
+            var y = rect.top - 10;
+            requestAnimationFrame(function() {
+              var w = tooltipEl.offsetWidth;
+              var h = tooltipEl.offsetHeight;
+              tooltipEl.style.left = Math.max(12, Math.min(x - w / 2, window.innerWidth - w - 12)) + 'px';
+              tooltipEl.style.top = Math.max(12, y - h) + 'px';
+            });
+          };
+          var onOut = function(e) {
+            var related = e.relatedTarget;
+            if (related && diagram.contains(related)) return;
+            tooltipEl.classList.remove('is-visible');
+          };
+          diagram.addEventListener('mouseover', onOver);
+          diagram.addEventListener('mouseout', onOut);
+          attached++;
+        });
+        return attached;
+      }
+      var delays = [150, 400, 800];
+      delays.forEach(function(delay, i) {
+        setTimeout(function() {
+          var n = attachTooltips();
+          if (n === 0 && i === delays.length - 1) {
+            setTimeout(attachTooltips, 500);
+          }
+        }, delay);
+      });
+    });
+  </script>
 </body>
 </html>

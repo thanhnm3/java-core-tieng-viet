@@ -23,7 +23,7 @@
     <nav class="topic-sidebar"><ul>
         <li><a href="../../index.html">Trang ch&#7911;</a>
         </li>
-        <li><a href="../oop.html">OOP</a>
+        <li><a href="../oop/01-intro.html">OOP</a>
         </li>
         <li><a href="../collections/01-intro.html" class="topic-sidebar-link--active">Collections</a>
         <ul class="topic-sub-nav">
@@ -61,14 +61,35 @@
   <h4>equals và hashCode — Contract bắt buộc</h4>
   <p>Với custom object trong Set/Map: <strong>equals</strong> so sánh logic; <strong>hashCode</strong> phải nhất quán với equals — nếu <code>a.equals(b)</code> thì <code>a.hashCode() == b.hashCode()</code>. Ngược lại không đúng (hash collision). Nếu hashCode sai: hai object equals nhưng hash khác nhau → có thể cả hai vào Set (vi phạm không trùng). Nếu hashCode đúng nhưng equals sai: hai object không equals nhưng hash trùng → chaining, vẫn đúng.</p>
 
-  <pre><code>// Ví dụ: class phải override equals và hashCode
-record Person(String id, String name) {
-  // record tự sinh equals/hashCode dựa trên id, name
+  <h4>Ví dụ override equals và hashCode</h4>
+  <pre><code>public class Person {
+  private final String id;
+  private final String name;
+
+  public Person(String id, String name) {
+    this.id = id;
+    this.name = name;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (!(o instanceof Person person)) return false;
+    return id.equals(person.id);
+  }
+
+  @Override
+  public int hashCode() {
+    return id.hashCode();  // Dùng cùng field với equals
+  }
 }
+
+// Hoặc dùng record (Java 16+) — tự sinh equals/hashCode
+record PersonRecord(String id, String name) { }
 
 Set&lt;Person&gt; set = new HashSet&lt;&gt;();
 set.add(new Person("1", "Alice"));
-set.add(new Person("1", "Alice"));  // Bị bỏ qua
+set.add(new Person("1", "Alice"));  // Bị bỏ qua (trùng id)
 set.add(new Person("2", "Bob"));
 System.out.println(set.size());  // 2</code></pre>
 
@@ -76,7 +97,31 @@ System.out.println(set.size());  // 2</code></pre>
   <p>Kế thừa HashSet, thêm doubly-linked list chạy qua các entry theo thứ tự chèn. Mỗi entry có <code>before</code>, <code>after</code>. Iteration theo thứ tự thêm vào. Overhead nhỏ so với HashSet.</p>
 
   <h4>TreeSet</h4>
-  <p>Dùng <code>TreeMap</code> (Red-Black tree) bên trong. Phần tử phải <code>Comparable</code> hoặc truyền <code>Comparator</code>. Cây cân bằng — độ cao O(log n). first(), last(), headSet(), tailSet() — O(log n).</p>
+  <p>Dùng <code>TreeMap</code> (Red-Black tree) bên trong. Phần tử phải <code>Comparable</code> hoặc truyền <code>Comparator</code>. Cây cân bằng — độ cao O(log n). first(), last(), headSet(), tailSet() — O(log n). Không cho phép null khi dùng natural order.</p>
+
+  <h4>EnumSet — Set cho enum (hiệu năng cao)</h4>
+  <p><code>EnumSet</code> dùng bit vector — rất nhanh, ít bộ nhớ. Chỉ dùng với enum. <code>EnumSet.of()</code>, <code>EnumSet.allOf()</code>, <code>EnumSet.range()</code>.</p>
+  <pre><code>enum Day { MON, TUE, WED, THU, FRI, SAT, SUN }
+
+Set&lt;Day&gt; weekend = EnumSet.of(Day.SAT, Day.SUN);
+Set&lt;Day&gt; weekdays = EnumSet.range(Day.MON, Day.FRI);
+Set&lt;Day&gt; all = EnumSet.allOf(Day.class);</code></pre>
+
+  <h4>Set operations — Union, intersection, difference</h4>
+  <pre><code>Set&lt;Integer&gt; a = new HashSet&lt;&gt;(Set.of(1, 2, 3));
+Set&lt;Integer&gt; b = new HashSet&lt;&gt;(Set.of(2, 3, 4));
+
+// Union
+Set&lt;Integer&gt; union = new HashSet&lt;&gt;(a);
+union.addAll(b);  // {1, 2, 3, 4}
+
+// Intersection
+Set&lt;Integer&gt; inter = new HashSet&lt;&gt;(a);
+inter.retainAll(b);  // {2, 3}
+
+// Difference (a - b)
+Set&lt;Integer&gt; diff = new HashSet&lt;&gt;(a);
+diff.removeAll(b);  // {1}</code></pre>
 
   <table class="comparison-table">
     <caption>Độ phức tạp — HashSet vs LinkedHashSet vs TreeSet</caption>
@@ -151,5 +196,113 @@ System.out.println(tree.first());  // 30</code></pre>
   <footer class="topic-footer">
     <p>Xây dựng bằng Java 17+ · Không dùng framework · Pure NIO</p>
   </footer>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@9/dist/mermaid.min.js"></script>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      securityLevel: 'loose',
+      theme: 'base',
+      flowchart: { useMaxWidth: true, htmlLabels: true, curve: 'basis', padding: 20 },
+      themeVariables: {
+        primaryColor: '#FFFFFF',
+        primaryTextColor: '#0F172A',
+        primaryBorderColor: '#10B981',
+        secondaryColor: '#ECFDF5',
+        secondaryBorderColor: '#059669',
+        tertiaryColor: '#F8FAFC',
+        tertiaryBorderColor: '#10B981',
+        lineColor: '#64748B',
+        textColor: '#334155',
+        fontFamily: 'Inter, system-ui, sans-serif',
+        fontSize: '14px',
+        clusterBkg: '#F8FAFC',
+        clusterBorder: '#10B981',
+        titleColor: '#0F172A',
+        nodeBorder: '#10B981',
+        defaultLinkColor: '#64748B',
+        edgeLabelBackground: '#ECFDF5',
+        edgeLabelColor: '#047857',
+        mainBkg: '#FFFFFF',
+        secondBkg: '#ECFDF5'
+      }
+    });
+    window.addEventListener('load', function() {
+      var tooltipEl = document.createElement('div');
+      tooltipEl.className = 'flow-tooltip';
+      tooltipEl.innerHTML = '<div class="flow-tooltip__title"></div><div class="flow-tooltip__body"></div>';
+      document.body.appendChild(tooltipEl);
+      function getNodeIdFromElement(el) {
+        if (!el) return null;
+        var dataId = el.getAttribute && el.getAttribute('data-id');
+        if (dataId) return dataId;
+        var id = el.id;
+        if (!id) return null;
+        if (id.indexOf('flowchart-') === 0) {
+          var rest = id.slice(10);
+          var dash = rest.indexOf('-');
+          return dash >= 0 ? rest.slice(0, dash) : rest;
+        }
+        return id;
+      }
+      function attachTooltips() {
+        document.querySelectorAll('.flow-diagram svg rect').forEach(function(r) {
+          r.setAttribute('rx', '8');
+          r.setAttribute('ry', '8');
+        });
+        var attached = 0;
+        document.querySelectorAll('.flow-diagram').forEach(function(diagram, di) {
+          var script = diagram.querySelector('script[type="application/json"][data-flow-tooltips]');
+          if (!script) return;
+          var data;
+          try { data = JSON.parse(script.textContent); } catch (e) { return; }
+          var svg = diagram.querySelector('svg');
+          if (!svg) return;
+          if (diagram.hasAttribute('data-tooltip-delegated')) return;
+          diagram.setAttribute('data-tooltip-delegated', '1');
+          diagram.querySelectorAll('g.node').forEach(function(g) { g.style.pointerEvents = 'auto'; });
+          var onOver = function(e) {
+            var g = e.target.closest && e.target.closest('g.node');
+            if (!g) return;
+            var nodeId = getNodeIdFromElement(g);
+            if (!nodeId) return;
+            var tip = data[nodeId];
+            if (!tip || !tip.detail) return;
+            tooltipEl.querySelector('.flow-tooltip__title').textContent = tip.title || nodeId;
+            tooltipEl.querySelector('.flow-tooltip__body').innerHTML = tip.detail;
+            tooltipEl.style.left = '';
+            tooltipEl.style.top = '';
+            tooltipEl.classList.add('is-visible');
+            var rect = g.getBoundingClientRect();
+            var x = rect.left + rect.width / 2;
+            var y = rect.top - 10;
+            requestAnimationFrame(function() {
+              var w = tooltipEl.offsetWidth;
+              var h = tooltipEl.offsetHeight;
+              tooltipEl.style.left = Math.max(12, Math.min(x - w / 2, window.innerWidth - w - 12)) + 'px';
+              tooltipEl.style.top = Math.max(12, y - h) + 'px';
+            });
+          };
+          var onOut = function(e) {
+            var related = e.relatedTarget;
+            if (related && diagram.contains(related)) return;
+            tooltipEl.classList.remove('is-visible');
+          };
+          diagram.addEventListener('mouseover', onOver);
+          diagram.addEventListener('mouseout', onOut);
+          attached++;
+        });
+        return attached;
+      }
+      var delays = [150, 400, 800];
+      delays.forEach(function(delay, i) {
+        setTimeout(function() {
+          var n = attachTooltips();
+          if (n === 0 && i === delays.length - 1) {
+            setTimeout(attachTooltips, 500);
+          }
+        }, delay);
+      });
+    });
+  </script>
 </body>
 </html>

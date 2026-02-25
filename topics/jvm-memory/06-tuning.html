@@ -23,7 +23,7 @@
     <nav class="topic-sidebar"><ul>
         <li><a href="../../index.html">Trang ch&#7911;</a>
         </li>
-        <li><a href="../oop.html">OOP</a>
+        <li><a href="../oop/01-intro.html">OOP</a>
         </li>
         <li><a href="../collections/01-intro.html">Collections</a>
         </li>
@@ -57,6 +57,7 @@
   <h3>JVM Tuning — Chi tiết kỹ thuật</h3>
   <p>Các flag quan trọng khi deploy. Luôn test trên workload thực tế.</p>
 
+  <h4>Flag Heap và Memory</h4>
   <table class="comparison-table">
     <caption>Flag Heap và Memory</caption>
     <thead>
@@ -100,6 +101,13 @@
     </tbody>
   </table>
 
+  <h4>GC Logging (Java 9+)</h4>
+  <p><code>-Xlog:gc*:file=gc.log</code> — ghi log GC. <code>-Xlog:gc*:file=gc.log:time,uptime,level,tags</code> — với timestamp. Java 8: <code>-XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:gc.log</code>.</p>
+  <pre><code>java -Xlog:gc*:file=gc.log:time,uptime -Xmx512m -jar app.jar</code></pre>
+
+  <h4>Container support</h4>
+  <p>JVM mặc định không nhận diện cgroup limit (Docker, K8s). Java 10+: <code>-XX:+UseContainerSupport</code> (mặc định) — đọc memory limit từ cgroup. Java 8: set <code>-Xmx</code> thủ công theo container limit. <code>-XX:MaxRAMPercentage=75</code> — dùng 75% RAM cho Heap.</p>
+
   <h4>G1-specific</h4>
   <p><code>-XX:MaxGCPauseMillis=200</code> — mục tiêu pause; <code>-XX:G1HeapRegionSize</code> — kích thước region (1–32MB, power of 2); <code>-XX:InitiatingHeapOccupancyPercent=45</code> — bắt đầu concurrent mark khi Old đạt 45%.</p>
 
@@ -108,7 +116,7 @@
 
   <section class="when-use">
     <h4>Lưu ý deploy</h4>
-    <p class="when-use-do"><strong>-Xms = -Xmx:</strong> Tránh resize Heap — giảm overhead. <strong>Container:</strong> JVM không nhận diện cgroup limit — dùng <code>-XX:+UseContainerSupport</code> (Java 10+) hoặc set -Xmx thủ công theo limit.</p>
+    <p class="when-use-do"><strong>-Xms = -Xmx:</strong> Tránh resize Heap — giảm overhead. <strong>Container:</strong> Dùng UseContainerSupport hoặc set -Xmx theo limit.</p>
     <p class="when-use-avoid"><strong>Tránh:</strong> -Xmx quá lớn so với RAM vật lý; quên -XX:MaxMetaspaceSize (có thể OOM Native).</p>
   </section>
 </section>
@@ -119,5 +127,113 @@
   <footer class="topic-footer">
     <p>Xây dựng bằng Java 17+ · Không dùng framework · Pure NIO</p>
   </footer>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@9/dist/mermaid.min.js"></script>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      securityLevel: 'loose',
+      theme: 'base',
+      flowchart: { useMaxWidth: true, htmlLabels: true, curve: 'basis', padding: 20 },
+      themeVariables: {
+        primaryColor: '#FFFFFF',
+        primaryTextColor: '#0F172A',
+        primaryBorderColor: '#10B981',
+        secondaryColor: '#ECFDF5',
+        secondaryBorderColor: '#059669',
+        tertiaryColor: '#F8FAFC',
+        tertiaryBorderColor: '#10B981',
+        lineColor: '#64748B',
+        textColor: '#334155',
+        fontFamily: 'Inter, system-ui, sans-serif',
+        fontSize: '14px',
+        clusterBkg: '#F8FAFC',
+        clusterBorder: '#10B981',
+        titleColor: '#0F172A',
+        nodeBorder: '#10B981',
+        defaultLinkColor: '#64748B',
+        edgeLabelBackground: '#ECFDF5',
+        edgeLabelColor: '#047857',
+        mainBkg: '#FFFFFF',
+        secondBkg: '#ECFDF5'
+      }
+    });
+    window.addEventListener('load', function() {
+      var tooltipEl = document.createElement('div');
+      tooltipEl.className = 'flow-tooltip';
+      tooltipEl.innerHTML = '<div class="flow-tooltip__title"></div><div class="flow-tooltip__body"></div>';
+      document.body.appendChild(tooltipEl);
+      function getNodeIdFromElement(el) {
+        if (!el) return null;
+        var dataId = el.getAttribute && el.getAttribute('data-id');
+        if (dataId) return dataId;
+        var id = el.id;
+        if (!id) return null;
+        if (id.indexOf('flowchart-') === 0) {
+          var rest = id.slice(10);
+          var dash = rest.indexOf('-');
+          return dash >= 0 ? rest.slice(0, dash) : rest;
+        }
+        return id;
+      }
+      function attachTooltips() {
+        document.querySelectorAll('.flow-diagram svg rect').forEach(function(r) {
+          r.setAttribute('rx', '8');
+          r.setAttribute('ry', '8');
+        });
+        var attached = 0;
+        document.querySelectorAll('.flow-diagram').forEach(function(diagram, di) {
+          var script = diagram.querySelector('script[type="application/json"][data-flow-tooltips]');
+          if (!script) return;
+          var data;
+          try { data = JSON.parse(script.textContent); } catch (e) { return; }
+          var svg = diagram.querySelector('svg');
+          if (!svg) return;
+          if (diagram.hasAttribute('data-tooltip-delegated')) return;
+          diagram.setAttribute('data-tooltip-delegated', '1');
+          diagram.querySelectorAll('g.node').forEach(function(g) { g.style.pointerEvents = 'auto'; });
+          var onOver = function(e) {
+            var g = e.target.closest && e.target.closest('g.node');
+            if (!g) return;
+            var nodeId = getNodeIdFromElement(g);
+            if (!nodeId) return;
+            var tip = data[nodeId];
+            if (!tip || !tip.detail) return;
+            tooltipEl.querySelector('.flow-tooltip__title').textContent = tip.title || nodeId;
+            tooltipEl.querySelector('.flow-tooltip__body').innerHTML = tip.detail;
+            tooltipEl.style.left = '';
+            tooltipEl.style.top = '';
+            tooltipEl.classList.add('is-visible');
+            var rect = g.getBoundingClientRect();
+            var x = rect.left + rect.width / 2;
+            var y = rect.top - 10;
+            requestAnimationFrame(function() {
+              var w = tooltipEl.offsetWidth;
+              var h = tooltipEl.offsetHeight;
+              tooltipEl.style.left = Math.max(12, Math.min(x - w / 2, window.innerWidth - w - 12)) + 'px';
+              tooltipEl.style.top = Math.max(12, y - h) + 'px';
+            });
+          };
+          var onOut = function(e) {
+            var related = e.relatedTarget;
+            if (related && diagram.contains(related)) return;
+            tooltipEl.classList.remove('is-visible');
+          };
+          diagram.addEventListener('mouseover', onOver);
+          diagram.addEventListener('mouseout', onOut);
+          attached++;
+        });
+        return attached;
+      }
+      var delays = [150, 400, 800];
+      delays.forEach(function(delay, i) {
+        setTimeout(function() {
+          var n = attachTooltips();
+          if (n === 0 && i === delays.length - 1) {
+            setTimeout(attachTooltips, 500);
+          }
+        }, delay);
+      });
+    });
+  </script>
 </body>
 </html>

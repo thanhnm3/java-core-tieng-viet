@@ -23,7 +23,7 @@
     <nav class="topic-sidebar"><ul>
         <li><a href="../../index.html">Trang ch&#7911;</a>
         </li>
-        <li><a href="../oop.html">OOP</a>
+        <li><a href="../oop/01-intro.html">OOP</a>
         </li>
         <li><a href="../collections/01-intro.html">Collections</a>
         </li>
@@ -57,6 +57,7 @@
   <h3>Executor Framework</h3>
   <p>Đừng tạo thread thủ công bằng <code>new Thread().start()</code> — tạo/hủy thread tốn tài nguyên. <code>ExecutorService</code> quản lý pool thread có sẵn, tái sử dụng.</p>
 
+  <h4>Các loại Thread Pool</h4>
   <table class="comparison-table">
     <caption>Các loại Thread Pool</caption>
     <thead>
@@ -68,27 +69,60 @@
     </thead>
     <tbody>
       <tr>
-        <td><code>FixedThreadPool</code></td>
-        <td>Số thread cố định.</td>
+        <td><code>newFixedThreadPool(n)</code></td>
+        <td>n thread cố định, queue unbounded</td>
         <td>Workload ổn định, giới hạn tài nguyên</td>
       </tr>
       <tr>
-        <td><code>CachedThreadPool</code></td>
-        <td>Tự tạo thread mới khi cần, tái sử dụng thread idle.</td>
+        <td><code>newCachedThreadPool()</code></td>
+        <td>Tạo thread mới khi cần, tái sử dụng idle, 60s timeout</td>
         <td>Nhiều task ngắn, burst</td>
       </tr>
       <tr>
-        <td><code>ScheduledThreadPool</code></td>
-        <td>Chạy định kỳ hoặc sau delay.</td>
+        <td><code>newScheduledThreadPool(n)</code></td>
+        <td>Chạy định kỳ hoặc sau delay</td>
         <td>Cron, heartbeat</td>
       </tr>
       <tr>
-        <td><code>SingleThreadExecutor</code></td>
-        <td>Chỉ 1 thread, đảm bảo thứ tự.</td>
+        <td><code>newSingleThreadExecutor()</code></td>
+        <td>1 thread, đảm bảo thứ tự</td>
         <td>Queue tuần tự</td>
       </tr>
     </tbody>
   </table>
+
+  <h4>ThreadPoolExecutor — Tùy chỉnh</h4>
+  <p><code>Executors.newFixedThreadPool(n)</code> thực chất tạo <code>ThreadPoolExecutor</code>. Có thể tạo trực tiếp với corePoolSize, maxPoolSize, keepAliveTime, queue. Khi queue đầy và chưa đạt maxPoolSize → tạo thread mới; đạt max → RejectedExecutionHandler.</p>
+  <pre><code>ThreadPoolExecutor exec = new ThreadPoolExecutor(
+  4, 10, 60, TimeUnit.SECONDS,
+  new ArrayBlockingQueue&lt;&gt;(100),
+  new ThreadPoolExecutor.CallerRunsPolicy()  // Caller chạy khi reject
+);</code></pre>
+
+  <h4>shutdown vs shutdownNow</h4>
+  <p><code>shutdown()</code> — không nhận task mới, chờ task đang chạy và trong queue xong. <code>shutdownNow()</code> — trả về list task chưa chạy, cố dừng task đang chạy (interrupt). <code>awaitTermination(timeout)</code> — block cho đến khi shutdown hoặc timeout.</p>
+  <pre><code>executor.shutdown();
+if (!executor.awaitTermination(60, TimeUnit.SECONDS)) {
+  executor.shutdownNow();
+}</code></pre>
+
+  <h4>invokeAll và invokeAny</h4>
+  <p><code>invokeAll(tasks)</code> — chạy tất cả, trả về List&lt;Future&gt;, block cho đến khi xong. <code>invokeAny(tasks)</code> — trả về kết quả của task hoàn thành đầu tiên, hủy các task còn lại.</p>
+  <pre><code>List&lt;Callable&lt;String&gt;&gt; tasks = List.of(
+  () -> fetchFromA(),
+  () -> fetchFromB()
+);
+List&lt;Future&lt;String&gt;&gt; futures = executor.invokeAll(tasks);
+
+String first = executor.invokeAny(tasks);  // Lấy kết quả đầu tiên</code></pre>
+
+  <h4>Future.get với timeout</h4>
+  <p><code>future.get(timeout, unit)</code> — block tối đa timeout, ném TimeoutException nếu quá. Tránh deadlock khi task bị kẹt.</p>
+  <pre><code>try {
+  String result = future.get(5, TimeUnit.SECONDS);
+} catch (TimeoutException e) {
+  future.cancel(true);  // Hủy task
+}</code></pre>
 
   <pre><code>ExecutorService fixed = Executors.newFixedThreadPool(4);
 fixed.submit(() -> System.out.println("Task"));
@@ -131,5 +165,113 @@ fixed.shutdown();  // Luôn shutdown khi xong</code></pre>
   <footer class="topic-footer">
     <p>Xây dựng bằng Java 17+ · Không dùng framework · Pure NIO</p>
   </footer>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@9/dist/mermaid.min.js"></script>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      securityLevel: 'loose',
+      theme: 'base',
+      flowchart: { useMaxWidth: true, htmlLabels: true, curve: 'basis', padding: 20 },
+      themeVariables: {
+        primaryColor: '#FFFFFF',
+        primaryTextColor: '#0F172A',
+        primaryBorderColor: '#10B981',
+        secondaryColor: '#ECFDF5',
+        secondaryBorderColor: '#059669',
+        tertiaryColor: '#F8FAFC',
+        tertiaryBorderColor: '#10B981',
+        lineColor: '#64748B',
+        textColor: '#334155',
+        fontFamily: 'Inter, system-ui, sans-serif',
+        fontSize: '14px',
+        clusterBkg: '#F8FAFC',
+        clusterBorder: '#10B981',
+        titleColor: '#0F172A',
+        nodeBorder: '#10B981',
+        defaultLinkColor: '#64748B',
+        edgeLabelBackground: '#ECFDF5',
+        edgeLabelColor: '#047857',
+        mainBkg: '#FFFFFF',
+        secondBkg: '#ECFDF5'
+      }
+    });
+    window.addEventListener('load', function() {
+      var tooltipEl = document.createElement('div');
+      tooltipEl.className = 'flow-tooltip';
+      tooltipEl.innerHTML = '<div class="flow-tooltip__title"></div><div class="flow-tooltip__body"></div>';
+      document.body.appendChild(tooltipEl);
+      function getNodeIdFromElement(el) {
+        if (!el) return null;
+        var dataId = el.getAttribute && el.getAttribute('data-id');
+        if (dataId) return dataId;
+        var id = el.id;
+        if (!id) return null;
+        if (id.indexOf('flowchart-') === 0) {
+          var rest = id.slice(10);
+          var dash = rest.indexOf('-');
+          return dash >= 0 ? rest.slice(0, dash) : rest;
+        }
+        return id;
+      }
+      function attachTooltips() {
+        document.querySelectorAll('.flow-diagram svg rect').forEach(function(r) {
+          r.setAttribute('rx', '8');
+          r.setAttribute('ry', '8');
+        });
+        var attached = 0;
+        document.querySelectorAll('.flow-diagram').forEach(function(diagram, di) {
+          var script = diagram.querySelector('script[type="application/json"][data-flow-tooltips]');
+          if (!script) return;
+          var data;
+          try { data = JSON.parse(script.textContent); } catch (e) { return; }
+          var svg = diagram.querySelector('svg');
+          if (!svg) return;
+          if (diagram.hasAttribute('data-tooltip-delegated')) return;
+          diagram.setAttribute('data-tooltip-delegated', '1');
+          diagram.querySelectorAll('g.node').forEach(function(g) { g.style.pointerEvents = 'auto'; });
+          var onOver = function(e) {
+            var g = e.target.closest && e.target.closest('g.node');
+            if (!g) return;
+            var nodeId = getNodeIdFromElement(g);
+            if (!nodeId) return;
+            var tip = data[nodeId];
+            if (!tip || !tip.detail) return;
+            tooltipEl.querySelector('.flow-tooltip__title').textContent = tip.title || nodeId;
+            tooltipEl.querySelector('.flow-tooltip__body').innerHTML = tip.detail;
+            tooltipEl.style.left = '';
+            tooltipEl.style.top = '';
+            tooltipEl.classList.add('is-visible');
+            var rect = g.getBoundingClientRect();
+            var x = rect.left + rect.width / 2;
+            var y = rect.top - 10;
+            requestAnimationFrame(function() {
+              var w = tooltipEl.offsetWidth;
+              var h = tooltipEl.offsetHeight;
+              tooltipEl.style.left = Math.max(12, Math.min(x - w / 2, window.innerWidth - w - 12)) + 'px';
+              tooltipEl.style.top = Math.max(12, y - h) + 'px';
+            });
+          };
+          var onOut = function(e) {
+            var related = e.relatedTarget;
+            if (related && diagram.contains(related)) return;
+            tooltipEl.classList.remove('is-visible');
+          };
+          diagram.addEventListener('mouseover', onOver);
+          diagram.addEventListener('mouseout', onOut);
+          attached++;
+        });
+        return attached;
+      }
+      var delays = [150, 400, 800];
+      delays.forEach(function(delay, i) {
+        setTimeout(function() {
+          var n = attachTooltips();
+          if (n === 0 && i === delays.length - 1) {
+            setTimeout(attachTooltips, 500);
+          }
+        }, delay);
+      });
+    });
+  </script>
 </body>
 </html>

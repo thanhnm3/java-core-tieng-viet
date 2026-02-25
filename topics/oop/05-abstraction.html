@@ -1,0 +1,318 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Abstraction - Java Core</title>
+  <link rel="icon" type="image/svg+xml" href="../../favicon.svg">
+  <link rel="stylesheet" href="../../css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="topic-page">
+  <header class="topic-header">
+    <div class="topic-header-inner">
+      <a href="../../index.html" class="topic-header-logo">Java Core</a>
+      <nav class="topic-header-nav">
+        <a href="../../index.html">Trang chủ</a>
+      </nav>
+    </div>
+  </header>
+  <div class="topic-layout">
+    <nav class="topic-sidebar"><ul>
+        <li><a href="../../index.html">Trang ch&#7911;</a>
+        </li>
+        <li><a href="../oop/01-intro.html" class="topic-sidebar-link--active">OOP</a>
+        <ul class="topic-sub-nav">
+          <li><a href="../oop/01-intro.html">Gi&#7899;i thi&#7879;u</a></li>
+          <li><a href="../oop/02-encapsulation.html">Encapsulation</a></li>
+          <li><a href="../oop/03-inheritance.html">Inheritance</a></li>
+          <li><a href="../oop/04-polymorphism.html">Polymorphism</a></li>
+          <li><a href="../oop/05-abstraction.html" class="topic-sidebar-link--active">Abstraction</a></li>
+        </ul>
+        </li>
+        <li><a href="../collections/01-intro.html">Collections</a>
+        </li>
+        <li><a href="../io-nio/01-intro.html">I/O & NIO</a>
+        </li>
+        <li><a href="../concurrency/01-intro.html">Concurrency</a>
+        </li>
+        <li><a href="../jvm-memory/01-architecture.html">JVM & Memory</a>
+        </li>
+        <li><a href="../exception/01-hierarchy.html">Exception</a>
+        </li>
+        <li><a href="../generics/01-intro.html">Generics</a>
+        </li>
+        <li><a href="../lambda/01-intro.html">Lambda & Stream</a>
+        </li>
+</ul></nav>
+
+    <main class="main-content topic-main">
+      <div class="breadcrumb"><a href="../../index.html">Trang ch&#7911;</a> / <a href="../oop/01-intro.html">OOP</a> / Abstraction</div>
+      <article class="topic-content">
+        <section>
+  <h3>5. Abstraction (Trừu tượng hóa)</h3>
+
+  <h4>Định nghĩa</h4>
+  <p>Trừu tượng hóa là ẩn chi tiết triển khai, chỉ expose hành vi cần thiết qua interface hoặc abstract class. Trong Java: <strong>abstract class</strong> có thể chứa method trừu tượng và code chung; <strong>interface</strong> (từ Java 8) định nghĩa contract, có thể có default/static method.</p>
+
+  <h4>Abstract Class</h4>
+  <p>Class khai báo <code>abstract</code> không thể <code>new</code> trực tiếp. Có thể có: abstract method (không có body, subclass phải implement); concrete method (có body, dùng chung); constructor; fields.</p>
+  <pre><code>public abstract class Animal {
+  protected String name;
+
+  public Animal(String name) {
+    this.name = name;
+  }
+
+  // Abstract method — subclass BẮT BUỘC implement
+  public abstract void makeSound();
+
+  // Concrete method — dùng chung
+  public void sleep() {
+    System.out.println(name + " is sleeping... Zzz");
+  }
+}
+
+public class Dog extends Animal {
+  public Dog(String name) {
+    super(name);
+  }
+
+  @Override
+  public void makeSound() {
+    System.out.println(name + " says: Woof!");
+  }
+}</code></pre>
+
+  <h4>Interface</h4>
+  <p>Interface định nghĩa contract — class implement phải cung cấp tất cả method (trừ default/static). Từ Java 8: <code>default</code> method (có body, optional override); <code>static</code> method. Từ Java 9: <code>private</code> method. Một class có thể implement nhiều interface.</p>
+  <pre><code>public interface Drawable {
+  void draw();  // Abstract — implement bắt buộc
+
+  default void highlight() {
+    System.out.println("Highlighted");
+  }
+
+  static void printInfo() {
+    System.out.println("Drawable interface");
+  }
+}
+
+public class Circle implements Drawable {
+  @Override
+  public void draw() {
+    System.out.println("Drawing circle");
+  }
+  // highlight() không cần override — dùng default
+}
+
+Drawable.printInfo();  // Gọi static qua interface</code></pre>
+
+  <h4>Abstract Class vs Interface</h4>
+  <table class="comparison-table">
+    <thead>
+      <tr>
+        <th>Tiêu chí</th>
+        <th>Abstract Class</th>
+        <th>Interface</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Kế thừa</td>
+        <td>Một class (extends)</td>
+        <td>Nhiều interface (implements)</td>
+      </tr>
+      <tr>
+        <td>Constructor</td>
+        <td>Có</td>
+        <td>Không</td>
+      </tr>
+      <tr>
+        <td>Fields</td>
+        <td>Có (kể cả non-static)</td>
+        <td>Chỉ public static final (constant)</td>
+      </tr>
+      <tr>
+        <td>Method body</td>
+        <td>Có (concrete method)</td>
+        <td>default, static, private (từ Java 8/9)</td>
+      </tr>
+      <tr>
+        <td>Dùng khi</td>
+        <td>Chia sẻ code, quan hệ is-a</td>
+        <td>Contract, nhiều hành vi độc lập</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h4>Ví dụ kết hợp Interface + Abstract Class</h4>
+  <pre><code>public interface Flyable {
+  void fly();
+}
+
+public abstract class Bird implements Flyable {
+  protected String name;
+
+  public Bird(String name) {
+    this.name = name;
+  }
+
+  public abstract void makeSound();
+
+  @Override
+  public void fly() {
+    System.out.println(name + " is flying");
+  }
+}
+
+public class Sparrow extends Bird {
+  public Sparrow(String name) {
+    super(name);
+  }
+
+  @Override
+  public void makeSound() {
+    System.out.println("Chirp!");
+  }
+}</code></pre>
+
+  <section class="when-use">
+    <h4>Khi nào dùng abstract class vs interface?</h4>
+    <p class="when-use-do"><strong>Abstract class:</strong> Cần chia sẻ code chung (fields, methods) cho các subclass; quan hệ "is-a" với logic dùng chung.</p>
+    <p class="when-use-avoid"><strong>Interface:</strong> Định nghĩa contract mà nhiều class không liên quan có thể implement; Java không đa kế thừa class nên dùng interface để "implement" nhiều hành vi.</p>
+  </section>
+
+  <section class="pro-con">
+    <h4>Ưu và nhược điểm của abstraction</h4>
+    <div class="pro-con-list">
+      <div class="pro-con-item pro-con-item--pro">
+        <strong>Ưu điểm:</strong> Giảm coupling; dễ thay implementation; code phụ thuộc abstraction thay vì chi tiết cụ thể.
+      </div>
+      <div class="pro-con-item pro-con-item--con">
+        <strong>Nhược điểm:</strong> Thêm lớp indirection; có thể over-abstract nếu hierarchy quá phức tạp.
+      </div>
+    </div>
+  </section>
+</section>
+
+<p><strong>Tóm tắt:</strong> Bốn trụ cột OOP bổ trợ nhau. Encapsulation bảo vệ dữ liệu; Inheritance tái sử dụng và mở rộng; Polymorphism cho phép xử lý linh hoạt; Abstraction ẩn chi tiết triển khai. Dùng đúng chỗ, tránh lạm dụng — đặc biệt kế thừa khi composition phù hợp hơn.</p>
+
+      </article>
+    </main>
+  </div>
+  <footer class="topic-footer">
+    <p>Xây dựng bằng Java 17+ · Không dùng framework · Pure NIO</p>
+  </footer>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@9/dist/mermaid.min.js"></script>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      securityLevel: 'loose',
+      theme: 'base',
+      flowchart: { useMaxWidth: true, htmlLabels: true, curve: 'basis', padding: 20 },
+      themeVariables: {
+        primaryColor: '#FFFFFF',
+        primaryTextColor: '#0F172A',
+        primaryBorderColor: '#10B981',
+        secondaryColor: '#ECFDF5',
+        secondaryBorderColor: '#059669',
+        tertiaryColor: '#F8FAFC',
+        tertiaryBorderColor: '#10B981',
+        lineColor: '#64748B',
+        textColor: '#334155',
+        fontFamily: 'Inter, system-ui, sans-serif',
+        fontSize: '14px',
+        clusterBkg: '#F8FAFC',
+        clusterBorder: '#10B981',
+        titleColor: '#0F172A',
+        nodeBorder: '#10B981',
+        defaultLinkColor: '#64748B',
+        edgeLabelBackground: '#ECFDF5',
+        edgeLabelColor: '#047857',
+        mainBkg: '#FFFFFF',
+        secondBkg: '#ECFDF5'
+      }
+    });
+    window.addEventListener('load', function() {
+      var tooltipEl = document.createElement('div');
+      tooltipEl.className = 'flow-tooltip';
+      tooltipEl.innerHTML = '<div class="flow-tooltip__title"></div><div class="flow-tooltip__body"></div>';
+      document.body.appendChild(tooltipEl);
+      function getNodeIdFromElement(el) {
+        if (!el) return null;
+        var dataId = el.getAttribute && el.getAttribute('data-id');
+        if (dataId) return dataId;
+        var id = el.id;
+        if (!id) return null;
+        if (id.indexOf('flowchart-') === 0) {
+          var rest = id.slice(10);
+          var dash = rest.indexOf('-');
+          return dash >= 0 ? rest.slice(0, dash) : rest;
+        }
+        return id;
+      }
+      function attachTooltips() {
+        document.querySelectorAll('.flow-diagram svg rect').forEach(function(r) {
+          r.setAttribute('rx', '8');
+          r.setAttribute('ry', '8');
+        });
+        var attached = 0;
+        document.querySelectorAll('.flow-diagram').forEach(function(diagram, di) {
+          var script = diagram.querySelector('script[type="application/json"][data-flow-tooltips]');
+          if (!script) return;
+          var data;
+          try { data = JSON.parse(script.textContent); } catch (e) { return; }
+          var svg = diagram.querySelector('svg');
+          if (!svg) return;
+          if (diagram.hasAttribute('data-tooltip-delegated')) return;
+          diagram.setAttribute('data-tooltip-delegated', '1');
+          diagram.querySelectorAll('g.node').forEach(function(g) { g.style.pointerEvents = 'auto'; });
+          var onOver = function(e) {
+            var g = e.target.closest && e.target.closest('g.node');
+            if (!g) return;
+            var nodeId = getNodeIdFromElement(g);
+            if (!nodeId) return;
+            var tip = data[nodeId];
+            if (!tip || !tip.detail) return;
+            tooltipEl.querySelector('.flow-tooltip__title').textContent = tip.title || nodeId;
+            tooltipEl.querySelector('.flow-tooltip__body').innerHTML = tip.detail;
+            tooltipEl.style.left = '';
+            tooltipEl.style.top = '';
+            tooltipEl.classList.add('is-visible');
+            var rect = g.getBoundingClientRect();
+            var x = rect.left + rect.width / 2;
+            var y = rect.top - 10;
+            requestAnimationFrame(function() {
+              var w = tooltipEl.offsetWidth;
+              var h = tooltipEl.offsetHeight;
+              tooltipEl.style.left = Math.max(12, Math.min(x - w / 2, window.innerWidth - w - 12)) + 'px';
+              tooltipEl.style.top = Math.max(12, y - h) + 'px';
+            });
+          };
+          var onOut = function(e) {
+            var related = e.relatedTarget;
+            if (related && diagram.contains(related)) return;
+            tooltipEl.classList.remove('is-visible');
+          };
+          diagram.addEventListener('mouseover', onOver);
+          diagram.addEventListener('mouseout', onOut);
+          attached++;
+        });
+        return attached;
+      }
+      var delays = [150, 400, 800];
+      delays.forEach(function(delay, i) {
+        setTimeout(function() {
+          var n = attachTooltips();
+          if (n === 0 && i === delays.length - 1) {
+            setTimeout(attachTooltips, 500);
+          }
+        }, delay);
+      });
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,126 @@
+<section>
+  <h3>4. Polymorphism (Đa hình)</h3>
+
+  <h4>Định nghĩa</h4>
+  <p>Đa hình cho phép biến kiểu cha tham chiếu tới object kiểu con. Khi gọi phương thức, JVM sẽ gọi implementation của object thực tế (runtime polymorphism). Java có hai loại: <strong>override</strong> (runtime — cùng signature, khác implementation) và <strong>overload</strong> (compile-time — cùng tên, khác tham số).</p>
+
+  <h4>Runtime Polymorphism — Override</h4>
+  <p>Biến kiểu cha trỏ tới object kiểu con. Gọi method: JVM xác định implementation dựa trên <strong>kiểu thực tế của object</strong> (runtime type), không phải kiểu biến (compile-time type).</p>
+  <pre><code>Person p = new Student("Bob", 20, "S001");
+p.introduce();  // Gọi Student.introduce() — đa hình runtime
+
+// p có kiểu compile-time: Person
+// p trỏ tới object kiểu runtime: Student
+// JVM gọi method của Student</code></pre>
+
+  <h4>Override vs Overload</h4>
+  <table class="comparison-table">
+    <thead>
+      <tr>
+        <th>Tiêu chí</th>
+        <th>Override</th>
+        <th>Overload</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Quan hệ</td>
+        <td>Cha-con (inheritance)</td>
+        <td>Cùng class</td>
+      </tr>
+      <tr>
+        <td>Signature</td>
+        <td>Giống hệt (tên + tham số)</td>
+        <td>Khác tham số (số lượng hoặc kiểu)</td>
+      </tr>
+      <tr>
+        <td>Thời điểm chọn</td>
+        <td>Runtime (dynamic binding)</td>
+        <td>Compile-time (static binding)</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h4>Overload — Nạp chồng phương thức</h4>
+  <p>Overload: nhiều method cùng tên, khác danh sách tham số. Compiler chọn method dựa trên kiểu và số lượng tham số tại compile-time.</p>
+  <pre><code>public class Calculator {
+  public int add(int a, int b) {
+    return a + b;
+  }
+
+  public double add(double a, double b) {
+    return a + b;
+  }
+
+  public int add(int a, int b, int c) {
+    return a + b + c;
+  }
+}
+
+Calculator calc = new Calculator();
+calc.add(1, 2);       // Gọi add(int, int) → 3
+calc.add(1.0, 2.0);   // Gọi add(double, double) → 3.0
+calc.add(1, 2, 3);   // Gọi add(int, int, int) → 6</code></pre>
+
+  <h4>Ví dụ đa hình trong thực tế</h4>
+  <pre><code>public void processShapes(List&lt;Shape&gt; shapes) {
+  for (Shape s : shapes) {
+    System.out.println("Area: " + s.area());
+    // s có thể là Circle, Rectangle, Triangle...
+    // Mỗi loại gọi area() của chính nó
+  }
+}
+
+List&lt;Shape&gt; list = List.of(
+  new Circle(5),
+  new Rectangle(3, 4)
+);
+processShapes(list);  // Không cần if-else theo từng loại</code></pre>
+
+  <h4>Ép kiểu (Casting) khi cần method riêng</h4>
+  <p>Khi biến kiểu cha cần gọi method chỉ có ở class con, phải cast. Dùng <code>instanceof</code> kiểm tra trước để tránh <code>ClassCastException</code>.</p>
+  <pre><code>Person p = new Student("Alice", 20, "S001");
+
+if (p instanceof Student s) {  // Pattern matching (Java 16+)
+  System.out.println(s.getStudentId());
+}
+
+// Hoặc cast tường minh
+if (p instanceof Student) {
+  Student s = (Student) p;
+  System.out.println(s.getStudentId());
+}</code></pre>
+
+  <section class="pro-con">
+    <h4>Ưu và nhược điểm của đa hình</h4>
+    <div class="pro-con-list">
+      <div class="pro-con-item pro-con-item--pro">
+        <strong>Ưu điểm:</strong> Code linh hoạt, dễ mở rộng; dependency inversion (phụ thuộc vào abstraction); giảm điều kiện if-else.
+      </div>
+      <div class="pro-con-item pro-con-item--con">
+        <strong>Nhược điểm:</strong> Cần hiểu hierarchy; debug phức tạp hơn khi có nhiều implementation.
+      </div>
+    </div>
+  </section>
+
+  <section class="comparison">
+    <h4>Gọi qua kiểu cha vs kiểu con</h4>
+    <div class="comparison-grid">
+      <div class="comparison-box comparison-box--pro">
+        <h4>Gọi qua kiểu cha (đa hình)</h4>
+        <p>Dùng khi xử lý nhiều loại object cùng interface; code không phụ thuộc implementation cụ thể.</p>
+        <pre><code>void printName(Person p) {
+  System.out.println(p.getName());
+}
+printName(new Student(...));
+printName(new Person(...));</code></pre>
+      </div>
+      <div class="comparison-box comparison-box--con">
+        <h4>Gọi cụ thể kiểu con</h4>
+        <p>Dùng khi cần method riêng của subclass; nhưng code bị gắn chặt với implementation.</p>
+        <pre><code>Student s = new Student(...);
+s.getStudentId(); // Chỉ Student có</code></pre>
+      </div>
+    </div>
+  </section>
+</section>

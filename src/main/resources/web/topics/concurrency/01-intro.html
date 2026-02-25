@@ -3,7 +3,109 @@
 <p>Concurrency giúp ứng dụng tận dụng CPU nhiều nhân. Ví dụ quán cà phê: thay vì một người làm tất cả (pha chế, bưng bê, tính tiền), thuê nhiều nhân viên làm cùng lúc. Java cung cấp <code>Thread</code>, <code>Executor</code>, <code>synchronized</code>, và <code>java.util.concurrent</code> để xử lý đa luồng an toàn.</p>
 
 <section>
+  <h3>Tổng quan từng phần</h3>
+  <p>Mỗi phần gồm: <strong>Kỹ thuật</strong> (định nghĩa, cơ chế) và <strong>Ví dụ</strong> (code minh họa).</p>
+  <table class="comparison-table">
+    <caption>Concurrency — Kỹ thuật và Ví dụ</caption>
+    <thead>
+      <tr>
+        <th>Phần</th>
+        <th>Kỹ thuật</th>
+        <th>Ví dụ</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>01 — Intro</strong></td>
+        <td>Process vs Thread, Runnable/Callable, Daemon</td>
+        <td>3 cách tạo Thread, ExecutorService.submit</td>
+      </tr>
+      <tr>
+        <td><strong>02 — Lifecycle</strong></td>
+        <td>NEW, RUNNABLE, BLOCKED, WAITING, TIMED_WAITING, TERMINATED</td>
+        <td>getState(), join(), sleep()</td>
+      </tr>
+      <tr>
+        <td><strong>03 — Synchronized</strong></td>
+        <td>synchronized, monitor, volatile</td>
+        <td>method/block sync, race condition</td>
+      </tr>
+      <tr>
+        <td><strong>04 — Executor</strong></td>
+        <td>ExecutorService, thread pool, Future</td>
+        <td>newFixedThreadPool, submit/call</td>
+      </tr>
+      <tr>
+        <td><strong>05 — Concurrent Collections</strong></td>
+        <td>ConcurrentHashMap, CopyOnWriteArrayList</td>
+        <td>putIfAbsent, atomic operations</td>
+      </tr>
+      <tr>
+        <td><strong>06 — Modern</strong></td>
+        <td>CompletableFuture, virtual threads</td>
+        <td>thenApply, supplyAsync</td>
+      </tr>
+      <tr>
+        <td><strong>07 — Pitfalls</strong></td>
+        <td>Deadlock, livelock, starvation</td>
+        <td>Cách tránh, debug</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h3>Lộ trình học — Sơ đồ flow</h3>
+  <p>Sơ đồ dưới đây thể hiện thứ tự học và mối liên hệ giữa các phần. Mỗi ô là một phần; mũi tên chỉ hướng tiếp theo.</p>
+
+  <div class="flow-diagram">
+    <script type="application/json" data-flow-tooltips>
+    {"E1":{"title":"01 Intro - Process &amp; Thread","detail":"<p><strong>Process</strong> - chương trình chạy, vùng nhớ riêng. <strong>Thread</strong> - đơn vị nhỏ nhất trong process, chia sẻ Heap, Stack riêng.</p><p>Runnable - interface run(). Callable - call() trả giá trị. Thread tạo qua new Thread(runnable) hoặc Executor.</p>"},"E2":{"title":"02 Lifecycle","detail":"<p><strong>Thread.State:</strong> NEW (chưa start), RUNNABLE (đang chạy hoặc sẵn sàng), BLOCKED (chờ monitor), WAITING, TIMED_WAITING, TERMINATED.</p><p>join() đợi thread kết thúc. sleep() tạm dừng. yield() nhường CPU.</p>"},"E3":{"title":"03 Synchronized","detail":"<p><strong>synchronized</strong> - mỗi object có monitor. Chỉ một thread giữ monitor tại một thời điểm. Block/method.</p><p><strong>volatile</strong> - đảm bảo visibility giữa các thread. Không đảm bảo atomicity (dùng AtomicInteger cho count).</p>"},"E4":{"title":"04 Executor","detail":"<p><strong>ExecutorService</strong> - thread pool. submit(Callable) trả Future. get() block đến khi có kết quả.</p><p>FixedThreadPool, CachedThreadPool. shutdown() chờ task xong, shutdownNow() interrupt.</p>"},"E5":{"title":"05 Concurrent Collections","detail":"<p><strong>ConcurrentHashMap</strong> - thread-safe, không lock toàn bộ. CopyOnWriteArrayList - copy khi write, phù hợp read nhiều.</p><p>BlockingQueue - put/take block khi đầy/rỗng.</p>"},"E6":{"title":"06 Modern","detail":"<p><strong>CompletableFuture</strong> - async, thenApply, thenCompose, allOf. Không block.</p><p><strong>Virtual threads</strong> (Java 21) - lightweight, triệu thread với ít OS thread. Executors.newVirtualThreadPerTaskExecutor().</p>"},"E7":{"title":"07 Pitfalls","detail":"<p><strong>Deadlock</strong> - hai thread chờ nhau (circular wait). Tránh: lock theo thứ tự cố định.</p><p><strong>Livelock</strong> - hoạt động nhưng không tiến. <strong>Starvation</strong> - thread không được chạy. Detect deadlock: thread dump.</p>"}}
+    </script>
+    <pre class="mermaid">
+flowchart TD
+  subgraph Thread [Thread Basics]
+    direction LR
+    E1("01 Intro")
+    E2("02 Lifecycle")
+    E3("03 Synchronized")
+    E1 -->|"Process, Runnable"| E2 -->|"Monitor, volatile"| E3
+  end
+  subgraph Concurrent [Concurrent API]
+    direction LR
+    E4("04 Executor")
+    E5("05 Collections")
+    E6("06 Modern")
+    E4 -->|"Thread pool"| E5 -->|"CompletableFuture"| E6
+  end
+  subgraph Pitfalls [Pitfalls]
+    E7("07 Deadlock, livelock")
+  end
+  Thread -->|"Future"| Concurrent
+  Concurrent -->|"ConcurrentHashMap"| Pitfalls
+    </pre>
+  </div>
+
+  <table class="comparison-table">
+    <caption>Chú thích từng phần</caption>
+    <thead>
+      <tr><th>Phần</th><th>Nội dung chính</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>01</td><td>Process vs Thread, Runnable, Callable</td></tr>
+      <tr><td>02</td><td>Thread.State, join, sleep</td></tr>
+      <tr><td>03</td><td>synchronized, monitor, volatile</td></tr>
+      <tr><td>04</td><td>ExecutorService, thread pool, Future</td></tr>
+      <tr><td>05</td><td>ConcurrentHashMap, CopyOnWriteArrayList</td></tr>
+      <tr><td>06</td><td>CompletableFuture, virtual threads</td></tr>
+      <tr><td>07</td><td>Deadlock, livelock, starvation</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
   <h3>Process và Thread</h3>
+  <h4>Kỹ thuật</h4>
   <p><strong>Process</strong> (tiến trình) — chương trình đang chạy, có vùng nhớ riêng. Ví dụ: một instance IntelliJ IDEA là một Process. <strong>Thread</strong> (luồng) — đơn vị nhỏ nhất trong Process. Các Thread trong cùng Process chia sẻ Heap nhưng có Stack riêng.</p>
 
   <table class="comparison-table">
@@ -33,6 +135,21 @@
       </tr>
     </tbody>
   </table>
+
+  <h4>Daemon Thread</h4>
+  <p>Daemon thread chạy nền — JVM thoát khi tất cả <strong>user thread</strong> kết thúc, không đợi daemon. Ví dụ: GC thread. <code>thread.setDaemon(true)</code> phải gọi trước <code>start()</code>.</p>
+  <pre><code>Thread daemon = new Thread(() -> {
+  while (true) {
+    cleanup();  // Chạy nền
+    Thread.sleep(1000);
+  }
+});
+daemon.setDaemon(true);  // Trước start()
+daemon.start();
+// JVM thoát khi main thread kết thúc, không đợi daemon</code></pre>
+
+  <h4>Thread Priority</h4>
+  <p><code>Thread.MIN_PRIORITY (1)</code> đến <code>Thread.MAX_PRIORITY (10)</code>, mặc định 5. Chỉ gợi ý cho scheduler — không đảm bảo. Tránh phụ thuộc priority cho logic.</p>
 </section>
 
 <section>
@@ -52,7 +169,11 @@ new MyThread().start();</code></pre>
   <p>Cách phổ biến nhất. Tách biệt logic thực thi và quản lý luồng. Có thể implement thêm interface khác.</p>
   <pre><code>Runnable task = () -> System.out.println("Thread: " + Thread.currentThread().getName());
 Thread t = new Thread(task);
-t.start();</code></pre>
+t.start();
+
+// Hoặc với tên thread
+Thread t2 = new Thread(task, "Worker-1");
+t2.start();</code></pre>
 
   <h4>3. Implements Callable</h4>
   <p>Giống Runnable nhưng trả về kết quả (<code>Future</code>) và có thể ném Exception. Dùng với <code>ExecutorService.submit()</code>.</p>
@@ -62,7 +183,8 @@ t.start();</code></pre>
 };
 ExecutorService exec = Executors.newSingleThreadExecutor();
 Future&lt;Integer&gt; future = exec.submit(task);
-System.out.println(future.get());  // 42</code></pre>
+System.out.println(future.get());  // 42 — block cho đến khi xong
+exec.shutdown();</code></pre>
 
   <table class="comparison-table">
     <caption>So sánh 3 cách tạo Thread</caption>
@@ -95,4 +217,10 @@ System.out.println(future.get());  // 42</code></pre>
       </tr>
     </tbody>
   </table>
+
+  <section class="when-use">
+    <h4>Lưu ý</h4>
+    <p class="when-use-do"><strong>Runnable:</strong> Dùng cho task không cần kết quả; Callable khi cần Future; ưu tiên ExecutorService thay vì new Thread().</p>
+    <p class="when-use-avoid"><strong>Tránh:</strong> extends Thread — mất cơ hội kế thừa class khác; tạo quá nhiều thread thủ công — dùng thread pool.</p>
+  </section>
 </section>

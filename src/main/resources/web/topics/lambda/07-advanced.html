@@ -2,6 +2,8 @@
   <h3>Optional</h3>
   <p>Container chứa 0 hoặc 1 phần tử — tránh NullPointerException. Không dùng Optional cho parameter, field collection; dùng cho return type khi có thể null.</p>
 
+  <h4>Optional chaining</h4>
+  <p>Chain map, flatMap, filter để xử lý nested Optional. flatMap khi function trả Optional — tránh Optional&lt;Optional&lt;T&gt;&gt;.</p>
   <pre><code>// Tạo
 Optional&lt;String&gt; opt = Optional.of("value");      // Non-null
 Optional&lt;String&gt; empty = Optional.empty();
@@ -14,7 +16,14 @@ opt.ifPresent(System.out::println);
 
 // Chuyển đổi
 Optional&lt;Integer&gt; len = opt.map(String::length);
-Optional&lt;Integer&gt; flat = opt.flatMap(s -> Optional.of(s.length()));</code></pre>
+Optional&lt;Integer&gt; flat = opt.flatMap(s -> Optional.of(s.length()));
+
+// Chain — lấy length nếu có, filter &gt; 3
+Optional&lt;Integer&gt; result = opt.map(String::length).filter(l -> l &gt; 3);
+
+// Nested Optional — flatMap
+Optional&lt;User&gt; user = findUser(id);
+Optional&lt;String&gt; addr = user.flatMap(User::getAddress);  // getAddress trả Optional</code></pre>
 
   <section class="when-use">
     <h4>Optional — Nên và không nên</h4>
@@ -33,11 +42,18 @@ Optional&lt;Integer&gt; flat = opt.flatMap(s -> Optional.of(s.length()));</code>
 
 <section>
   <h3>Parallel Stream</h3>
-  <p><code>parallelStream()</code> hoặc <code>stream().parallel()</code> — chia công việc cho nhiều thread. Chỉ có lợi khi:</p>
+  <p><code>parallelStream()</code> hoặc <code>stream().parallel()</code> — chia công việc cho nhiều thread (ForkJoinPool.commonPool()). Chỉ có lợi khi:</p>
   <ul>
     <li>Dữ liệu lớn (hàng nghìn phần tử trở lên)</li>
     <li>Operation tốn CPU, không bị I/O block</li>
     <li>Không có shared mutable state</li>
+  </ul>
+
+  <h4>Parallel pitfalls</h4>
+  <ul>
+    <li><strong>Shared mutable state</strong>: Biến capture trong lambda không được thay đổi — race condition. Dùng collect/reduce thay vì forEach với biến ngoài.</li>
+    <li><strong>Reduce combiner</strong>: Với parallel, reduce(identity, accumulator, combiner) — combiner phải associative. identity phải đúng.</li>
+    <li><strong>Ordering</strong>: findFirst giữ thứ tự; findAny không — parallel thường dùng findAny.</li>
   </ul>
 
   <pre><code>// Cẩn thận — reduce cần combiner associative
@@ -45,7 +61,11 @@ int sum = list.parallelStream().reduce(0, Integer::sum, Integer::sum);
 
 // Collectors đã thread-safe
 Map&lt;String, Long&gt; map = list.parallelStream()
-  .collect(Collectors.groupingByConcurrent(Function.identity(), Collectors.counting()));</code></pre>
+  .collect(Collectors.groupingByConcurrent(Function.identity(), Collectors.counting()));
+
+// SAI — shared mutable
+int[] total = {0};
+list.parallelStream().forEach(x -> total[0] += x);  // Race condition!</code></pre>
 
   <section class="pro-con">
     <h4>Parallel Stream — Ưu nhược</h4>
@@ -55,6 +75,17 @@ Map&lt;String, Long&gt; map = list.parallelStream()
       <li class="pro-con-item pro-con-item--con">Shared mutable state → race condition</li>
     </ul>
   </section>
+</section>
+
+<section>
+  <h3>Custom Collector</h3>
+  <p>Implement <code>Collector&lt;T, A, R&gt;</code>: supplier (tạo container), accumulator (thêm phần tử), combiner (merge parallel), finisher (chuyển A→R). Ví dụ: collect thành String với delimiter.</p>
+  <pre><code>Collector&lt;String, StringBuilder, String&gt; customJoin = Collector.of(
+  StringBuilder::new,
+  (sb, s) -> sb.append(s).append(","),
+  StringBuilder::append,
+  sb -> sb.length() &gt; 0 ? sb.deleteCharAt(sb.length()-1).toString() : ""
+);</code></pre>
 </section>
 
 <section>
@@ -83,6 +114,10 @@ Map&lt;String, Long&gt; map = list.parallelStream()
       <tr>
         <td>Boxing overhead (IntStream)</td>
         <td>Dùng IntStream, LongStream, DoubleStream khi có thể</td>
+      </tr>
+      <tr>
+        <td>Parallel + mutable state</td>
+        <td>Dùng collect/reduce, không capture biến thay đổi</td>
       </tr>
     </tbody>
   </table>

@@ -23,7 +23,7 @@
     <nav class="topic-sidebar"><ul>
         <li><a href="../../index.html">Trang ch&#7911;</a>
         </li>
-        <li><a href="../oop.html">OOP</a>
+        <li><a href="../oop/01-intro.html">OOP</a>
         </li>
         <li><a href="../collections/01-intro.html">Collections</a>
         </li>
@@ -55,6 +55,8 @@
       <article class="topic-content">
         <section>
   <h3>Functional Interface</h3>
+
+  <h4>Kỹ thuật</h4>
   <p>Interface có đúng <strong>một</strong> abstract method. Dùng <code>@FunctionalInterface</code> để compiler kiểm tra. Java cung cấp sẵn nhiều functional interface trong <code>java.util.function</code>.</p>
 
   <h4>Các functional interface cơ bản</h4>
@@ -98,12 +100,56 @@
         <td><code>R apply(T t, U u)</code></td>
         <td>Chuyển đổi (T,U) → R</td>
       </tr>
+      <tr>
+        <td><code>BiPredicate&lt;T,U&gt;</code></td>
+        <td><code>boolean test(T t, U u)</code></td>
+        <td>Điều kiện 2 tham số</td>
+      </tr>
+      <tr>
+        <td><code>BiConsumer&lt;T,U&gt;</code></td>
+        <td><code>void accept(T t, U u)</code></td>
+        <td>Tiêu thụ 2 tham số (Map.forEach)</td>
+      </tr>
     </tbody>
   </table>
 
+  <h4>Primitive variants — Tránh boxing</h4>
+  <p>Khi làm việc với primitive (int, long, double), dùng <code>IntPredicate</code>, <code>LongFunction</code>, <code>DoubleConsumer</code>... để tránh boxing/unboxing overhead.</p>
+  <table class="comparison-table">
+    <caption>Primitive functional interfaces</caption>
+    <thead>
+      <tr>
+        <th>Generic</th>
+        <th>Primitive</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>Predicate&lt;Integer&gt;</code></td>
+        <td><code>IntPredicate</code>, <code>LongPredicate</code>, <code>DoublePredicate</code></td>
+      </tr>
+      <tr>
+        <td><code>Function&lt;Integer,R&gt;</code></td>
+        <td><code>IntFunction&lt;R&gt;</code>, <code>IntToLongFunction</code>, <code>IntToDoubleFunction</code></td>
+      </tr>
+      <tr>
+        <td><code>Consumer&lt;Integer&gt;</code></td>
+        <td><code>IntConsumer</code>, <code>LongConsumer</code>, <code>DoubleConsumer</code></td>
+      </tr>
+      <tr>
+        <td><code>Supplier&lt;Integer&gt;</code></td>
+        <td><code>IntSupplier</code>, <code>LongSupplier</code>, <code>DoubleSupplier</code></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h4>Ví dụ</h4>
   <pre><code>// Predicate — filter
 Predicate&lt;Integer&gt; isEven = n -> n % 2 == 0;
 List.of(1, 2, 3, 4).stream().filter(isEven).toList();  // [2, 4]
+
+// IntPredicate — tránh boxing
+IntStream.range(0, 10).filter(n -> n % 2 == 0).toArray();
 
 // Function — map
 Function&lt;String, Integer&gt; len = s -> s.length();
@@ -113,9 +159,24 @@ List.of("a", "ab", "abc").stream().map(len).toList();  // [1, 2, 3]
 Consumer&lt;String&gt; print = s -> System.out.println(s);
 List.of("x", "y").forEach(print);
 
+// BiConsumer — Map.forEach
+Map.of("a", 1, "b", 2).forEach((k, v) -> System.out.println(k + "=" + v));
+
 // Supplier — lazy init
 Supplier&lt;LocalDate&gt; today = LocalDate::now;
 LocalDate d = today.get();</code></pre>
+
+  <h4>Composing — Kết hợp Predicate, Function</h4>
+  <pre><code>// Predicate: and, or, negate
+Predicate&lt;Integer&gt; isEven = n -> n % 2 == 0;
+Predicate&lt;Integer&gt; gt5 = n -> n &gt; 5;
+Predicate&lt;Integer&gt; evenAndGt5 = isEven.and(gt5);
+
+// Function: andThen, compose
+Function&lt;Integer, Integer&gt; add1 = x -> x + 1;
+Function&lt;Integer, Integer&gt; mul2 = x -> x * 2;
+add1.andThen(mul2).apply(3);   // 8: (3+1)*2
+add1.compose(mul2).apply(3);    // 7: (3*2)+1</code></pre>
 
   <h4>Tự định nghĩa functional interface</h4>
   <pre><code>@FunctionalInterface
@@ -133,6 +194,8 @@ TriPredicate&lt;Integer, Integer, Integer&gt; isTriangle =
       <li><code>Function</code>: map, flatMap, computeIfAbsent</li>
       <li><code>Consumer</code>: forEach, peek</li>
       <li><code>Supplier</code>: Optional.orElseGet, lazy evaluation</li>
+      <li><code>BiConsumer</code>: Map.forEach, replaceAll</li>
+      <li><code>IntPredicate</code>, <code>IntFunction</code>: IntStream, tránh boxing</li>
     </ul>
   </section>
 </section>
@@ -143,5 +206,113 @@ TriPredicate&lt;Integer, Integer, Integer&gt; isTriangle =
   <footer class="topic-footer">
     <p>Xây dựng bằng Java 17+ · Không dùng framework · Pure NIO</p>
   </footer>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@9/dist/mermaid.min.js"></script>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      securityLevel: 'loose',
+      theme: 'base',
+      flowchart: { useMaxWidth: true, htmlLabels: true, curve: 'basis', padding: 20 },
+      themeVariables: {
+        primaryColor: '#FFFFFF',
+        primaryTextColor: '#0F172A',
+        primaryBorderColor: '#10B981',
+        secondaryColor: '#ECFDF5',
+        secondaryBorderColor: '#059669',
+        tertiaryColor: '#F8FAFC',
+        tertiaryBorderColor: '#10B981',
+        lineColor: '#64748B',
+        textColor: '#334155',
+        fontFamily: 'Inter, system-ui, sans-serif',
+        fontSize: '14px',
+        clusterBkg: '#F8FAFC',
+        clusterBorder: '#10B981',
+        titleColor: '#0F172A',
+        nodeBorder: '#10B981',
+        defaultLinkColor: '#64748B',
+        edgeLabelBackground: '#ECFDF5',
+        edgeLabelColor: '#047857',
+        mainBkg: '#FFFFFF',
+        secondBkg: '#ECFDF5'
+      }
+    });
+    window.addEventListener('load', function() {
+      var tooltipEl = document.createElement('div');
+      tooltipEl.className = 'flow-tooltip';
+      tooltipEl.innerHTML = '<div class="flow-tooltip__title"></div><div class="flow-tooltip__body"></div>';
+      document.body.appendChild(tooltipEl);
+      function getNodeIdFromElement(el) {
+        if (!el) return null;
+        var dataId = el.getAttribute && el.getAttribute('data-id');
+        if (dataId) return dataId;
+        var id = el.id;
+        if (!id) return null;
+        if (id.indexOf('flowchart-') === 0) {
+          var rest = id.slice(10);
+          var dash = rest.indexOf('-');
+          return dash >= 0 ? rest.slice(0, dash) : rest;
+        }
+        return id;
+      }
+      function attachTooltips() {
+        document.querySelectorAll('.flow-diagram svg rect').forEach(function(r) {
+          r.setAttribute('rx', '8');
+          r.setAttribute('ry', '8');
+        });
+        var attached = 0;
+        document.querySelectorAll('.flow-diagram').forEach(function(diagram, di) {
+          var script = diagram.querySelector('script[type="application/json"][data-flow-tooltips]');
+          if (!script) return;
+          var data;
+          try { data = JSON.parse(script.textContent); } catch (e) { return; }
+          var svg = diagram.querySelector('svg');
+          if (!svg) return;
+          if (diagram.hasAttribute('data-tooltip-delegated')) return;
+          diagram.setAttribute('data-tooltip-delegated', '1');
+          diagram.querySelectorAll('g.node').forEach(function(g) { g.style.pointerEvents = 'auto'; });
+          var onOver = function(e) {
+            var g = e.target.closest && e.target.closest('g.node');
+            if (!g) return;
+            var nodeId = getNodeIdFromElement(g);
+            if (!nodeId) return;
+            var tip = data[nodeId];
+            if (!tip || !tip.detail) return;
+            tooltipEl.querySelector('.flow-tooltip__title').textContent = tip.title || nodeId;
+            tooltipEl.querySelector('.flow-tooltip__body').innerHTML = tip.detail;
+            tooltipEl.style.left = '';
+            tooltipEl.style.top = '';
+            tooltipEl.classList.add('is-visible');
+            var rect = g.getBoundingClientRect();
+            var x = rect.left + rect.width / 2;
+            var y = rect.top - 10;
+            requestAnimationFrame(function() {
+              var w = tooltipEl.offsetWidth;
+              var h = tooltipEl.offsetHeight;
+              tooltipEl.style.left = Math.max(12, Math.min(x - w / 2, window.innerWidth - w - 12)) + 'px';
+              tooltipEl.style.top = Math.max(12, y - h) + 'px';
+            });
+          };
+          var onOut = function(e) {
+            var related = e.relatedTarget;
+            if (related && diagram.contains(related)) return;
+            tooltipEl.classList.remove('is-visible');
+          };
+          diagram.addEventListener('mouseover', onOver);
+          diagram.addEventListener('mouseout', onOut);
+          attached++;
+        });
+        return attached;
+      }
+      var delays = [150, 400, 800];
+      delays.forEach(function(delay, i) {
+        setTimeout(function() {
+          var n = attachTooltips();
+          if (n === 0 && i === delays.length - 1) {
+            setTimeout(attachTooltips, 500);
+          }
+        }, delay);
+      });
+    });
+  </script>
 </body>
 </html>

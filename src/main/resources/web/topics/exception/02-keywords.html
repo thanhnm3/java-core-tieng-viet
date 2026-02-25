@@ -1,11 +1,32 @@
 <section>
   <h3>Năm từ khóa cốt lõi</h3>
 
-  <h4>try, catch, finally</h4>
+  <h4>Kỹ thuật — try, catch, finally</h4>
   <p><strong>try:</strong> Bao quanh code có thể gây lỗi. <strong>catch:</strong> Xử lý lỗi nếu xảy ra. Nhiều catch — thứ tự từ cụ thể đến chung (Exception cuối). <strong>finally:</strong> Luôn chạy dù có lỗi hay không — dùng đóng resource, cleanup. Khi return trong try, finally vẫn chạy trước khi return.</p>
 
+  <h4>Multi-catch (Java 7+)</h4>
+  <p>Bắt nhiều Exception cùng xử lý: <code>catch (IOException | SQLException e)</code>. Biến <code>e</code> là effectively final — không gán lại. Tránh catch Exception chung chung khi có thể catch cụ thể.</p>
+  <h4>Ví dụ</h4>
+  <pre><code>try {
+  parseAndSave(input);
+} catch (IOException | SQLException e) {
+  log.error("Failed", e);
+  throw new ServiceException("Save failed", e);
+}</code></pre>
+
+  <h4>try-finally với return</h4>
+  <p>Khi <code>return</code> trong try, finally vẫn chạy trước. Nếu finally cũng return — giá trị trong try bị ghi đè. Tránh return trong finally.</p>
+  <pre><code>int getValue() {
+  try {
+    return 1;
+  } finally {
+    return 2;  // Trả về 2 — ghi đè 1 (anti-pattern)
+  }
+}
+// Đúng: không return trong finally</code></pre>
+
   <h4>throw, throws</h4>
-  <p><strong>throw:</strong> Chủ động ném Exception: <code>throw new IllegalArgumentException("invalid");</code>. <strong>throws:</strong> Khai báo ở method signature — báo cho caller biết method có thể ném Exception nào: <code>void read() throws IOException</code>.</p>
+  <p><strong>throw:</strong> Chủ động ném Exception: <code>throw new IllegalArgumentException("invalid");</code>. <strong>throws</strong>: Khai báo ở method signature — báo cho caller biết method có thể ném Exception nào: <code>void read() throws IOException</code>.</p>
 
   <pre><code>try {
   int result = parse(input);
@@ -37,6 +58,10 @@ void readFile() throws IOException {
       <tr>
         <td>Catch chung sau</td>
         <td>Exception cuối — nếu không compile error (unreachable)</td>
+      </tr>
+      <tr>
+        <td>Multi-catch</td>
+        <td>IOException | SQLException — không quan hệ cha-con</td>
       </tr>
     </tbody>
   </table>

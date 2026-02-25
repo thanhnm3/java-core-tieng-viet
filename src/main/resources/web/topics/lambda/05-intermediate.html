@@ -1,6 +1,6 @@
 <section>
   <h3>Intermediate Operations</h3>
-  <p>Các operation trả về Stream, có thể chain. Thứ tự gọi ảnh hưởng hiệu năng — filter trước map để giảm số phần tử cần map.</p>
+  <p>Các operation trả về Stream, có thể chain. Thứ tự gọi ảnh hưởng hiệu năng — filter trước map để giảm số phần tử cần map. Một số operation stateful (sorted, distinct) cần buffer — ảnh hưởng memory.</p>
 
   <h4>filter — Lọc theo điều kiện</h4>
   <pre><code>List&lt;Integer&gt; evens = List.of(1, 2, 3, 4, 5)
@@ -13,6 +13,16 @@
   .stream()
   .map(String::length)
   .toList();  // [1, 2, 3]</code></pre>
+
+  <h4>mapToInt, mapToLong, mapToDouble — Tránh boxing</h4>
+  <p>Khi kết quả là primitive, dùng mapToInt/mapToLong/mapToDouble để trả về IntStream/LongStream/DoubleStream — tránh boxing overhead, có thêm sum(), average(), summaryStatistics().</p>
+  <pre><code>// map → Stream&lt;Integer&gt; (boxing)
+List.of("a", "ab", "abc").stream().map(String::length).toList();
+
+// mapToInt → IntStream (không boxing)
+int sum = List.of("a", "ab", "abc").stream()
+  .mapToInt(String::length)
+  .sum();  // 6</code></pre>
 
   <h4>flatMap — Chuyển đổi 1-nhiều, flatten</h4>
   <p>Mỗi phần tử map thành Stream, rồi flatten thành một Stream duy nhất.</p>
@@ -27,16 +37,33 @@ List&lt;Integer&gt; flat = lists.stream()
   .flatMap(List::stream)
   .toList();  // [1, 2, 3, 4]</code></pre>
 
+  <h4>takeWhile, dropWhile (Java 9+)</h4>
+  <p><code>takeWhile(predicate)</code>: lấy phần tử cho đến khi predicate false. <code>dropWhile(predicate)</code>: bỏ phần tử cho đến khi predicate false. Khác filter: dừng khi gặp phần tử không thỏa (với ordered stream).</p>
+  <pre><code>// takeWhile — dừng khi gặp phần tử không thỏa
+List.of(2, 4, 6, 7, 8).stream().takeWhile(n -> n % 2 == 0).toList();
+// [2, 4, 6] — dừng ở 7
+
+// dropWhile
+List.of(2, 4, 6, 7, 8).stream().dropWhile(n -> n % 2 == 0).toList();
+// [7, 8]</code></pre>
+
   <h4>sorted — Sắp xếp</h4>
+  <p>Stateful — cần buffer toàn bộ. Với null: <code>Comparator.nullsFirst</code>, <code>Comparator.nullsLast</code>.</p>
   <pre><code>// Natural order (Comparable)
 List.of(3, 1, 2).stream().sorted().toList();  // [1, 2, 3]
 
 // Custom Comparator
 List.of("bb", "a", "ccc").stream()
   .sorted(Comparator.comparingInt(String::length))
-  .toList();  // ["a", "bb", "ccc"]</code></pre>
+  .toList();  // ["a", "bb", "ccc"]
+
+// Với null
+List.of("b", null, "a").stream()
+  .sorted(Comparator.nullsLast(Comparator.naturalOrder()))
+  .toList();  // ["a", "b", null]</code></pre>
 
   <h4>distinct, limit, skip</h4>
+  <p><code>distinct()</code> dùng equals() — stateful, cần lưu đã thấy. Với object custom cần override equals/hashCode. <code>limit(n)</code>: short-circuit, không cần xử lý hết. <code>skip(n)</code>: bỏ n phần tử đầu.</p>
   <pre><code>List.of(1, 2, 2, 3, 3, 3).stream().distinct().toList();  // [1, 2, 3]
 
 Stream.iterate(0, n -> n + 1).limit(5).toList();  // [0, 1, 2, 3, 4]
@@ -44,7 +71,7 @@ Stream.iterate(0, n -> n + 1).limit(5).toList();  // [0, 1, 2, 3, 4]
 List.of(1, 2, 3, 4, 5).stream().skip(2).toList();  // [3, 4, 5]</code></pre>
 
   <h4>peek — Debug (không thay đổi element)</h4>
-  <p>Dùng để log, debug. Không nên dùng để side-effect vì thứ tự không đảm bảo với parallel.</p>
+  <p>Dùng để log, debug. Không nên dùng để side-effect vì thứ tự không đảm bảo với parallel. Javadoc: "exists mainly to support debugging".</p>
   <pre><code>list.stream()
   .peek(System.out::println)
   .map(String::toUpperCase)
@@ -66,6 +93,10 @@ List.of(1, 2, 3, 4, 5).stream().skip(2).toList();  // [3, 4, 5]</code></pre>
       <tr>
         <td>limit/skip sớm nếu có thể</td>
         <td>sorted trên stream lớn không cần thiết</td>
+      </tr>
+      <tr>
+        <td>mapToInt thay map khi kết quả là int</td>
+        <td>distinct trên stream rất lớn — cân nhắc Set</td>
       </tr>
     </tbody>
   </table>

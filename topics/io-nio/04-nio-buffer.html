@@ -23,7 +23,7 @@
     <nav class="topic-sidebar"><ul>
         <li><a href="../../index.html">Trang ch&#7911;</a>
         </li>
-        <li><a href="../oop.html">OOP</a>
+        <li><a href="../oop/01-intro.html">OOP</a>
         </li>
         <li><a href="../collections/01-intro.html">Collections</a>
         </li>
@@ -57,7 +57,19 @@
   <h3>Buffer — java.nio</h3>
   <p><code>Buffer</code> là container cho dữ liệu primitive. <code>ByteBuffer</code> là phổ biến nhất. Có 4 thuộc tính: <strong>capacity</strong> (kích thước), <strong>position</strong> (vị trí đọc/ghi), <strong>limit</strong> (giới hạn), <strong>mark</strong> (đánh dấu để reset).</p>
 
-  <h4>Cơ chế flip</h4>
+  <h4>Trạng thái Buffer — position, limit, capacity</h4>
+  <p>0 ≤ mark ≤ position ≤ limit ≤ capacity. <strong>Write mode:</strong> position = vị trí ghi tiếp, limit = capacity. <strong>Read mode (sau flip):</strong> position = 0, limit = số byte đã ghi.</p>
+  <pre><code>// Write: put() tăng position
+// [pos=0, limit=cap] → put() → [pos=5, limit=cap]
+
+// flip(): chuyển sang read
+// limit=position, position=0
+// [pos=0, limit=5]
+
+// Read: get() tăng position
+// clear(): position=0, limit=capacity (chuẩn bị ghi lại)</code></pre>
+
+  <h4>Cơ chế flip, clear, compact</h4>
   <p>Để ghi: <code>put()</code> tăng position. Sau khi ghi xong, gọi <code>flip()</code> — limit = position, position = 0. Để đọc: <code>get()</code> lấy từ buffer. Sau khi đọc xong, <code>clear()</code> — position = 0, limit = capacity (chuẩn bị ghi lại). <code>compact()</code> — đẩy dữ liệu chưa đọc lên đầu, position = remaining, limit = capacity.</p>
 
   <table class="comparison-table">
@@ -93,6 +105,18 @@
     </tbody>
   </table>
 
+  <h4>wrap, duplicate, slice</h4>
+  <p><code>ByteBuffer.wrap(byte[])</code> — buffer wrap mảng, thay đổi buffer ảnh hưởng mảng. <code>buffer.duplicate()</code> — buffer mới chia sẻ data, position/limit độc lập. <code>buffer.slice()</code> — buffer con từ position đến limit, chia sẻ data.</p>
+  <pre><code>byte[] arr = {1, 2, 3, 4, 5};
+ByteBuffer buf = ByteBuffer.wrap(arr);
+buf.put(0, (byte) 10);  // arr[0] = 10
+
+ByteBuffer dup = buf.duplicate();  // Cùng data, position riêng
+ByteBuffer slice = buf.slice();    // Từ position đến limit</code></pre>
+
+  <h4>asReadOnlyBuffer</h4>
+  <p><code>buffer.asReadOnlyBuffer()</code> — buffer read-only, put() ném ReadOnlyBufferException. Dùng khi truyền buffer cho code khác mà không muốn bị sửa.</p>
+
   <pre><code>ByteBuffer buf = ByteBuffer.allocate(1024);
 
 // Ghi
@@ -110,27 +134,38 @@ ByteBuffer direct = ByteBuffer.allocateDirect(1024);</code></pre>
   <h4>Heap vs Direct Buffer</h4>
   <p><code>allocate()</code> — buffer trên heap (byte[]). <code>allocateDirect()</code> — buffer ngoài heap, JVM có thể dùng DMA cho I/O, tránh copy qua kernel. Direct buffer tốt cho high-throughput nhưng allocation tốn hơn.</p>
 
-  <section class="comparison">
-    <h4>Heap vs Direct Buffer</h4>
-    <div class="comparison-grid">
-      <div class="comparison-box comparison-box--pro">
-        <h4>Heap Buffer</h4>
-        <ul>
-          <li>Allocation nhanh</li>
-          <li>GC quản lý</li>
-          <li>Dùng mặc định</li>
-        </ul>
-      </div>
-      <div class="comparison-box comparison-box--pro">
-        <h4>Direct Buffer</h4>
-        <ul>
-          <li>Zero-copy I/O với kernel</li>
-          <li>Phù hợp high-throughput</li>
-          <li>Allocation chậm</li>
-        </ul>
-      </div>
-    </div>
-  </section>
+  <table class="comparison-table">
+    <caption>Heap vs Direct Buffer</caption>
+    <thead>
+      <tr>
+        <th>Tiêu chí</th>
+        <th>Heap</th>
+        <th>Direct</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Vị trí</td>
+        <td>JVM heap</td>
+        <td>Ngoài heap (native)</td>
+      </tr>
+      <tr>
+        <td>Allocation</td>
+        <td>Nhanh</td>
+        <td>Chậm hơn</td>
+      </tr>
+      <tr>
+        <td>I/O</td>
+        <td>Copy qua kernel</td>
+        <td>Zero-copy (DMA)</td>
+      </tr>
+      <tr>
+        <td>Dùng khi</td>
+        <td>Mặc định, buffer nhỏ</td>
+        <td>High-throughput, buffer lớn</td>
+      </tr>
+    </tbody>
+  </table>
 </section>
 
       </article>
@@ -139,5 +174,113 @@ ByteBuffer direct = ByteBuffer.allocateDirect(1024);</code></pre>
   <footer class="topic-footer">
     <p>Xây dựng bằng Java 17+ · Không dùng framework · Pure NIO</p>
   </footer>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@9/dist/mermaid.min.js"></script>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      securityLevel: 'loose',
+      theme: 'base',
+      flowchart: { useMaxWidth: true, htmlLabels: true, curve: 'basis', padding: 20 },
+      themeVariables: {
+        primaryColor: '#FFFFFF',
+        primaryTextColor: '#0F172A',
+        primaryBorderColor: '#10B981',
+        secondaryColor: '#ECFDF5',
+        secondaryBorderColor: '#059669',
+        tertiaryColor: '#F8FAFC',
+        tertiaryBorderColor: '#10B981',
+        lineColor: '#64748B',
+        textColor: '#334155',
+        fontFamily: 'Inter, system-ui, sans-serif',
+        fontSize: '14px',
+        clusterBkg: '#F8FAFC',
+        clusterBorder: '#10B981',
+        titleColor: '#0F172A',
+        nodeBorder: '#10B981',
+        defaultLinkColor: '#64748B',
+        edgeLabelBackground: '#ECFDF5',
+        edgeLabelColor: '#047857',
+        mainBkg: '#FFFFFF',
+        secondBkg: '#ECFDF5'
+      }
+    });
+    window.addEventListener('load', function() {
+      var tooltipEl = document.createElement('div');
+      tooltipEl.className = 'flow-tooltip';
+      tooltipEl.innerHTML = '<div class="flow-tooltip__title"></div><div class="flow-tooltip__body"></div>';
+      document.body.appendChild(tooltipEl);
+      function getNodeIdFromElement(el) {
+        if (!el) return null;
+        var dataId = el.getAttribute && el.getAttribute('data-id');
+        if (dataId) return dataId;
+        var id = el.id;
+        if (!id) return null;
+        if (id.indexOf('flowchart-') === 0) {
+          var rest = id.slice(10);
+          var dash = rest.indexOf('-');
+          return dash >= 0 ? rest.slice(0, dash) : rest;
+        }
+        return id;
+      }
+      function attachTooltips() {
+        document.querySelectorAll('.flow-diagram svg rect').forEach(function(r) {
+          r.setAttribute('rx', '8');
+          r.setAttribute('ry', '8');
+        });
+        var attached = 0;
+        document.querySelectorAll('.flow-diagram').forEach(function(diagram, di) {
+          var script = diagram.querySelector('script[type="application/json"][data-flow-tooltips]');
+          if (!script) return;
+          var data;
+          try { data = JSON.parse(script.textContent); } catch (e) { return; }
+          var svg = diagram.querySelector('svg');
+          if (!svg) return;
+          if (diagram.hasAttribute('data-tooltip-delegated')) return;
+          diagram.setAttribute('data-tooltip-delegated', '1');
+          diagram.querySelectorAll('g.node').forEach(function(g) { g.style.pointerEvents = 'auto'; });
+          var onOver = function(e) {
+            var g = e.target.closest && e.target.closest('g.node');
+            if (!g) return;
+            var nodeId = getNodeIdFromElement(g);
+            if (!nodeId) return;
+            var tip = data[nodeId];
+            if (!tip || !tip.detail) return;
+            tooltipEl.querySelector('.flow-tooltip__title').textContent = tip.title || nodeId;
+            tooltipEl.querySelector('.flow-tooltip__body').innerHTML = tip.detail;
+            tooltipEl.style.left = '';
+            tooltipEl.style.top = '';
+            tooltipEl.classList.add('is-visible');
+            var rect = g.getBoundingClientRect();
+            var x = rect.left + rect.width / 2;
+            var y = rect.top - 10;
+            requestAnimationFrame(function() {
+              var w = tooltipEl.offsetWidth;
+              var h = tooltipEl.offsetHeight;
+              tooltipEl.style.left = Math.max(12, Math.min(x - w / 2, window.innerWidth - w - 12)) + 'px';
+              tooltipEl.style.top = Math.max(12, y - h) + 'px';
+            });
+          };
+          var onOut = function(e) {
+            var related = e.relatedTarget;
+            if (related && diagram.contains(related)) return;
+            tooltipEl.classList.remove('is-visible');
+          };
+          diagram.addEventListener('mouseover', onOver);
+          diagram.addEventListener('mouseout', onOut);
+          attached++;
+        });
+        return attached;
+      }
+      var delays = [150, 400, 800];
+      delays.forEach(function(delay, i) {
+        setTimeout(function() {
+          var n = attachTooltips();
+          if (n === 0 && i === delays.length - 1) {
+            setTimeout(attachTooltips, 500);
+          }
+        }, delay);
+      });
+    });
+  </script>
 </body>
 </html>

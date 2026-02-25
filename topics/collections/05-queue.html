@@ -23,7 +23,7 @@
     <nav class="topic-sidebar"><ul>
         <li><a href="../../index.html">Trang ch&#7911;</a>
         </li>
-        <li><a href="../oop.html">OOP</a>
+        <li><a href="../oop/01-intro.html">OOP</a>
         </li>
         <li><a href="../collections/01-intro.html" class="topic-sidebar-link--active">Collections</a>
         <ul class="topic-sub-nav">
@@ -58,8 +58,56 @@
   <h4>ArrayDeque — Mảng vòng (circular array)</h4>
   <p>Lưu trong <code>Object[] elements</code>. Hai chỉ số <code>head</code> và <code>tail</code>. Index thực tế: <code>(head + i) &amp; (elements.length - 1)</code> — dùng bit AND vì length luôn lũy thừa 2. offerLast: ghi tail, tăng tail; offerFirst: giảm head, ghi head. Khi đầy: capacity x2, copy. Không cho phép null. Nhanh hơn LinkedList vì: không tạo node, cache locality tốt, ít allocation.</p>
 
+  <h4>ArrayDeque — Queue và Stack</h4>
+  <p>ArrayDeque implement cả Queue và Deque. Dùng <code>offer(e)</code>/<code>poll()</code> cho FIFO queue. Dùng <code>push(e)</code>/<code>pop()</code> (tương đương addFirst/removeFirst) cho LIFO stack. <strong>Tránh class Stack</strong> (legacy) — ArrayDeque nhanh hơn và thread-safe hơn khi dùng đúng cách.</p>
+  <pre><code>// Queue (FIFO)
+Queue&lt;String&gt; queue = new ArrayDeque&lt;&gt;();
+queue.offer("first");
+queue.offer("second");
+queue.offer("third");
+System.out.println(queue.poll());  // first
+System.out.println(queue.poll());  // second
+
+// Stack (LIFO)
+Deque&lt;String&gt; stack = new ArrayDeque&lt;&gt;();
+stack.push("a");
+stack.push("b");
+stack.push("c");
+System.out.println(stack.pop());  // c
+System.out.println(stack.peek()); // b (không xóa)</code></pre>
+
   <h4>PriorityQueue — Binary Heap</h4>
   <p>Lưu trong mảng <code>Object[] queue</code> biểu diễn min-heap (hoặc max-heap với Comparator.reverseOrder()). Parent tại <code>(i-1)/2</code>, left child <code>2*i+1</code>, right child <code>2*i+2</code>. offer: thêm cuối, siftUp (heapify up); poll: lấy root, đặt phần tử cuối lên root, siftDown (heapify down). Cả hai O(log n). peek O(1). Iterator không đảm bảo thứ tự — chỉ poll mới lấy theo thứ tự.</p>
+
+  <h4>PriorityQueue — Custom Comparator</h4>
+  <pre><code>// Min-heap (mặc định)
+Queue&lt;Integer&gt; minHeap = new PriorityQueue&lt;&gt;();
+
+// Max-heap
+Queue&lt;Integer&gt; maxHeap = new PriorityQueue&lt;&gt;(Comparator.reverseOrder());
+
+// Custom: sắp xếp theo độ ưu tiên
+record Task(String name, int priority) { }
+Queue&lt;Task&gt; tasks = new PriorityQueue&lt;&gt;(
+  Comparator.comparingInt(Task::priority).reversed()
+);
+tasks.offer(new Task("low", 1));
+tasks.offer(new Task("high", 10));
+System.out.println(tasks.poll().name());  // high</code></pre>
+
+  <h4>BlockingQueue — Đa luồng</h4>
+  <p><code>BlockingQueue</code> (trong <code>java.util.concurrent</code>) — put/take chặn khi queue đầy/rỗng. <code>ArrayBlockingQueue</code>, <code>LinkedBlockingQueue</code>, <code>PriorityBlockingQueue</code>. Dùng cho producer-consumer pattern.</p>
+  <pre><code>BlockingQueue&lt;String&gt; queue = new LinkedBlockingQueue&lt;&gt;(10);
+
+// Producer
+queue.put("item");  // Chặn nếu đầy
+
+// Consumer
+String item = queue.take();  // Chặn nếu rỗng
+
+// Non-blocking
+queue.offer("item");  // false nếu đầy
+String s = queue.poll();  // null nếu rỗng</code></pre>
 
   <table class="comparison-table">
     <caption>Độ phức tạp — LinkedList vs ArrayDeque vs PriorityQueue</caption>
@@ -116,13 +164,7 @@ deque.offerFirst(1);
 deque.offerLast(2);
 deque.offerFirst(0);
 System.out.println(deque.pollFirst());  // 0
-System.out.println(deque.pollLast());   // 2
-
-// Stack: push = addFirst, pop = removeFirst
-Deque&lt;String&gt; stack = new ArrayDeque&lt;&gt;();
-stack.push("a");
-stack.push("b");
-System.out.println(stack.pop());  // b</code></pre>
+System.out.println(deque.pollLast());   // 2</code></pre>
 
   <pre><code>Queue&lt;Integer&gt; pq = new PriorityQueue&lt;&gt;();
 pq.offer(30);
@@ -197,5 +239,113 @@ System.out.println(maxHeap.poll());  // c</code></pre>
   <footer class="topic-footer">
     <p>Xây dựng bằng Java 17+ · Không dùng framework · Pure NIO</p>
   </footer>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@9/dist/mermaid.min.js"></script>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      securityLevel: 'loose',
+      theme: 'base',
+      flowchart: { useMaxWidth: true, htmlLabels: true, curve: 'basis', padding: 20 },
+      themeVariables: {
+        primaryColor: '#FFFFFF',
+        primaryTextColor: '#0F172A',
+        primaryBorderColor: '#10B981',
+        secondaryColor: '#ECFDF5',
+        secondaryBorderColor: '#059669',
+        tertiaryColor: '#F8FAFC',
+        tertiaryBorderColor: '#10B981',
+        lineColor: '#64748B',
+        textColor: '#334155',
+        fontFamily: 'Inter, system-ui, sans-serif',
+        fontSize: '14px',
+        clusterBkg: '#F8FAFC',
+        clusterBorder: '#10B981',
+        titleColor: '#0F172A',
+        nodeBorder: '#10B981',
+        defaultLinkColor: '#64748B',
+        edgeLabelBackground: '#ECFDF5',
+        edgeLabelColor: '#047857',
+        mainBkg: '#FFFFFF',
+        secondBkg: '#ECFDF5'
+      }
+    });
+    window.addEventListener('load', function() {
+      var tooltipEl = document.createElement('div');
+      tooltipEl.className = 'flow-tooltip';
+      tooltipEl.innerHTML = '<div class="flow-tooltip__title"></div><div class="flow-tooltip__body"></div>';
+      document.body.appendChild(tooltipEl);
+      function getNodeIdFromElement(el) {
+        if (!el) return null;
+        var dataId = el.getAttribute && el.getAttribute('data-id');
+        if (dataId) return dataId;
+        var id = el.id;
+        if (!id) return null;
+        if (id.indexOf('flowchart-') === 0) {
+          var rest = id.slice(10);
+          var dash = rest.indexOf('-');
+          return dash >= 0 ? rest.slice(0, dash) : rest;
+        }
+        return id;
+      }
+      function attachTooltips() {
+        document.querySelectorAll('.flow-diagram svg rect').forEach(function(r) {
+          r.setAttribute('rx', '8');
+          r.setAttribute('ry', '8');
+        });
+        var attached = 0;
+        document.querySelectorAll('.flow-diagram').forEach(function(diagram, di) {
+          var script = diagram.querySelector('script[type="application/json"][data-flow-tooltips]');
+          if (!script) return;
+          var data;
+          try { data = JSON.parse(script.textContent); } catch (e) { return; }
+          var svg = diagram.querySelector('svg');
+          if (!svg) return;
+          if (diagram.hasAttribute('data-tooltip-delegated')) return;
+          diagram.setAttribute('data-tooltip-delegated', '1');
+          diagram.querySelectorAll('g.node').forEach(function(g) { g.style.pointerEvents = 'auto'; });
+          var onOver = function(e) {
+            var g = e.target.closest && e.target.closest('g.node');
+            if (!g) return;
+            var nodeId = getNodeIdFromElement(g);
+            if (!nodeId) return;
+            var tip = data[nodeId];
+            if (!tip || !tip.detail) return;
+            tooltipEl.querySelector('.flow-tooltip__title').textContent = tip.title || nodeId;
+            tooltipEl.querySelector('.flow-tooltip__body').innerHTML = tip.detail;
+            tooltipEl.style.left = '';
+            tooltipEl.style.top = '';
+            tooltipEl.classList.add('is-visible');
+            var rect = g.getBoundingClientRect();
+            var x = rect.left + rect.width / 2;
+            var y = rect.top - 10;
+            requestAnimationFrame(function() {
+              var w = tooltipEl.offsetWidth;
+              var h = tooltipEl.offsetHeight;
+              tooltipEl.style.left = Math.max(12, Math.min(x - w / 2, window.innerWidth - w - 12)) + 'px';
+              tooltipEl.style.top = Math.max(12, y - h) + 'px';
+            });
+          };
+          var onOut = function(e) {
+            var related = e.relatedTarget;
+            if (related && diagram.contains(related)) return;
+            tooltipEl.classList.remove('is-visible');
+          };
+          diagram.addEventListener('mouseover', onOver);
+          diagram.addEventListener('mouseout', onOut);
+          attached++;
+        });
+        return attached;
+      }
+      var delays = [150, 400, 800];
+      delays.forEach(function(delay, i) {
+        setTimeout(function() {
+          var n = attachTooltips();
+          if (n === 0 && i === delays.length - 1) {
+            setTimeout(attachTooltips, 500);
+          }
+        }, delay);
+      });
+    });
+  </script>
 </body>
 </html>

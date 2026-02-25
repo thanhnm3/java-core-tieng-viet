@@ -23,7 +23,7 @@
     <nav class="topic-sidebar"><ul>
         <li><a href="../../index.html">Trang ch&#7911;</a>
         </li>
-        <li><a href="../oop.html">OOP</a>
+        <li><a href="../oop/01-intro.html">OOP</a>
         </li>
         <li><a href="../collections/01-intro.html">Collections</a>
         </li>
@@ -57,11 +57,24 @@
   <h3>Garbage Collection — Cơ chế sâu</h3>
   <p>GC thu hồi Object unreachable. Hai loại: <strong>Tracing</strong> (mark từ root) và <strong>Reference Counting</strong> (Java không dùng — không xử lý cycle).</p>
 
-  <h4>GC Roots</h4>
-  <p>Điểm bắt đầu trace: (1) Local variable trong Stack frame đang thực thi; (2) Static variable; (3) JNI global reference; (4) Object được lock (monitor). Từ Root, trace qua reference → Object reachable. Còn lại = unreachable.</p>
+  <h4>GC Roots — Điểm bắt đầu</h4>
+  <p>Từ Root, trace qua reference → Object reachable. Còn lại = unreachable (có thể thu hồi).</p>
+  <ul>
+    <li><strong>Stack:</strong> Local variable trong frame đang thực thi</li>
+    <li><strong>Static:</strong> Biến static trong class đã load</li>
+    <li><strong>JNI:</strong> Global reference từ native code</li>
+    <li><strong>Monitor:</strong> Object đang được synchronized</li>
+  </ul>
+  <pre><code>// Root: local ref
+void method() {
+  Object o = new Object();  // o là root khi method đang chạy
+}  // o mất → Object unreachable</code></pre>
 
   <h4>Mark-Sweep-Compact</h4>
   <p><strong>Mark:</strong> DFS/BFS từ Root, đánh dấu live. <strong>Sweep:</strong> Duyệt Heap, free unreachable. <strong>Compact:</strong> Dồn live object — giảm fragmentation, tăng locality. Compact tốn thời gian — nhiều GC tối ưu để giảm compact.</p>
+
+  <h4>Serial vs Parallel GC</h4>
+  <p><strong>Serial:</strong> 1 thread GC — pause toàn bộ. <strong>Parallel (Throughput):</strong> Nhiều thread GC — nhanh hơn nhưng vẫn STW. <code>-XX:+UseParallelGC</code>. Phù hợp batch, ít yêu cầu latency.</p>
 
   <h4>G1 (Garbage First)</h4>
   <p>Chia Heap thành region (~2048 region, mỗi region 1–32MB). Mỗi region là Eden, Survivor, hoặc Old. Ưu tiên dọn region có nhiều rác (garbage first). Evacuation: copy live object từ region này sang region khác. Mixed GC: dọn cả Young và một phần Old. Pause time mục tiêu: <code>-XX:MaxGCPauseMillis</code> (mặc định 200ms).</p>
@@ -111,5 +124,113 @@
   <footer class="topic-footer">
     <p>Xây dựng bằng Java 17+ · Không dùng framework · Pure NIO</p>
   </footer>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@9/dist/mermaid.min.js"></script>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      securityLevel: 'loose',
+      theme: 'base',
+      flowchart: { useMaxWidth: true, htmlLabels: true, curve: 'basis', padding: 20 },
+      themeVariables: {
+        primaryColor: '#FFFFFF',
+        primaryTextColor: '#0F172A',
+        primaryBorderColor: '#10B981',
+        secondaryColor: '#ECFDF5',
+        secondaryBorderColor: '#059669',
+        tertiaryColor: '#F8FAFC',
+        tertiaryBorderColor: '#10B981',
+        lineColor: '#64748B',
+        textColor: '#334155',
+        fontFamily: 'Inter, system-ui, sans-serif',
+        fontSize: '14px',
+        clusterBkg: '#F8FAFC',
+        clusterBorder: '#10B981',
+        titleColor: '#0F172A',
+        nodeBorder: '#10B981',
+        defaultLinkColor: '#64748B',
+        edgeLabelBackground: '#ECFDF5',
+        edgeLabelColor: '#047857',
+        mainBkg: '#FFFFFF',
+        secondBkg: '#ECFDF5'
+      }
+    });
+    window.addEventListener('load', function() {
+      var tooltipEl = document.createElement('div');
+      tooltipEl.className = 'flow-tooltip';
+      tooltipEl.innerHTML = '<div class="flow-tooltip__title"></div><div class="flow-tooltip__body"></div>';
+      document.body.appendChild(tooltipEl);
+      function getNodeIdFromElement(el) {
+        if (!el) return null;
+        var dataId = el.getAttribute && el.getAttribute('data-id');
+        if (dataId) return dataId;
+        var id = el.id;
+        if (!id) return null;
+        if (id.indexOf('flowchart-') === 0) {
+          var rest = id.slice(10);
+          var dash = rest.indexOf('-');
+          return dash >= 0 ? rest.slice(0, dash) : rest;
+        }
+        return id;
+      }
+      function attachTooltips() {
+        document.querySelectorAll('.flow-diagram svg rect').forEach(function(r) {
+          r.setAttribute('rx', '8');
+          r.setAttribute('ry', '8');
+        });
+        var attached = 0;
+        document.querySelectorAll('.flow-diagram').forEach(function(diagram, di) {
+          var script = diagram.querySelector('script[type="application/json"][data-flow-tooltips]');
+          if (!script) return;
+          var data;
+          try { data = JSON.parse(script.textContent); } catch (e) { return; }
+          var svg = diagram.querySelector('svg');
+          if (!svg) return;
+          if (diagram.hasAttribute('data-tooltip-delegated')) return;
+          diagram.setAttribute('data-tooltip-delegated', '1');
+          diagram.querySelectorAll('g.node').forEach(function(g) { g.style.pointerEvents = 'auto'; });
+          var onOver = function(e) {
+            var g = e.target.closest && e.target.closest('g.node');
+            if (!g) return;
+            var nodeId = getNodeIdFromElement(g);
+            if (!nodeId) return;
+            var tip = data[nodeId];
+            if (!tip || !tip.detail) return;
+            tooltipEl.querySelector('.flow-tooltip__title').textContent = tip.title || nodeId;
+            tooltipEl.querySelector('.flow-tooltip__body').innerHTML = tip.detail;
+            tooltipEl.style.left = '';
+            tooltipEl.style.top = '';
+            tooltipEl.classList.add('is-visible');
+            var rect = g.getBoundingClientRect();
+            var x = rect.left + rect.width / 2;
+            var y = rect.top - 10;
+            requestAnimationFrame(function() {
+              var w = tooltipEl.offsetWidth;
+              var h = tooltipEl.offsetHeight;
+              tooltipEl.style.left = Math.max(12, Math.min(x - w / 2, window.innerWidth - w - 12)) + 'px';
+              tooltipEl.style.top = Math.max(12, y - h) + 'px';
+            });
+          };
+          var onOut = function(e) {
+            var related = e.relatedTarget;
+            if (related && diagram.contains(related)) return;
+            tooltipEl.classList.remove('is-visible');
+          };
+          diagram.addEventListener('mouseover', onOver);
+          diagram.addEventListener('mouseout', onOut);
+          attached++;
+        });
+        return attached;
+      }
+      var delays = [150, 400, 800];
+      delays.forEach(function(delay, i) {
+        setTimeout(function() {
+          var n = attachTooltips();
+          if (n === 0 && i === delays.length - 1) {
+            setTimeout(attachTooltips, 500);
+          }
+        }, delay);
+      });
+    });
+  </script>
 </body>
 </html>

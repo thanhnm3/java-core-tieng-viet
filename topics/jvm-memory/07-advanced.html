@@ -23,7 +23,7 @@
     <nav class="topic-sidebar"><ul>
         <li><a href="../../index.html">Trang ch&#7911;</a>
         </li>
-        <li><a href="../oop.html">OOP</a>
+        <li><a href="../oop/01-intro.html">OOP</a>
         </li>
         <li><a href="../collections/01-intro.html">Collections</a>
         </li>
@@ -58,12 +58,41 @@
 
   <h4>String Pool (Intern)</h4>
   <p>Literal <code>"hello"</code> lưu trong String Pool (nằm Heap từ Java 7). <code>intern()</code> trả về reference từ pool nếu có, không thì thêm vào. Tránh duplicate string. Pool có thể OOM nếu intern quá nhiều string khác nhau.</p>
+  <pre><code>String a = "hello";           // Literal — trong pool
+String b = new String("hello").intern();  // intern() → trỏ pool
+assert a == b;  // Cùng object
+
+String c = new String("hello");  // Object mới, không trong pool
+assert a != c;
+
+// Cẩn thận: intern() nhiều string unique → OOM
+for (int i = 0; i < 1_000_000; i++) {
+  ("unique" + i).intern();  // Có thể OOM
+}</code></pre>
+
+  <h4>WeakHashMap</h4>
+  <p>Key là WeakReference — khi không còn strong reference tới key, entry có thể bị GC thu hồi. Dùng cho cache với key là Object (metadata, listener). Không dùng cho cache lâu dài — entry có thể mất bất ngờ.</p>
+  <pre><code>WeakHashMap&lt;Object, String&gt; cache = new WeakHashMap&lt;&gt;();
+Object key = new Object();
+cache.put(key, "value");
+// key = null; GC chạy → entry có thể bị xóa
+// Dùng khi key là Object tạm, không cần giữ lâu</code></pre>
+
+  <h4>ReferenceQueue</h4>
+  <p>Khi Soft/Weak/PhantomReference được GC thu hồi, reference được đưa vào ReferenceQueue. Poll queue để biết Object đã bị thu hồi — dùng cho cleanup, monitoring.</p>
+  <pre><code>ReferenceQueue&lt;Object&gt; queue = new ReferenceQueue&lt;&gt;();
+WeakReference&lt;Object&gt; ref = new WeakReference&lt;&gt;(new Object(), queue);
+// GC chạy → ref vào queue
+Reference&lt;?&gt; cleared = queue.poll();
+if (cleared != null) {
+  // Object đã bị thu hồi, cleanup
+}</code></pre>
 
   <h4>Reference Types</h4>
   <p><strong>Strong:</strong> Bình thường — GC không thu hồi khi còn reference. <strong>SoftReference:</strong> Thu hồi khi Heap sắp OOM — dùng cache. <strong>WeakReference:</strong> Thu hồi bất kỳ lúc nào GC chạy — dùng cho metadata. <strong>PhantomReference:</strong> Dùng với ReferenceQueue — biết khi Object sắp bị thu hồi (cleanup).</p>
 
   <h4>Compressed OOPs</h4>
-  <p>Trên 64-bit JVM, pointer 8 byte — tốn Heap. <strong>Compressed OOPs</strong> (-XX:+UseCompressedOops, mặc định): dùng 32-bit offset, scale x3 (shift left 3) để địa chỉ 8-byte aligned. Heap &lt; 32GB: dùng base + offset. Giảm ~30% memory cho Object có nhiều reference.</p>
+  <p>Trên 64-bit JVM, pointer 8 byte — tốn Heap. <strong>Compressed OOPs</strong> (-XX:+UseCompressedOops, mặc định): dùng 32-bit offset, scale x3 (shift left 3) để địa chỉ 8-byte aligned. Heap &lt; 32GB: dùng base + offset. Giảm ~30% memory cho Object có nhiều reference. Tắt khi Heap &gt; 32GB.</p>
 
   <table class="comparison-table">
     <caption>Reference types</caption>
@@ -105,5 +134,113 @@
   <footer class="topic-footer">
     <p>Xây dựng bằng Java 17+ · Không dùng framework · Pure NIO</p>
   </footer>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@9/dist/mermaid.min.js"></script>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      securityLevel: 'loose',
+      theme: 'base',
+      flowchart: { useMaxWidth: true, htmlLabels: true, curve: 'basis', padding: 20 },
+      themeVariables: {
+        primaryColor: '#FFFFFF',
+        primaryTextColor: '#0F172A',
+        primaryBorderColor: '#10B981',
+        secondaryColor: '#ECFDF5',
+        secondaryBorderColor: '#059669',
+        tertiaryColor: '#F8FAFC',
+        tertiaryBorderColor: '#10B981',
+        lineColor: '#64748B',
+        textColor: '#334155',
+        fontFamily: 'Inter, system-ui, sans-serif',
+        fontSize: '14px',
+        clusterBkg: '#F8FAFC',
+        clusterBorder: '#10B981',
+        titleColor: '#0F172A',
+        nodeBorder: '#10B981',
+        defaultLinkColor: '#64748B',
+        edgeLabelBackground: '#ECFDF5',
+        edgeLabelColor: '#047857',
+        mainBkg: '#FFFFFF',
+        secondBkg: '#ECFDF5'
+      }
+    });
+    window.addEventListener('load', function() {
+      var tooltipEl = document.createElement('div');
+      tooltipEl.className = 'flow-tooltip';
+      tooltipEl.innerHTML = '<div class="flow-tooltip__title"></div><div class="flow-tooltip__body"></div>';
+      document.body.appendChild(tooltipEl);
+      function getNodeIdFromElement(el) {
+        if (!el) return null;
+        var dataId = el.getAttribute && el.getAttribute('data-id');
+        if (dataId) return dataId;
+        var id = el.id;
+        if (!id) return null;
+        if (id.indexOf('flowchart-') === 0) {
+          var rest = id.slice(10);
+          var dash = rest.indexOf('-');
+          return dash >= 0 ? rest.slice(0, dash) : rest;
+        }
+        return id;
+      }
+      function attachTooltips() {
+        document.querySelectorAll('.flow-diagram svg rect').forEach(function(r) {
+          r.setAttribute('rx', '8');
+          r.setAttribute('ry', '8');
+        });
+        var attached = 0;
+        document.querySelectorAll('.flow-diagram').forEach(function(diagram, di) {
+          var script = diagram.querySelector('script[type="application/json"][data-flow-tooltips]');
+          if (!script) return;
+          var data;
+          try { data = JSON.parse(script.textContent); } catch (e) { return; }
+          var svg = diagram.querySelector('svg');
+          if (!svg) return;
+          if (diagram.hasAttribute('data-tooltip-delegated')) return;
+          diagram.setAttribute('data-tooltip-delegated', '1');
+          diagram.querySelectorAll('g.node').forEach(function(g) { g.style.pointerEvents = 'auto'; });
+          var onOver = function(e) {
+            var g = e.target.closest && e.target.closest('g.node');
+            if (!g) return;
+            var nodeId = getNodeIdFromElement(g);
+            if (!nodeId) return;
+            var tip = data[nodeId];
+            if (!tip || !tip.detail) return;
+            tooltipEl.querySelector('.flow-tooltip__title').textContent = tip.title || nodeId;
+            tooltipEl.querySelector('.flow-tooltip__body').innerHTML = tip.detail;
+            tooltipEl.style.left = '';
+            tooltipEl.style.top = '';
+            tooltipEl.classList.add('is-visible');
+            var rect = g.getBoundingClientRect();
+            var x = rect.left + rect.width / 2;
+            var y = rect.top - 10;
+            requestAnimationFrame(function() {
+              var w = tooltipEl.offsetWidth;
+              var h = tooltipEl.offsetHeight;
+              tooltipEl.style.left = Math.max(12, Math.min(x - w / 2, window.innerWidth - w - 12)) + 'px';
+              tooltipEl.style.top = Math.max(12, y - h) + 'px';
+            });
+          };
+          var onOut = function(e) {
+            var related = e.relatedTarget;
+            if (related && diagram.contains(related)) return;
+            tooltipEl.classList.remove('is-visible');
+          };
+          diagram.addEventListener('mouseover', onOver);
+          diagram.addEventListener('mouseout', onOut);
+          attached++;
+        });
+        return attached;
+      }
+      var delays = [150, 400, 800];
+      delays.forEach(function(delay, i) {
+        setTimeout(function() {
+          var n = attachTooltips();
+          if (n === 0 && i === delays.length - 1) {
+            setTimeout(attachTooltips, 500);
+          }
+        }, delay);
+      });
+    });
+  </script>
 </body>
 </html>

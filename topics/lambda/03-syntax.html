@@ -23,7 +23,7 @@
     <nav class="topic-sidebar"><ul>
         <li><a href="../../index.html">Trang ch&#7911;</a>
         </li>
-        <li><a href="../oop.html">OOP</a>
+        <li><a href="../oop/01-intro.html">OOP</a>
         </li>
         <li><a href="../collections/01-intro.html">Collections</a>
         </li>
@@ -90,7 +90,7 @@
   </table>
 
   <h4>Method Reference</h4>
-  <p>Rút gọn lambda khi body chỉ gọi một method. Có 4 loại:</p>
+  <p>Rút gọn lambda khi body chỉ gọi một method. Có 4 loại. Method reference không thực thi ngay — chỉ tham chiếu đến method, thực thi khi được gọi.</p>
   <table class="comparison-table">
     <caption>4 loại method reference</caption>
     <thead>
@@ -124,6 +124,12 @@
     </tbody>
   </table>
 
+  <h4>Method reference — Overload resolution</h4>
+  <p>Khi có nhiều overload, compiler chọn dựa trên target type. Ví dụ: <code>String::valueOf</code> có thể là <code>IntFunction</code> (valueOf(int)) hoặc <code>Function&lt;Object,String&gt;</code> (valueOf(Object)) — tùy context.</p>
+  <pre><code>// Compiler chọn overload phù hợp target type
+IntFunction&lt;String&gt; f1 = String::valueOf;           // valueOf(int)
+Function&lt;Object, String&gt; f2 = String::valueOf;     // valueOf(Object)</code></pre>
+
   <pre><code>// Static
 List&lt;String&gt; nums = List.of("1", "2", "3");
 nums.stream().map(Integer::parseInt).toList();  // [1, 2, 3]
@@ -138,8 +144,8 @@ nums.stream().map(prefix::concat).toList();  // ["id-1", "id-2", ...]
 // Constructor
 Supplier&lt;List&lt;String&gt;&gt; listSupplier = ArrayList::new;</code></pre>
 
-  <h4>Effectively final</h4>
-  <p>Biến dùng trong lambda phải effectively final — không gán lại sau khi được capture. Compiler báo lỗi nếu vi phạm.</p>
+  <h4>Effectively final và capture scope</h4>
+  <p>Biến dùng trong lambda phải <strong>effectively final</strong> — không gán lại sau khi được capture. Khác với <code>final</code> explicit: effectively final cho phép biến chưa khai báo final nhưng không thay đổi sau khi gán. Lambda capture biến theo <em>value</em> (bản sao tham chiếu) tại thời điểm capture.</p>
   <pre><code>int count = 0;
 list.forEach(s -> {
   count++;  // Compile error! count không effectively final
@@ -147,7 +153,22 @@ list.forEach(s -> {
 
 // Cách đúng — dùng array hoặc AtomicInteger
 int[] counter = {0};
-list.forEach(s -> counter[0]++);</code></pre>
+list.forEach(s -> counter[0]++);  // Mutable reference, effectively final
+
+// Hoặc AtomicInteger (thread-safe nếu parallel)
+AtomicInteger ai = new AtomicInteger(0);
+list.forEach(s -> ai.incrementAndGet());</code></pre>
+
+  <section class="when-use">
+    <h4>Lambda vs Method reference</h4>
+    <ul class="when-use-do">
+      <li>Method reference khi body chỉ gọi 1 method — ngắn gọn hơn</li>
+      <li>Lambda khi cần truyền thêm argument: <code>n -> n * 2</code> thay vì method ref</li>
+    </ul>
+    <ul class="when-use-avoid">
+      <li>Method reference với overload phức tạp — có thể ambiguous, dùng lambda rõ ràng hơn</li>
+    </ul>
+  </section>
 </section>
 
       </article>
@@ -156,5 +177,113 @@ list.forEach(s -> counter[0]++);</code></pre>
   <footer class="topic-footer">
     <p>Xây dựng bằng Java 17+ · Không dùng framework · Pure NIO</p>
   </footer>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@9/dist/mermaid.min.js"></script>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      securityLevel: 'loose',
+      theme: 'base',
+      flowchart: { useMaxWidth: true, htmlLabels: true, curve: 'basis', padding: 20 },
+      themeVariables: {
+        primaryColor: '#FFFFFF',
+        primaryTextColor: '#0F172A',
+        primaryBorderColor: '#10B981',
+        secondaryColor: '#ECFDF5',
+        secondaryBorderColor: '#059669',
+        tertiaryColor: '#F8FAFC',
+        tertiaryBorderColor: '#10B981',
+        lineColor: '#64748B',
+        textColor: '#334155',
+        fontFamily: 'Inter, system-ui, sans-serif',
+        fontSize: '14px',
+        clusterBkg: '#F8FAFC',
+        clusterBorder: '#10B981',
+        titleColor: '#0F172A',
+        nodeBorder: '#10B981',
+        defaultLinkColor: '#64748B',
+        edgeLabelBackground: '#ECFDF5',
+        edgeLabelColor: '#047857',
+        mainBkg: '#FFFFFF',
+        secondBkg: '#ECFDF5'
+      }
+    });
+    window.addEventListener('load', function() {
+      var tooltipEl = document.createElement('div');
+      tooltipEl.className = 'flow-tooltip';
+      tooltipEl.innerHTML = '<div class="flow-tooltip__title"></div><div class="flow-tooltip__body"></div>';
+      document.body.appendChild(tooltipEl);
+      function getNodeIdFromElement(el) {
+        if (!el) return null;
+        var dataId = el.getAttribute && el.getAttribute('data-id');
+        if (dataId) return dataId;
+        var id = el.id;
+        if (!id) return null;
+        if (id.indexOf('flowchart-') === 0) {
+          var rest = id.slice(10);
+          var dash = rest.indexOf('-');
+          return dash >= 0 ? rest.slice(0, dash) : rest;
+        }
+        return id;
+      }
+      function attachTooltips() {
+        document.querySelectorAll('.flow-diagram svg rect').forEach(function(r) {
+          r.setAttribute('rx', '8');
+          r.setAttribute('ry', '8');
+        });
+        var attached = 0;
+        document.querySelectorAll('.flow-diagram').forEach(function(diagram, di) {
+          var script = diagram.querySelector('script[type="application/json"][data-flow-tooltips]');
+          if (!script) return;
+          var data;
+          try { data = JSON.parse(script.textContent); } catch (e) { return; }
+          var svg = diagram.querySelector('svg');
+          if (!svg) return;
+          if (diagram.hasAttribute('data-tooltip-delegated')) return;
+          diagram.setAttribute('data-tooltip-delegated', '1');
+          diagram.querySelectorAll('g.node').forEach(function(g) { g.style.pointerEvents = 'auto'; });
+          var onOver = function(e) {
+            var g = e.target.closest && e.target.closest('g.node');
+            if (!g) return;
+            var nodeId = getNodeIdFromElement(g);
+            if (!nodeId) return;
+            var tip = data[nodeId];
+            if (!tip || !tip.detail) return;
+            tooltipEl.querySelector('.flow-tooltip__title').textContent = tip.title || nodeId;
+            tooltipEl.querySelector('.flow-tooltip__body').innerHTML = tip.detail;
+            tooltipEl.style.left = '';
+            tooltipEl.style.top = '';
+            tooltipEl.classList.add('is-visible');
+            var rect = g.getBoundingClientRect();
+            var x = rect.left + rect.width / 2;
+            var y = rect.top - 10;
+            requestAnimationFrame(function() {
+              var w = tooltipEl.offsetWidth;
+              var h = tooltipEl.offsetHeight;
+              tooltipEl.style.left = Math.max(12, Math.min(x - w / 2, window.innerWidth - w - 12)) + 'px';
+              tooltipEl.style.top = Math.max(12, y - h) + 'px';
+            });
+          };
+          var onOut = function(e) {
+            var related = e.relatedTarget;
+            if (related && diagram.contains(related)) return;
+            tooltipEl.classList.remove('is-visible');
+          };
+          diagram.addEventListener('mouseover', onOver);
+          diagram.addEventListener('mouseout', onOut);
+          attached++;
+        });
+        return attached;
+      }
+      var delays = [150, 400, 800];
+      delays.forEach(function(delay, i) {
+        setTimeout(function() {
+          var n = attachTooltips();
+          if (n === 0 && i === delays.length - 1) {
+            setTimeout(attachTooltips, 500);
+          }
+        }, delay);
+      });
+    });
+  </script>
 </body>
 </html>

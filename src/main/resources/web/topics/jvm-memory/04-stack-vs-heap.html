@@ -5,8 +5,25 @@
   <h4>Stack Frame Layout</h4>
   <p>Mỗi frame: <em>Local Variable Array</em> — slot 32-bit (long/double dùng 2 slot); <em>Operand Stack</em> — max depth xác định tại compile; <em>Reference</em> tới Constant Pool của method. Kích thước frame = tổng local vars + operand stack + overhead. <code>-Xss256k</code> giới hạn stack/thread — thread nhiều = stack nhiều.</p>
 
+  <h4>Phân bổ biến — Ví dụ</h4>
+  <pre><code>void method() {
+  int a = 1;              // a: primitive trên Stack
+  Integer b = Integer.valueOf(1);  // b: reference Stack; Integer: Heap (cached)
+  Object o = new Object();  // o: reference Stack; Object: Heap
+  int[] arr = new int[10];  // arr: reference Stack; array: Heap
+}
+// Return: frame pop, a/b/o/arr mất; Object/array chờ GC</code></pre>
+
   <h4>Escape Analysis</h4>
-  <p>JIT phân tích Object có "escape" khỏi method không. Nếu không escape (chỉ dùng nội bộ method) → có thể <strong>Scalar Replacement</strong>: allocate trên stack thay vì Heap, hoặc bỏ allocation hoàn toàn. Giảm áp lực GC.</p>
+  <p>JIT phân tích Object có "escape" khỏi method không. <strong>No escape:</strong> Object chỉ dùng nội bộ method → <strong>Scalar Replacement</strong>: allocate trên stack thay vì Heap, hoặc bỏ allocation (chỉ lưu giá trị trong register). Giảm áp lực GC. Bật mặc định: <code>-XX:+DoEscapeAnalysis</code>.</p>
+  <pre><code>// Object không escape — có thể scalar replace
+void sum() {
+  Point p = new Point(1, 2);  // Chỉ dùng trong method
+  return p.x + p.y;  // JIT có thể bỏ allocation
+}</code></pre>
+
+  <h4>StackOverflowError</h4>
+  <p>Xảy ra khi: đệ quy quá sâu; frame quá lớn (nhiều local variable); circular call. Giải pháp: tăng <code>-Xss</code>; refactor đệ quy thành vòng lặp.</p>
 
   <table class="comparison-table">
     <caption>So sánh Stack và Heap</caption>
@@ -45,10 +62,4 @@
       </tr>
     </tbody>
   </table>
-
-  <pre><code>void method() {
-  int a = 1;           // a: slot trên Stack
-  Object o = new Object();  // o: reference Stack; Object: Heap
-}
-// Return: frame pop, a và o mất; Object chờ GC</code></pre>
 </section>

@@ -23,7 +23,7 @@
     <nav class="topic-sidebar"><ul>
         <li><a href="../../index.html">Trang ch&#7911;</a>
         </li>
-        <li><a href="../oop.html">OOP</a>
+        <li><a href="../oop/01-intro.html">OOP</a>
         </li>
         <li><a href="../collections/01-intro.html">Collections</a>
         </li>
@@ -56,8 +56,31 @@
   <h3>Try-with-resources (Java 7+)</h3>
   <p>Tự động đóng resource implement <code>AutoCloseable</code> (có method <code>close()</code>). Tránh memory leak khi quên close trong finally. Resource được đóng theo thứ tự ngược với khai báo.</p>
 
+  <h4>AutoCloseable vs Closeable</h4>
+  <p><code>AutoCloseable</code> (Java 7) — <code>close() throws Exception</code>. <code>Closeable</code> extends AutoCloseable — <code>close() throws IOException</code>. InputStream, Reader implement Closeable. Try-with-resources chấp nhận cả hai.</p>
+
   <h4>Cơ chế</h4>
-  <p>Compiler sinh bytecode: gọi <code>close()</code> trong block finally ẩn. Nếu cả try và close() đều ném Exception — Exception từ try được <strong>suppressed</strong>, có thể lấy qua <code>getSuppressed()</code>. Java 9+: biến trong try-with-resources có thể là effectively final.</p>
+  <p>Compiler sinh bytecode: gọi <code>close()</code> trong block finally ẩn. Nếu cả try và close() đều ném Exception — Exception từ try được <strong>suppressed</strong>, có thể lấy qua <code>getSuppressed()</code>. Java 9+: biến trong try-with-resources có thể là effectively final (không cần khai báo trong ngoặc).</p>
+
+  <h4>Suppressed Exceptions</h4>
+  <p>Khi try block ném Exception và close() cũng ném — Exception gốc được ném ra, Exception từ close() được add vào <code>getSuppressed()</code>. Log đầy đủ: <code>e.getSuppressed()</code>.</p>
+  <pre><code>try (InputStream in = new FileInputStream("x")) {
+  in.read();  // Ném IOException
+} catch (IOException e) {
+  // e: IOException từ read()
+  for (Throwable t : e.getSuppressed()) {
+    // t: IOException từ close()
+  }
+}</code></pre>
+
+  <h4>Java 9+ — Effectively final</h4>
+  <p>Biến có thể khai báo ngoài try, miễn là effectively final.</p>
+  <pre><code>// Java 9+
+InputStream in = openStream();
+OutputStream out = openStream();
+try (in; out) {
+  copy(in, out);
+}</code></pre>
 
   <pre><code>// Java 7+
 try (BufferedReader br = new BufferedReader(
@@ -88,5 +111,113 @@ try (InputStream in = openInput();
   <footer class="topic-footer">
     <p>Xây dựng bằng Java 17+ · Không dùng framework · Pure NIO</p>
   </footer>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@9/dist/mermaid.min.js"></script>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      securityLevel: 'loose',
+      theme: 'base',
+      flowchart: { useMaxWidth: true, htmlLabels: true, curve: 'basis', padding: 20 },
+      themeVariables: {
+        primaryColor: '#FFFFFF',
+        primaryTextColor: '#0F172A',
+        primaryBorderColor: '#10B981',
+        secondaryColor: '#ECFDF5',
+        secondaryBorderColor: '#059669',
+        tertiaryColor: '#F8FAFC',
+        tertiaryBorderColor: '#10B981',
+        lineColor: '#64748B',
+        textColor: '#334155',
+        fontFamily: 'Inter, system-ui, sans-serif',
+        fontSize: '14px',
+        clusterBkg: '#F8FAFC',
+        clusterBorder: '#10B981',
+        titleColor: '#0F172A',
+        nodeBorder: '#10B981',
+        defaultLinkColor: '#64748B',
+        edgeLabelBackground: '#ECFDF5',
+        edgeLabelColor: '#047857',
+        mainBkg: '#FFFFFF',
+        secondBkg: '#ECFDF5'
+      }
+    });
+    window.addEventListener('load', function() {
+      var tooltipEl = document.createElement('div');
+      tooltipEl.className = 'flow-tooltip';
+      tooltipEl.innerHTML = '<div class="flow-tooltip__title"></div><div class="flow-tooltip__body"></div>';
+      document.body.appendChild(tooltipEl);
+      function getNodeIdFromElement(el) {
+        if (!el) return null;
+        var dataId = el.getAttribute && el.getAttribute('data-id');
+        if (dataId) return dataId;
+        var id = el.id;
+        if (!id) return null;
+        if (id.indexOf('flowchart-') === 0) {
+          var rest = id.slice(10);
+          var dash = rest.indexOf('-');
+          return dash >= 0 ? rest.slice(0, dash) : rest;
+        }
+        return id;
+      }
+      function attachTooltips() {
+        document.querySelectorAll('.flow-diagram svg rect').forEach(function(r) {
+          r.setAttribute('rx', '8');
+          r.setAttribute('ry', '8');
+        });
+        var attached = 0;
+        document.querySelectorAll('.flow-diagram').forEach(function(diagram, di) {
+          var script = diagram.querySelector('script[type="application/json"][data-flow-tooltips]');
+          if (!script) return;
+          var data;
+          try { data = JSON.parse(script.textContent); } catch (e) { return; }
+          var svg = diagram.querySelector('svg');
+          if (!svg) return;
+          if (diagram.hasAttribute('data-tooltip-delegated')) return;
+          diagram.setAttribute('data-tooltip-delegated', '1');
+          diagram.querySelectorAll('g.node').forEach(function(g) { g.style.pointerEvents = 'auto'; });
+          var onOver = function(e) {
+            var g = e.target.closest && e.target.closest('g.node');
+            if (!g) return;
+            var nodeId = getNodeIdFromElement(g);
+            if (!nodeId) return;
+            var tip = data[nodeId];
+            if (!tip || !tip.detail) return;
+            tooltipEl.querySelector('.flow-tooltip__title').textContent = tip.title || nodeId;
+            tooltipEl.querySelector('.flow-tooltip__body').innerHTML = tip.detail;
+            tooltipEl.style.left = '';
+            tooltipEl.style.top = '';
+            tooltipEl.classList.add('is-visible');
+            var rect = g.getBoundingClientRect();
+            var x = rect.left + rect.width / 2;
+            var y = rect.top - 10;
+            requestAnimationFrame(function() {
+              var w = tooltipEl.offsetWidth;
+              var h = tooltipEl.offsetHeight;
+              tooltipEl.style.left = Math.max(12, Math.min(x - w / 2, window.innerWidth - w - 12)) + 'px';
+              tooltipEl.style.top = Math.max(12, y - h) + 'px';
+            });
+          };
+          var onOut = function(e) {
+            var related = e.relatedTarget;
+            if (related && diagram.contains(related)) return;
+            tooltipEl.classList.remove('is-visible');
+          };
+          diagram.addEventListener('mouseover', onOver);
+          diagram.addEventListener('mouseout', onOut);
+          attached++;
+        });
+        return attached;
+      }
+      var delays = [150, 400, 800];
+      delays.forEach(function(delay, i) {
+        setTimeout(function() {
+          var n = attachTooltips();
+          if (n === 0 && i === delays.length - 1) {
+            setTimeout(attachTooltips, 500);
+          }
+        }, delay);
+      });
+    });
+  </script>
 </body>
 </html>

@@ -1,11 +1,125 @@
 <h2>Lambda — Giới thiệu</h2>
 
-<p>Lambda expression (Java 8+) cho phép truyền hành vi như một giá trị — viết code ngắn gọn, dễ đọc thay cho anonymous class. Cú pháp: <code>(params) -> body</code>.</p>
+<p>Lambda expression (Java 8+) cho phép truyền hành vi như một giá trị — viết code ngắn gọn, dễ đọc thay cho anonymous class. Cú pháp: <code>(params) -> body</code>. Target type được suy ra từ context (assignment, method parameter, return).</p>
+
+<section>
+  <h3>Tổng quan từng phần</h3>
+  <p>Mỗi phần gồm: <strong>Kỹ thuật</strong> (định nghĩa, cú pháp, quy tắc) và <strong>Ví dụ</strong> (code minh họa).</p>
+  <table class="comparison-table">
+    <caption>Lambda &amp; Stream — Kỹ thuật và Ví dụ</caption>
+    <thead>
+      <tr>
+        <th>Phần</th>
+        <th>Kỹ thuật</th>
+        <th>Ví dụ</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>01 — Intro</strong></td>
+        <td>Target type, SAM, effectively final, anonymous vs lambda</td>
+        <td>Runnable, Comparator, ambiguous cast</td>
+      </tr>
+      <tr>
+        <td><strong>02 — Functional</strong></td>
+        <td>Predicate, Function, Consumer, Supplier, Bi*, primitive, composing</td>
+        <td>filter, map, forEach, and/or/negate, andThen</td>
+      </tr>
+      <tr>
+        <td><strong>03 — Syntax</strong></td>
+        <td>Cú pháp lambda, method reference (4 loại), overload, effectively final</td>
+        <td>Integer::parseInt, prefix::concat, AtomicInteger</td>
+      </tr>
+      <tr>
+        <td><strong>04 — Stream Intro</strong></td>
+        <td>Lazy, intermediate vs terminal, characteristics, finite vs infinite</td>
+        <td>Stream.of, iterate, findFirst short-circuit</td>
+      </tr>
+      <tr>
+        <td><strong>05 — Intermediate</strong></td>
+        <td>filter, map, flatMap, mapToInt, takeWhile/dropWhile, sorted, distinct</td>
+        <td>flatMap List of lists, Comparator.nullsLast</td>
+      </tr>
+      <tr>
+        <td><strong>06 — Terminal</strong></td>
+        <td>collect, groupingBy, reduce, teeing, collectingAndThen</td>
+        <td>toMap, partitioningBy, reduce identity</td>
+      </tr>
+      <tr>
+        <td><strong>07 — Advanced</strong></td>
+        <td>Optional chain, parallel pitfalls, custom Collector</td>
+        <td>flatMap Optional, parallelStream race</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h3>Lộ trình học — Sơ đồ flow</h3>
+  <p>Sơ đồ dưới đây thể hiện thứ tự học và mối liên hệ giữa các phần. Mỗi ô là một phần; mũi tên chỉ hướng tiếp theo.</p>
+
+  <div class="flow-diagram">
+    <script type="application/json" data-flow-tooltips>
+    {"B1":{"title":"01 Intro - Lambda cơ bản","detail":"<p><strong>Phần này là gì?</strong> Lambda là cách viết ngắn gọn thay cho anonymous class, cho phép truyền hành vi (behavior) như tham số.</p><p><strong>Target type và SAM:</strong> Lambda không có kiểu riêng - kiểu được suy ra từ nơi nó được dùng (biến gán, tham số method, return). Target type phải là functional interface - interface có đúng một abstract method (SAM).</p><p><strong>Effectively final:</strong> Biến capture bởi lambda phải effectively final - không thay đổi sau khi gán.</p>"},"B2":{"title":"02 Functional Interfaces","detail":"<p><strong>Predicate&lt;T&gt;</strong> - nhận T, trả boolean. Dùng trong filter, removeIf.</p><p><strong>Function&lt;T,R&gt;</strong> - nhận T, trả R. Dùng trong map.</p><p><strong>Consumer&lt;T&gt;</strong> - nhận T, không trả gì. Dùng trong forEach.</p><p><strong>Supplier&lt;T&gt;</strong> - không nhận gì, trả T. Dùng khi lazy init.</p><p>Composing: and, or, negate cho Predicate; andThen, compose cho Function.</p>"},"B3":{"title":"03 Syntax - Method Reference","detail":"<p><strong>Bốn loại method reference:</strong> ClassName::staticMethod, object::instanceMethod, ClassName::instanceMethod (nhận object làm tham số đầu), ClassName::new (constructor).</p><p>Method reference ngắn gọn hơn lambda khi chỉ gọi một method. Ví dụ: String::toLowerCase thay cho s -&gt; s.toLowerCase().</p>"},"B4":{"title":"04 Stream Intro","detail":"<p><strong>Stream</strong> là chuỗi phần tử hỗ trợ sequential và parallel aggregate operations.</p><p><strong>Lazy:</strong> Intermediate operations (filter, map) không chạy ngay - chúng chỉ tạo pipeline. Terminal operation (collect, forEach) mới kích hoạt xử lý.</p><p>Finite vs infinite stream (Stream.iterate, Stream.generate).</p>"},"B5":{"title":"05 Intermediate Ops","detail":"<p><strong>filter(Predicate)</strong> - giữ phần tử thỏa điều kiện.</p><p><strong>map(Function)</strong> - chuyển đổi từng phần tử.</p><p><strong>flatMap</strong> - flatten stream lồng nhau. Ví dụ: List&lt;List&lt;String&gt;&gt; thành Stream&lt;String&gt;.</p><p>takeWhile, dropWhile (Java 9), sorted, distinct.</p>"},"B6":{"title":"06 Terminal Ops","detail":"<p><strong>collect(Collectors.toList())</strong> - gom vào List.</p><p><strong>groupingBy</strong> - nhóm theo key. reducing, mapping kết hợp.</p><p><strong>reduce</strong> - gộp thành một giá trị. teeing (Java 12) - hai collector cùng lúc.</p>"},"B7":{"title":"07 Optional &amp; Parallel","detail":"<p><strong>Optional</strong> - tránh null. orElse, orElseGet, map, flatMap. Chain an toàn.</p><p><strong>parallelStream</strong> - cẩn thận: stateful ops (sorted, distinct) có thể chậm hơn; shared mutable state gây bug. Chỉ dùng khi CPU-bound và đã benchmark.</p>"}}
+    </script>
+    <pre class="mermaid">
+flowchart TD
+  subgraph Lambda [Lambda]
+    direction LR
+    B1("01 Intro")
+    B2("02 Functional")
+    B3("03 Syntax")
+    B1 -->|"Target type, SAM"| B2 -->|"Method ref"| B3
+  end
+  subgraph Stream [Stream API]
+    direction LR
+    B4("04 Intro")
+    B5("05 Intermediate")
+    B6("06 Terminal")
+    B4 -->|"Lazy, characteristics"| B5 -->|"filter, map"| B6
+  end
+  subgraph Advanced [Advanced]
+    B7("07 Optional, parallel")
+  end
+  Lambda -->|"Predicate, Consumer"| Stream
+  Stream -->|"collect, groupingBy"| Advanced
+    </pre>
+  </div>
+
+  <table class="comparison-table">
+    <caption>Chú thích từng phần</caption>
+    <thead>
+      <tr><th>Phần</th><th>Nội dung chính</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>01</td><td>Lambda cơ bản, target type, SAM, effectively final</td></tr>
+      <tr><td>02</td><td>Predicate, Function, Consumer, Supplier, Bi*, composing</td></tr>
+      <tr><td>03</td><td>Cú pháp lambda, 4 loại method reference</td></tr>
+      <tr><td>04</td><td>Stream API, lazy, characteristics, finite vs infinite</td></tr>
+      <tr><td>05</td><td>filter, map, flatMap, takeWhile, sorted, distinct</td></tr>
+      <tr><td>06</td><td>collect, groupingBy, reduce, teeing</td></tr>
+      <tr><td>07</td><td>Optional chain, parallelStream, custom Collector</td></tr>
+    </tbody>
+  </table>
+</section>
 
 <section>
   <h3>Tại sao cần Lambda?</h3>
-  <p>Trước Java 8: dùng anonymous class để truyền callback — verbose, nhiều boilerplate. Lambda rút gọn logic xuống còn biểu thức.</p>
+  <p>Trước Java 8: dùng anonymous class để truyền callback — verbose, nhiều boilerplate. Lambda rút gọn logic xuống còn biểu thức. Giảm số dòng code, tăng khả năng đọc.</p>
 
+  <h4>Kỹ thuật — Target type và SAM</h4>
+  <p>Lambda không có kiểu riêng — kiểu được suy ra từ <strong>target type</strong> (biến gán, tham số method, return). Target type phải là <strong>functional interface</strong> (SAM: Single Abstract Method) — interface có đúng 1 abstract method. Ví dụ: <code>Runnable</code>, <code>Comparator&lt;T&gt;</code>, <code>Predicate&lt;T&gt;</code>.</p>
+
+  <pre><code>// Target type từ assignment
+Runnable r = () -> System.out.println("hi");  // Runnable
+
+// Target type từ method parameter
+list.removeIf(s -> s.isEmpty());  // Predicate&lt;String&gt;
+
+// Target type từ return
+Supplier&lt;Integer&gt; get = () -> 42;</code></pre>
+
+  <h4>Ví dụ</h4>
   <table class="comparison-table">
     <caption>Anonymous class vs Lambda</caption>
     <thead>
@@ -26,6 +140,10 @@
       <tr>
         <td>Capture biến qua final</td>
         <td>Effectively final — compiler kiểm tra</td>
+      </tr>
+      <tr>
+        <td>Tạo class file riêng (.class)</td>
+        <td>Invokedynamic — JVM tạo implementation động</td>
       </tr>
     </tbody>
   </table>
@@ -59,8 +177,26 @@ names.sort((a, b) -> a.length() - b.length());</code></pre>
 <section>
   <h3>Điều kiện sử dụng Lambda</h3>
   <ul>
-    <li>Chỉ dùng được khi target type là <strong>functional interface</strong> — interface có đúng 1 abstract method.</li>
+    <li>Chỉ dùng được khi target type là <strong>functional interface</strong> — interface có đúng 1 abstract method (SAM). Default/static method không ảnh hưởng.</li>
     <li>Biến được capture phải <strong>effectively final</strong> (không gán lại sau khi capture).</li>
     <li>Lambda không tạo scope mới cho biến — không shadow biến ngoài.</li>
+    <li>Không thể dùng lambda khi target type ambiguous — ví dụ: overloaded method cần cast rõ ràng.</li>
+  </ul>
+
+  <pre><code>// Ambiguous — cần cast
+// foo(x -> x)  // Nếu có foo(Predicate) và foo(Function)
+foo((Predicate&lt;Integer&gt;) x -> x &gt; 0);</code></pre>
+</section>
+
+<section class="when-use">
+  <h3>Khi nào dùng Lambda?</h3>
+  <ul class="when-use-do">
+    <li>Callback, event handler (Runnable, Consumer)</li>
+    <li>Filter, map, sort trong Collections/Stream (Predicate, Function, Comparator)</li>
+    <li>Lazy evaluation (Supplier)</li>
+  </ul>
+  <ul class="when-use-avoid">
+    <li>Logic phức tạp nhiều dòng — tách method riêng</li>
+    <li>Cần debug chi tiết — anonymous class có tên rõ hơn trong stack trace</li>
   </ul>
 </section>

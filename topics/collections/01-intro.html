@@ -23,7 +23,7 @@
     <nav class="topic-sidebar"><ul>
         <li><a href="../../index.html">Trang ch&#7911;</a>
         </li>
-        <li><a href="../oop.html">OOP</a>
+        <li><a href="../oop/01-intro.html">OOP</a>
         </li>
         <li><a href="../collections/01-intro.html" class="topic-sidebar-link--active">Collections</a>
         <ul class="topic-sub-nav">
@@ -56,8 +56,106 @@
 <p>Java Collections Framework (JCF) nằm trong <code>java.util</code>, cung cấp các cấu trúc dữ liệu tái sử dụng để lưu trữ và xử lý nhóm đối tượng. Framework tách interface (contract) khỏi implementation (cách lưu trữ) — lập trình theo interface giúp dễ thay đổi implementation mà không đổi code gọi.</p>
 
 <section>
+  <h3>Tổng quan từng phần</h3>
+  <p>Mỗi phần gồm: <strong>Kỹ thuật</strong> (định nghĩa, API) và <strong>Ví dụ</strong> (code minh họa).</p>
+  <table class="comparison-table">
+    <caption>Collections — Kỹ thuật và Ví dụ</caption>
+    <thead>
+      <tr>
+        <th>Phần</th>
+        <th>Kỹ thuật</th>
+        <th>Ví dụ</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>01 — Intro</strong></td>
+        <td>Collection vs Map, Iterator, fail-fast, unmodifiable</td>
+        <td>List.of, ListIterator, iterator.remove</td>
+      </tr>
+      <tr>
+        <td><strong>02 — List</strong></td>
+        <td>ArrayList vs LinkedList, index-based</td>
+        <td>add, get, subList</td>
+      </tr>
+      <tr>
+        <td><strong>03 — Set</strong></td>
+        <td>HashSet, LinkedHashSet, TreeSet, không trùng</td>
+        <td>add, contains, SortedSet</td>
+      </tr>
+      <tr>
+        <td><strong>04 — Map</strong></td>
+        <td>HashMap, TreeMap, key-value</td>
+        <td>put, get, computeIfAbsent</td>
+      </tr>
+      <tr>
+        <td><strong>05 — Queue</strong></td>
+        <td>FIFO, PriorityQueue, Deque</td>
+        <td>offer, poll, ArrayDeque</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h3>Lộ trình học — Sơ đồ flow</h3>
+  <p>Sơ đồ dưới đây thể hiện thứ tự học và mối liên hệ giữa các phần. Mỗi ô là một phần; mũi tên chỉ hướng tiếp theo.</p>
+
+  <div class="flow-diagram">
+    <script type="application/json" data-flow-tooltips>
+    {"G1":{"title":"01 Intro - Collections Framework","detail":"<p><strong>Collection</strong> - Iterable, có add, remove, size. Ba nhánh: List (thứ tự, trùng), Set (không trùng), Queue (FIFO/priority).</p><p><strong>Map</strong> - không kế thừa Collection, cấu trúc key-value. Iterator, fail-fast khi modify trong lúc iterate. List.of() unmodifiable.</p>"},"G2":{"title":"02 List","detail":"<p><strong>ArrayList</strong> - mảng động, get(index) O(1), add cuối O(1) amortized. ensureCapacity(), trimToSize().</p><p><strong>LinkedList</strong> - doubly linked, addFirst/removeFirst O(1). Chọn ArrayList cho truy cập index, LinkedList cho thêm/xóa đầu cuối.</p>"},"G3":{"title":"03 Set","detail":"<p><strong>HashSet</strong> - hash, không thứ tự. Override equals/hashCode cho object.</p><p><strong>LinkedHashSet</strong> - thứ tự chèn. <strong>TreeSet</strong> - sắp xếp, Comparable hoặc Comparator. SortedSet - first(), last(), subSet().</p>"},"G4":{"title":"04 Map","detail":"<p><strong>HashMap</strong> - O(1) get/put trung bình. keySet(), values(), entrySet(). computeIfAbsent() lazy init value.</p><p>LinkedHashMap - thứ tự chèn. TreeMap - key sắp xếp. Chọn theo nhu cầu thứ tự.</p>"},"G5":{"title":"05 Queue","detail":"<p><strong>ArrayDeque</strong> - FIFO hiệu quả, offer/poll/peek. Deque - addFirst, removeLast.</p><p><strong>PriorityQueue</strong> - heap, phần tử nhỏ nhất (hoặc theo Comparator) ra trước. Dùng cho hàng đợi ưu tiên.</p>"}}
+    </script>
+    <pre class="mermaid">
+flowchart TD
+  subgraph Foundation [Foundation]
+    G1("01 Intro")
+  end
+  subgraph Sequential ["List and Set"]
+    direction LR
+    G2(["02 List"])
+    G3(["03 Set"])
+    G2 -->|"ArrayList, LinkedList"| G3
+  end
+  subgraph KeyValue ["Map and Queue"]
+    direction LR
+    G4("04 Map")
+    G5("05 Queue")
+    G4 -->|"HashMap, TreeMap"| G5
+  end
+  Foundation -->|"Iterator, fail-fast"| Sequential
+  Sequential -->|"HashSet, TreeSet"| KeyValue
+    </pre>
+  </div>
+
+  <table class="comparison-table">
+    <caption>Chú thích từng phần</caption>
+    <thead>
+      <tr><th>Phần</th><th>Nội dung chính</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>01</td><td>Collection vs Map, Iterator, fail-fast</td></tr>
+      <tr><td>02</td><td>ArrayList vs LinkedList, O(1) get vs addFirst</td></tr>
+      <tr><td>03</td><td>HashSet, LinkedHashSet, TreeSet</td></tr>
+      <tr><td>04</td><td>HashMap, TreeMap, computeIfAbsent</td></tr>
+      <tr><td>05</td><td>ArrayDeque, PriorityQueue, Deque</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
   <h3>Tổng quan hierarchy</h3>
-  <p><code>Collection</code> là interface gốc cho List, Set, Queue. <code>Map</code> không kế thừa Collection vì cấu trúc key-value khác. Các interface con mở rộng contract (ví dụ List thêm index-based access).</p>
+  <h4>Kỹ thuật</h4>
+  <p><code>Collection&lt;E&gt;</code> là interface gốc cho List, Set, Queue. <code>Map&lt;K,V&gt;</code> không kế thừa Collection vì cấu trúc key-value khác. Các interface con mở rộng contract (ví dụ List thêm index-based access).</p>
+
+  <h4>Sơ đồ phân cấp</h4>
+  <pre><code>Iterable&lt;T&gt;
+  └── Collection&lt;E&gt;
+        ├── List&lt;E&gt;      → ArrayList, LinkedList
+        ├── Set&lt;E&gt;       → HashSet, LinkedHashSet, TreeSet
+        └── Queue&lt;E&gt;     → LinkedList, ArrayDeque, PriorityQueue
+
+Map&lt;K,V&gt; (độc lập)
+  └── HashMap, LinkedHashMap, TreeMap</code></pre>
 
   <table class="comparison-table">
     <thead>
@@ -95,6 +193,16 @@
       </tr>
     </tbody>
   </table>
+
+  <h4>Ví dụ — Lập trình theo interface</h4>
+  <p>Khai báo biến theo interface, khởi tạo theo implementation. Dễ thay đổi implementation mà không đổi logic.</p>
+  <pre><code>// Tốt — phụ thuộc List, không phụ thuộc ArrayList
+List&lt;String&gt; list = new ArrayList&lt;&gt;();
+list.add("a");
+// Đổi sang LinkedList chỉ cần sửa dòng khởi tạo
+
+// Tránh — gắn chặt với implementation
+ArrayList&lt;String&gt; list = new ArrayList&lt;&gt;();</code></pre>
 </section>
 
 <section>
@@ -103,6 +211,19 @@
 
   <h4>Cơ chế hoạt động</h4>
   <p>Iterator giữ con trỏ (cursor) tới vị trí hiện tại. <code>next()</code> trả về phần tử và tiến cursor. <code>remove()</code> xóa phần tử vừa trả về bởi <code>next()</code> — gọi remove() hai lần liên tiếp không có next() ở giữa sẽ ném <code>IllegalStateException</code>.</p>
+
+  <h4>ListIterator — Iterator cho List</h4>
+  <p><code>ListIterator&lt;E&gt;</code> mở rộng Iterator: duyệt hai chiều (<code>hasPrevious()</code>, <code>previous()</code>), truy cập index (<code>nextIndex()</code>, <code>previousIndex()</code>), thêm/sửa (<code>add(e)</code>, <code>set(e)</code>). Chỉ List có <code>listIterator()</code>.</p>
+  <pre><code>List&lt;String&gt; list = new ArrayList&lt;&gt;(List.of("a", "b", "c"));
+ListIterator&lt;String&gt; it = list.listIterator(list.size());
+
+// Duyệt ngược
+while (it.hasPrevious()) {
+  String s = it.previous();
+  if (s.equals("b")) {
+    it.set("B");  // Thay thế phần tử
+  }
+}</code></pre>
 
   <h4>Fail-fast và ConcurrentModificationException</h4>
   <p>Iterator của ArrayList, HashMap... là <strong>fail-fast</strong>: nếu collection bị sửa (add/remove) ngoài iterator trong lúc duyệt, sẽ ném <code>ConcurrentModificationException</code>. Cách an toàn: dùng <code>iterator.remove()</code> thay vì <code>list.remove()</code> trong vòng lặp.</p>
@@ -125,6 +246,16 @@ while (it.hasNext()) {
 
 // SAI: list.remove(s) trong for-each → ConcurrentModificationException</code></pre>
 
+  <h4>Unmodifiable collections (Java 9+)</h4>
+  <p><code>List.of()</code>, <code>Set.of()</code>, <code>Map.of()</code> tạo collection immutable — không add/remove/set. <code>List.copyOf(collection)</code> tạo bản sao immutable. Dùng khi cần truyền collection mà không muốn bị sửa.</p>
+  <pre><code>List&lt;String&gt; immutable = List.of("a", "b", "c");
+// immutable.add("d");  // UnsupportedOperationException
+
+List&lt;String&gt; copy = List.copyOf(someList);  // Bản sao immutable
+
+// Collections.unmodifiableList(list) — view, thay đổi list gốc vẫn ảnh hưởng
+List&lt;String&gt; view = Collections.unmodifiableList(list);</code></pre>
+
   <section class="when-use">
     <h4>Khi nào dùng Iterator?</h4>
     <p class="when-use-do"><strong>Nên dùng:</strong> Cần remove trong lúc duyệt; duyệt Set (không có index); tránh ConcurrentModificationException; ListIterator khi cần duyệt ngược hoặc set phần tử.</p>
@@ -138,5 +269,113 @@ while (it.hasNext()) {
   <footer class="topic-footer">
     <p>Xây dựng bằng Java 17+ · Không dùng framework · Pure NIO</p>
   </footer>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@9/dist/mermaid.min.js"></script>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      securityLevel: 'loose',
+      theme: 'base',
+      flowchart: { useMaxWidth: true, htmlLabels: true, curve: 'basis', padding: 20 },
+      themeVariables: {
+        primaryColor: '#FFFFFF',
+        primaryTextColor: '#0F172A',
+        primaryBorderColor: '#10B981',
+        secondaryColor: '#ECFDF5',
+        secondaryBorderColor: '#059669',
+        tertiaryColor: '#F8FAFC',
+        tertiaryBorderColor: '#10B981',
+        lineColor: '#64748B',
+        textColor: '#334155',
+        fontFamily: 'Inter, system-ui, sans-serif',
+        fontSize: '14px',
+        clusterBkg: '#F8FAFC',
+        clusterBorder: '#10B981',
+        titleColor: '#0F172A',
+        nodeBorder: '#10B981',
+        defaultLinkColor: '#64748B',
+        edgeLabelBackground: '#ECFDF5',
+        edgeLabelColor: '#047857',
+        mainBkg: '#FFFFFF',
+        secondBkg: '#ECFDF5'
+      }
+    });
+    window.addEventListener('load', function() {
+      var tooltipEl = document.createElement('div');
+      tooltipEl.className = 'flow-tooltip';
+      tooltipEl.innerHTML = '<div class="flow-tooltip__title"></div><div class="flow-tooltip__body"></div>';
+      document.body.appendChild(tooltipEl);
+      function getNodeIdFromElement(el) {
+        if (!el) return null;
+        var dataId = el.getAttribute && el.getAttribute('data-id');
+        if (dataId) return dataId;
+        var id = el.id;
+        if (!id) return null;
+        if (id.indexOf('flowchart-') === 0) {
+          var rest = id.slice(10);
+          var dash = rest.indexOf('-');
+          return dash >= 0 ? rest.slice(0, dash) : rest;
+        }
+        return id;
+      }
+      function attachTooltips() {
+        document.querySelectorAll('.flow-diagram svg rect').forEach(function(r) {
+          r.setAttribute('rx', '8');
+          r.setAttribute('ry', '8');
+        });
+        var attached = 0;
+        document.querySelectorAll('.flow-diagram').forEach(function(diagram, di) {
+          var script = diagram.querySelector('script[type="application/json"][data-flow-tooltips]');
+          if (!script) return;
+          var data;
+          try { data = JSON.parse(script.textContent); } catch (e) { return; }
+          var svg = diagram.querySelector('svg');
+          if (!svg) return;
+          if (diagram.hasAttribute('data-tooltip-delegated')) return;
+          diagram.setAttribute('data-tooltip-delegated', '1');
+          diagram.querySelectorAll('g.node').forEach(function(g) { g.style.pointerEvents = 'auto'; });
+          var onOver = function(e) {
+            var g = e.target.closest && e.target.closest('g.node');
+            if (!g) return;
+            var nodeId = getNodeIdFromElement(g);
+            if (!nodeId) return;
+            var tip = data[nodeId];
+            if (!tip || !tip.detail) return;
+            tooltipEl.querySelector('.flow-tooltip__title').textContent = tip.title || nodeId;
+            tooltipEl.querySelector('.flow-tooltip__body').innerHTML = tip.detail;
+            tooltipEl.style.left = '';
+            tooltipEl.style.top = '';
+            tooltipEl.classList.add('is-visible');
+            var rect = g.getBoundingClientRect();
+            var x = rect.left + rect.width / 2;
+            var y = rect.top - 10;
+            requestAnimationFrame(function() {
+              var w = tooltipEl.offsetWidth;
+              var h = tooltipEl.offsetHeight;
+              tooltipEl.style.left = Math.max(12, Math.min(x - w / 2, window.innerWidth - w - 12)) + 'px';
+              tooltipEl.style.top = Math.max(12, y - h) + 'px';
+            });
+          };
+          var onOut = function(e) {
+            var related = e.relatedTarget;
+            if (related && diagram.contains(related)) return;
+            tooltipEl.classList.remove('is-visible');
+          };
+          diagram.addEventListener('mouseover', onOver);
+          diagram.addEventListener('mouseout', onOut);
+          attached++;
+        });
+        return attached;
+      }
+      var delays = [150, 400, 800];
+      delays.forEach(function(delay, i) {
+        setTimeout(function() {
+          var n = attachTooltips();
+          if (n === 0 && i === delays.length - 1) {
+            setTimeout(attachTooltips, 500);
+          }
+        }, delay);
+      });
+    });
+  </script>
 </body>
 </html>

@@ -1,21 +1,44 @@
 <section>
   <h3>Type Erasure và Giới hạn</h3>
-  <p>Generics chỉ tồn tại tại compile-time. JVM không biết generic — <strong>type erasure</strong>: compiler xóa thông tin type, thay bằng bound (hoặc Object nếu unbounded). <code>List&lt;String&gt;</code> và <code>List&lt;Integer&gt;</code> cùng class tại runtime.</p>
+
+  <h4>Kỹ thuật</h4>
+  <p>Generics chỉ tồn tại tại compile-time. JVM không biết generic — <strong>type erasure</strong>: compiler xóa thông tin type, thay bằng bound (hoặc Object nếu unbounded). <code>List&lt;String&gt;</code> và <code>List&lt;Integer&gt;</code> cùng class tại runtime. Bridge method: compiler sinh method để tương thích override. Reifiable: type còn tại runtime (raw, ?). Non-reifiable: List&lt;String&gt; — mất thông tin.</p>
+
+  <h4>Erasure — Sau compile</h4>
+  <h4>Ví dụ — Erasure</h4>
+  <pre><code>// Trước
+class Box&lt;T&gt; { T value; }
+class NumBox&lt;T extends Number&gt; { T value; }
+
+// Sau erasure
+class Box { Object value; }      // T → Object
+class NumBox { Number value; }    // T → Number</code></pre>
+
+  <h4>Bridge method</h4>
+  <p>Khi override method generic, compiler sinh <strong>bridge method</strong> để tương thích binary. Ví dụ: <code>class MyList implements List&lt;String&gt;</code> — override <code>add(String)</code> nhưng interface có <code>add(Object)</code> — bridge gọi add(String).</p>
+
+  <h4>Không new T[]</h4>
+  <p><code>new T[10]</code> — lỗi (T không tồn tại runtime). Giải pháp: (1) <code>(T[]) new Object[n]</code> — unchecked cast, có thể ClassCastException nếu array thoát ra ngoài; (2) <code>Array.newInstance(Class&lt;T&gt; clazz, int n)</code> — an toàn; (3) dùng <code>List&lt;T&gt;</code> thay vì array.</p>
+  <h4>Ví dụ — new T[]</h4>
+  <pre><code>// Cách 2 — an toàn
+public static &lt;T&gt; T[] createArray(Class&lt;T&gt; clazz, int size) {
+  @SuppressWarnings("unchecked")
+  T[] arr = (T[]) java.lang.reflect.Array.newInstance(clazz, size);
+  return arr;
+}
+String[] arr = createArray(String.class, 10);</code></pre>
+
+  <h4>Reifiable vs Non-reifiable</h4>
+  <p><strong>Reifiable:</strong> Type còn thông tin tại runtime — raw type, unbounded wildcard, primitive, array. <strong>Non-reifiable:</strong> List&lt;String&gt;, List&lt;? extends Number&gt; — erasure mất thông tin. Không dùng non-reifiable trong instanceof, cast (trừ unbounded), new.</p>
 
   <h4>Hậu quả của Erasure</h4>
   <ul>
     <li><strong>Không instanceof:</strong> <code>if (obj instanceof List&lt;String&gt;)</code> — lỗi. Chỉ <code>obj instanceof List</code>.</li>
-    <li><strong>Không new T[]:</strong> <code>new T[10]</code> — lỗi. Dùng <code>(T[]) new Object[n]</code> (unchecked cast) hoặc truyền Class&lt;T&gt;.</li>
+    <li><strong>Không new T[]:</strong> <code>new T[10]</code> — lỗi. Dùng Array.newInstance hoặc List.</li>
     <li><strong>Không primitive:</strong> <code>List&lt;int&gt;</code> — lỗi. Dùng <code>List&lt;Integer&gt;</code>.</li>
     <li><strong>Overload theo T:</strong> <code>void m(List&lt;String&gt;)</code> và <code>void m(List&lt;Integer&gt;)</code> — cùng erasure, compile error.</li>
+    <li><strong>Static field T:</strong> <code>static T instance</code> — lỗi. Mỗi instantiation chia sẻ cùng static.</li>
   </ul>
-
-  <pre><code>// Erasure — sau compile
-class Box&lt;T&gt; { T value; }
-// Thành: class Box { Object value; }  (T unbounded)
-
-class Box&lt;T extends Number&gt; { T value; }
-// Thành: class Box { Number value; }</code></pre>
 
   <table class="comparison-table">
     <caption>Giới hạn Generics</caption>

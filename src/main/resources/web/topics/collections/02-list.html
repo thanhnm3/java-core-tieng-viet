@@ -1,9 +1,21 @@
 <section>
   <h3>List — Danh sách có thứ tự</h3>
+
+  <h4>Kỹ thuật</h4>
   <p><code>List</code> cho phép phần tử trùng lặp, có thứ tự (index). Hai implementation phổ biến: <strong>ArrayList</strong> (mảng động) và <strong>LinkedList</strong> (danh sách liên kết đôi).</p>
 
   <h4>ArrayList — Cấu trúc nội bộ</h4>
   <p>ArrayList lưu trong mảng <code>Object[] elementData</code>. Khi mảng đầy, tạo mảng mới lớn hơn (capacity mới = <code>oldCapacity + (oldCapacity &gt;&gt; 1)</code> — tăng ~50%), copy phần tử sang. Capacity mặc định ban đầu 10 (từ Java 8). Truy cập <code>get(i)</code> là <code>elementData[i]</code> — O(1). Thêm ở cuối <code>add(e)</code> O(1) amortized; thêm ở index i phải dịch n-i phần tử — O(n).</p>
+
+  <h4>ensureCapacity và trimToSize</h4>
+  <p><code>ensureCapacity(minCapacity)</code> tăng capacity trước khi add nhiều phần tử — tránh resize nhiều lần. <code>trimToSize()</code> thu nhỏ mảng về đúng size — tiết kiệm bộ nhớ khi không còn add thêm.</p>
+  <h4>Ví dụ</h4>
+  <pre><code>ArrayList&lt;String&gt; list = new ArrayList&lt;&gt;();
+list.ensureCapacity(1000);  // Tránh resize khi add 1000 phần tử
+for (int i = 0; i &lt; 1000; i++) {
+  list.add("item" + i);
+}
+list.trimToSize();  // Thu nhỏ về đúng 1000</code></pre>
 
   <h4>LinkedList — Cấu trúc nội bộ</h4>
   <p>LinkedList dùng node: mỗi node có <code>item</code>, <code>prev</code>, <code>next</code>. Có <code>first</code> và <code>last</code> trỏ đầu/cuối. Thêm/xóa đầu hoặc cuối chỉ cần cập nhật vài reference — O(1). Truy cập index i phải duyệt từ first (hoặc last nếu i gần cuối) — O(n). Mỗi node tốn thêm ~24 byte (object header + 3 reference) so với ArrayList chỉ lưu reference trong mảng.</p>
@@ -56,6 +68,17 @@
     </tbody>
   </table>
 
+  <h4>subList — View con của List</h4>
+  <p><code>list.subList(fromIndex, toIndex)</code> trả về view (không copy) — thay đổi subList ảnh hưởng list gốc và ngược lại. Dùng để xử lý một đoạn mà không tạo bản sao.</p>
+  <pre><code>List&lt;Integer&gt; list = new ArrayList&lt;&gt;(List.of(1, 2, 3, 4, 5));
+List&lt;Integer&gt; sub = list.subList(1, 4);  // [2, 3, 4]
+sub.set(0, 20);  // list thành [1, 20, 3, 4, 5]
+list.remove(2);  // Structural change — subList invalid, sub dùng lại sẽ CME</code></pre>
+
+  <h4>List.of() và Arrays.asList()</h4>
+  <p><code>List.of("a", "b")</code> — immutable, không null. <code>Arrays.asList(arr)</code> — view của mảng, fixed-size (không add/remove nhưng set được). Thay đổi arr ảnh hưởng list.</p>
+
+  <h4>Ví dụ sử dụng</h4>
   <pre><code>List&lt;String&gt; list = new ArrayList&lt;&gt;();
 list.add("apple");
 list.add("banana");
