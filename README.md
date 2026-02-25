@@ -46,6 +46,10 @@ Mặc định server listen trên port **9091**.
 - Topic OOP: http://localhost:9091/topics/oop
 - Các topic khác (stub): http://localhost:9091/topics/collections, ...
 
+## Deployment
+
+- **Demo (gh-pages)**: [https://thanhnm3.github.io/java-core-tieng-viet/](https://thanhnm3.github.io/java-core-tieng-viet/)
+
 ## Cấu trúc
 
 - `src/main/java/com/javacore/server/` — server, router, handlers
