@@ -2,6 +2,44 @@
   <h3>Path và Files — NIO.2</h3>
   <p>Java 7+ có <code>java.nio.file</code>. <code>Path</code> thay <code>File</code> — immutable, cross-platform. <code>Paths.get()</code> hoặc <code>Path.of()</code> (Java 11) tạo Path. <code>Files</code> — utility static: read, write, copy, delete, walk...</p>
 
+  <h4>Path operations</h4>
+  <p><code>path.resolve(other)</code> — nối path (path + other). <code>path.relativize(other)</code> — path tương đối từ path đến other. <code>path.normalize()</code> — bỏ . và .. <code>path.toAbsolutePath()</code> — path tuyệt đối.</p>
+  <pre><code>Path base = Path.of("project", "src");
+Path file = base.resolve("main/java/App.java");  // project/src/main/java/App.java
+Path rel = base.relativize(file);  // ../main/java/App.java
+Path norm = Path.of("a/../b/./c").normalize();  // b/c</code></pre>
+
+  <h4>FileVisitor — Duyệt cây thư mục</h4>
+  <p><code>Files.walkFileTree(path, visitor)</code> — duyệt đệ quy, gọi visitor tại mỗi file/dir. <code>SimpleFileVisitor</code> — override <code>visitFile</code>, <code>preVisitDirectory</code>, <code>postVisitDirectory</code>.</p>
+  <pre><code>Files.walkFileTree(Path.of("src"), new SimpleFileVisitor&lt;&gt;() {
+  @Override
+  public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
+    System.out.println(file);
+    return FileVisitResult.CONTINUE;
+  }
+
+  @Override
+  public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
+    if (dir.endsWith("target")) return FileVisitResult.SKIP_SUBTREE;
+    return FileVisitResult.CONTINUE;
+  }
+});</code></pre>
+
+  <h4>WatchService — Theo dõi thay đổi</h4>
+  <p><code>FileSystem.getDefault().newWatchService()</code>. <code>path.register(watchService, ENTRY_CREATE, ENTRY_MODIFY, ENTRY_DELETE)</code>. <code>watchService.take()</code> block cho đến khi có event.</p>
+  <pre><code>WatchService watch = FileSystems.getDefault().newWatchService();
+Path dir = Path.of("data");
+dir.register(watch, StandardWatchEventKinds.ENTRY_CREATE, StandardWatchEventKinds.ENTRY_MODIFY);
+
+while (true) {
+  WatchKey key = watch.take();
+  for (WatchEvent&lt;?&gt; event : key.pollEvents()) {
+    Path name = (Path) event.context();
+    System.out.println(event.kind() + ": " + name);
+  }
+  key.reset();
+}</code></pre>
+
   <h4>Path vs File</h4>
   <p><code>File</code> (java.io) — cũ, có nhiều method I/O; <code>Path</code> — chỉ đại diện path, không mở file. <code>Path</code> dùng với <code>Files</code> hoặc <code>FileChannel</code>. <code>File.toPath()</code> chuyển File sang Path.</p>
 
@@ -32,7 +70,7 @@
       </tr>
       <tr>
         <td><code>Files.walk(Path)</code></td>
-        <td>Duyệt cây thư mục</td>
+        <td>Duyệt cây thư mục (Stream)</td>
       </tr>
       <tr>
         <td><code>Files.exists(Path)</code></td>
@@ -60,9 +98,11 @@ Files.walk(path, 3)
     <h4>Path + Files — Ưu điểm</h4>
     <div class="pro-con-list">
       <div class="pro-con-item pro-con-item--pro">
-        <strong>Ưu điểm:</strong> Immutable; cross-platform; Files utility mạnh; walk, copy, delete atomic; symbolic link.</div>
+        <strong>Ưu điểm:</strong> Immutable; cross-platform; Files utility mạnh; walk, copy, delete atomic; symbolic link.
+      </div>
       <div class="pro-con-item pro-con-item--con">
-        <strong>Lưu ý:</strong> readAllBytes/readAllLines load toàn bộ vào memory — không dùng cho file rất lớn.</div>
+        <strong>Lưu ý:</strong> readAllBytes/readAllLines load toàn bộ vào memory — không dùng cho file rất lớn.
+      </div>
     </div>
   </section>
 </section>

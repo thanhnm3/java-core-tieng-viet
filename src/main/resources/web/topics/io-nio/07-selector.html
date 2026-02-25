@@ -5,6 +5,42 @@
   <h4>Cơ chế</h4>
   <p><code>selector.select()</code> block cho đến khi có channel có sự kiện (OP_ACCEPT, OP_READ, OP_WRITE, OP_CONNECT). Trả về số key đã sẵn sàng. <code>selector.selectedKeys()</code> lấy set các key. Mỗi key có <code>channel()</code>, <code>readyOps()</code>. Xử lý xong phải <code>keyIterator.remove()</code>.</p>
 
+  <h4>select(timeout) và selectNow()</h4>
+  <p><code>select()</code> — block vô hạn. <code>select(timeout)</code> — block tối đa timeout ms. <code>selectNow()</code> — không block, trả về ngay (0 nếu không có event). <code>selector.wakeUp()</code> — đánh thức selector đang block (từ thread khác).</p>
+
+  <h4>Ví dụ Echo Server</h4>
+  <pre><code>Selector selector = Selector.open();
+ServerSocketChannel server = ServerSocketChannel.open();
+server.configureBlocking(false);
+server.bind(new InetSocketAddress(8080));
+server.register(selector, SelectionKey.OP_ACCEPT);
+
+while (true) {
+  selector.select();  // Block cho đến khi có event
+  Set&lt;SelectionKey&gt; keys = selector.selectedKeys();
+  Iterator&lt;SelectionKey&gt; it = keys.iterator();
+  while (it.hasNext()) {
+    SelectionKey key = it.next();
+    it.remove();  // BẮT BUỘC remove để tránh xử lý lại
+    if (key.isAcceptable()) {
+      ServerSocketChannel srv = (ServerSocketChannel) key.channel();
+      SocketChannel client = srv.accept();
+      client.configureBlocking(false);
+      client.register(selector, SelectionKey.OP_READ);
+    } else if (key.isReadable()) {
+      SocketChannel client = (SocketChannel) key.channel();
+      ByteBuffer buf = ByteBuffer.allocate(1024);
+      int n = client.read(buf);
+      if (n &gt; 0) {
+        buf.flip();
+        client.write(buf);  // Echo
+      } else if (n == -1) {
+        client.close();
+      }
+    }
+  }
+}</code></pre>
+
   <table class="comparison-table">
     <caption>SelectionKey operations</caption>
     <thead>
@@ -33,23 +69,8 @@
     </tbody>
   </table>
 
-  <pre><code>Selector selector = Selector.open();
-ServerSocketChannel server = ServerSocketChannel.open();
-server.configureBlocking(false);
-server.bind(new InetSocketAddress(port));
-server.register(selector, SelectionKey.OP_ACCEPT);
-
-while (true) {
-  selector.select();
-  Set&lt;SelectionKey&gt; keys = selector.selectedKeys();
-  Iterator&lt;SelectionKey&gt; it = keys.iterator();
-  while (it.hasNext()) {
-    SelectionKey key = it.next();
-    it.remove();
-    if (key.isAcceptable()) handleAccept(key);
-    else if (key.isReadable()) handleRead(key);
-  }
-}</code></pre>
+  <h4>Đăng ký nhiều interest</h4>
+  <p><code>channel.register(selector, OP_READ | OP_WRITE)</code> — đăng ký cả read và write. <code>key.interestOps(OP_READ)</code> — thay đổi interest sau khi đăng ký.</p>
 
   <section class="comparison">
     <h4>Blocking vs Non-blocking</h4>

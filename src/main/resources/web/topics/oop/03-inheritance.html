@@ -1,0 +1,150 @@
+<section>
+  <h3>3. Inheritance (Kế thừa)</h3>
+
+  <h4>Định nghĩa</h4>
+  <p>Class con kế thừa từ class cha bằng <code>extends</code>. Class con có thể override phương thức của cha, gọi phương thức cha bằng <code>super</code>. Quan hệ phải là "is-a": Student <em>là</em> Person. Java chỉ cho phép đơn kế thừa (một class chỉ extends một class).</p>
+
+  <h4>Ví dụ cơ bản</h4>
+  <pre><code>public class Person {
+  protected String name;
+  protected int age;
+
+  public Person(String name, int age) {
+    this.name = name;
+    this.age = age;
+  }
+
+  public String introduce() {
+    return "I am " + name + ", " + age + " years old.";
+  }
+}
+
+public class Student extends Person {
+  private String studentId;
+
+  public Student(String name, int age, String studentId) {
+    super(name, age);  // BẮT BUỘC gọi constructor cha trước
+    this.studentId = studentId;
+  }
+
+  @Override
+  public String introduce() {
+    return "Student: " + super.introduce() + " ID: " + studentId;
+  }
+}</code></pre>
+
+  <h4>Từ khóa <code>super</code></h4>
+  <p><code>super</code> tham chiếu tới class cha. Dùng để: (1) gọi constructor cha <code>super(...)</code> — phải là dòng đầu tiên trong constructor con; (2) gọi method cha <code>super.methodName()</code> khi override; (3) truy cập field cha (nếu protected).</p>
+  <pre><code>public class Animal {
+  protected String name;
+
+  public Animal(String name) {
+    this.name = name;
+  }
+
+  public void speak() {
+    System.out.println(name + " makes a sound");
+  }
+}
+
+public class Dog extends Animal {
+  public Dog(String name) {
+    super(name);  // Gọi Animal(name)
+  }
+
+  @Override
+  public void speak() {
+    super.speak();           // Gọi Animal.speak() trước
+    System.out.println("Woof!");
+  }
+}</code></pre>
+
+  <h4>Override — Ghi đè phương thức</h4>
+  <p>Override: method con có cùng signature (tên + tham số) với method cha. Dùng <code>@Override</code> để compiler kiểm tra. Quy tắc: cùng hoặc rộng hơn access modifier; cùng hoặc con hơn kiểu trả về (covariant); không throw thêm checked exception (có thể ít hơn).</p>
+  <pre><code>public class Shape {
+  public double area() {
+    return 0;
+  }
+}
+
+public class Circle extends Shape {
+  private double radius;
+
+  public Circle(double radius) {
+    this.radius = radius;
+  }
+
+  @Override
+  public double area() {
+    return Math.PI * radius * radius;
+  }
+}</code></pre>
+
+  <h4>Từ khóa <code>final</code></h4>
+  <p><code>final</code> trên class: không cho kế thừa (ví dụ <code>String</code>). <code>final</code> trên method: không cho override. <code>final</code> trên variable: không gán lại.</p>
+  <pre><code>public final class CannotExtend { }  // Không ai extends được
+
+public class Parent {
+  public final void cannotOverride() { }  // Subclass không override được
+}</code></pre>
+
+  <h4>Composition vs Inheritance</h4>
+  <p><strong>Inheritance</strong> (is-a): Student <em>là</em> Person. <strong>Composition</strong> (has-a): Car <em>có</em> Engine. Ưu tiên composition khi chỉ cần dùng lại code — linh hoạt hơn, ít coupling.</p>
+  <pre><code>// Inheritance — Car IS-A Vehicle
+public class Car extends Vehicle { }
+
+// Composition — Car HAS-A Engine (ưu tiên khi chỉ cần dùng lại)
+public class Car {
+  private Engine engine;  // Có thể thay Engine, test dễ hơn
+
+  public Car(Engine engine) {
+    this.engine = engine;
+  }
+}</code></pre>
+
+  <table class="comparison-table">
+    <caption>Inheritance vs Composition</caption>
+    <thead>
+      <tr>
+        <th>Tiêu chí</th>
+        <th>Inheritance</th>
+        <th>Composition</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Quan hệ</td>
+        <td>is-a (Student là Person)</td>
+        <td>has-a (Car có Engine)</td>
+      </tr>
+      <tr>
+        <td>Coupling</td>
+        <td>Chặt — thay đổi cha ảnh hưởng con</td>
+        <td>Lỏng — thay implementation dễ</td>
+      </tr>
+      <tr>
+        <td>Test</td>
+        <td>Khó mock cha</td>
+        <td>Dễ inject dependency</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <section class="when-use">
+    <h4>Khi nào nên dùng kế thừa?</h4>
+    <p class="when-use-do"><strong>Nên dùng khi:</strong> Quan hệ "is-a" thật sự (Student là Person); cần dùng chung hành vi và mở rộng; hierarchy không quá sâu.</p>
+    <p class="when-use-avoid"><strong>Tránh khi:</strong> Chỉ muốn dùng lại code — ưu tiên composition (has-a); hierarchy sâu dễ fragile; thay đổi class cha ảnh hưởng nhiều class con.</p>
+  </section>
+
+  <section class="pro-con">
+    <h4>Ưu và nhược điểm của kế thừa</h4>
+    <div class="pro-con-list">
+      <div class="pro-con-item pro-con-item--pro">
+        <strong>Ưu điểm:</strong> Tái sử dụng code, hỗ trợ đa hình, mô hình hóa quan hệ thực tế.
+      </div>
+      <div class="pro-con-item pro-con-item--con">
+        <strong>Nhược điểm:</strong> Coupling chặt giữa cha và con; thay đổi class cha có thể phá vỡ class con; khó test riêng lẻ.
+      </div>
+    </div>
+  </section>
+</section>

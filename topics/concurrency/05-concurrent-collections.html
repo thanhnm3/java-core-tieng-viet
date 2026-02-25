@@ -23,7 +23,7 @@
     <nav class="topic-sidebar"><ul>
         <li><a href="../../index.html">Trang ch&#7911;</a>
         </li>
-        <li><a href="../oop.html">OOP</a>
+        <li><a href="../oop/01-intro.html">OOP</a>
         </li>
         <li><a href="../collections/01-intro.html">Collections</a>
         </li>
@@ -58,13 +58,47 @@
   <p>Thay vì dùng <code>Vector</code>, <code>Hashtable</code> (cũ, lock toàn bộ), dùng <code>java.util.concurrent</code> — tối ưu cho đa luồng.</p>
 
   <h4>ConcurrentHashMap</h4>
-  <p>Cho phép nhiều thread đọc/ghi đồng thời. Không khóa toàn bộ — phân đoạn (segment) hoặc lock per-bucket (Java 8+). <code>putIfAbsent</code>, <code>compute</code>, <code>merge</code> — atomic. Không cho phép null key/value.</p>
+  <p>Cho phép nhiều thread đọc/ghi đồng thời. Không khóa toàn bộ — lock per-bucket (Java 8+). <code>putIfAbsent</code>, <code>compute</code>, <code>computeIfAbsent</code>, <code>merge</code> — atomic. Không cho phép null key/value.</p>
+
+  <h4>ConcurrentHashMap — Atomic operations</h4>
+  <pre><code>ConcurrentHashMap&lt;String, Integer&gt; map = new ConcurrentHashMap&lt;&gt;();
+
+// Đếm — atomic
+map.merge("key", 1, Integer::sum);
+
+// Compute nếu chưa có
+map.computeIfAbsent("key", k -> expensiveCompute(k));
+
+// Compute/update
+map.compute("key", (k, v) -> v == null ? 1 : v + 1);
+
+// putIfAbsent — chỉ put nếu key chưa có
+map.putIfAbsent("key", 100);</code></pre>
 
   <h4>CopyOnWriteArrayList</h4>
-  <p>Mỗi lần ghi tạo bản copy mới. Đọc không cần lock. Phù hợp: ít ghi, nhiều đọc (listener, config). Ghi tốn O(n) — copy toàn bộ.</p>
+  <p>Mỗi lần ghi (add, set, remove) tạo bản copy mới. Đọc không cần lock. Phù hợp: ít ghi, nhiều đọc (listener, config). Ghi tốn O(n) — copy toàn bộ. Iterator không throw ConcurrentModificationException — snapshot tại thời điểm tạo.</p>
+  <pre><code>List&lt;Listener&gt; listeners = new CopyOnWriteArrayList&lt;&gt;();
+listeners.add(listener);  // Copy mảng
+for (Listener l : listeners) {  // Iterator trên snapshot
+  l.onEvent();
+}</code></pre>
 
   <h4>BlockingQueue</h4>
-  <p>Queue blocking: <code>put()</code> block khi đầy; <code>take()</code> block khi rỗng. <code>ArrayBlockingQueue</code>, <code>LinkedBlockingQueue</code>, <code>LinkedTransferQueue</code>. Cực kỳ hữu ích cho Producer-Consumer.</p>
+  <p>Queue blocking: <code>put()</code> block khi đầy; <code>take()</code> block khi rỗng. <code>offer(timeout)</code>, <code>poll(timeout)</code> — block có timeout. <code>ArrayBlockingQueue</code> — capacity cố định; <code>LinkedBlockingQueue</code> — optional capacity; <code>LinkedTransferQueue</code> — unbounded.</p>
+  <pre><code>BlockingQueue&lt;Task&gt; queue = new LinkedBlockingQueue&lt;&gt;(100);
+
+// Producer
+queue.put(task);  // Block nếu đầy
+
+// Consumer
+Task t = queue.take();  // Block nếu rỗng
+
+// Với timeout
+boolean ok = queue.offer(task, 5, TimeUnit.SECONDS);
+Task t2 = queue.poll(5, TimeUnit.SECONDS);</code></pre>
+
+  <h4>ConcurrentLinkedQueue</h4>
+  <p>Non-blocking, lock-free. <code>offer()</code>, <code>poll()</code> không block. Phù hợp khi không cần producer-consumer blocking. Không có <code>size()</code> chính xác — O(n) duyệt.</p>
 
   <table class="comparison-table">
     <caption>Concurrent Collections</caption>

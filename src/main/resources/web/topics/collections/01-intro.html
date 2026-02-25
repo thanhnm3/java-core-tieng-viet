@@ -4,7 +4,17 @@
 
 <section>
   <h3>Tổng quan hierarchy</h3>
-  <p><code>Collection</code> là interface gốc cho List, Set, Queue. <code>Map</code> không kế thừa Collection vì cấu trúc key-value khác. Các interface con mở rộng contract (ví dụ List thêm index-based access).</p>
+  <p><code>Collection&lt;E&gt;</code> là interface gốc cho List, Set, Queue. <code>Map&lt;K,V&gt;</code> không kế thừa Collection vì cấu trúc key-value khác. Các interface con mở rộng contract (ví dụ List thêm index-based access).</p>
+
+  <h4>Sơ đồ phân cấp</h4>
+  <pre><code>Iterable&lt;T&gt;
+  └── Collection&lt;E&gt;
+        ├── List&lt;E&gt;      → ArrayList, LinkedList
+        ├── Set&lt;E&gt;       → HashSet, LinkedHashSet, TreeSet
+        └── Queue&lt;E&gt;     → LinkedList, ArrayDeque, PriorityQueue
+
+Map&lt;K,V&gt; (độc lập)
+  └── HashMap, LinkedHashMap, TreeMap</code></pre>
 
   <table class="comparison-table">
     <thead>
@@ -42,6 +52,16 @@
       </tr>
     </tbody>
   </table>
+
+  <h4>Lập trình theo interface</h4>
+  <p>Khai báo biến theo interface, khởi tạo theo implementation. Dễ thay đổi implementation mà không đổi logic.</p>
+  <pre><code>// Tốt — phụ thuộc List, không phụ thuộc ArrayList
+List&lt;String&gt; list = new ArrayList&lt;&gt;();
+list.add("a");
+// Đổi sang LinkedList chỉ cần sửa dòng khởi tạo
+
+// Tránh — gắn chặt với implementation
+ArrayList&lt;String&gt; list = new ArrayList&lt;&gt;();</code></pre>
 </section>
 
 <section>
@@ -50,6 +70,19 @@
 
   <h4>Cơ chế hoạt động</h4>
   <p>Iterator giữ con trỏ (cursor) tới vị trí hiện tại. <code>next()</code> trả về phần tử và tiến cursor. <code>remove()</code> xóa phần tử vừa trả về bởi <code>next()</code> — gọi remove() hai lần liên tiếp không có next() ở giữa sẽ ném <code>IllegalStateException</code>.</p>
+
+  <h4>ListIterator — Iterator cho List</h4>
+  <p><code>ListIterator&lt;E&gt;</code> mở rộng Iterator: duyệt hai chiều (<code>hasPrevious()</code>, <code>previous()</code>), truy cập index (<code>nextIndex()</code>, <code>previousIndex()</code>), thêm/sửa (<code>add(e)</code>, <code>set(e)</code>). Chỉ List có <code>listIterator()</code>.</p>
+  <pre><code>List&lt;String&gt; list = new ArrayList&lt;&gt;(List.of("a", "b", "c"));
+ListIterator&lt;String&gt; it = list.listIterator(list.size());
+
+// Duyệt ngược
+while (it.hasPrevious()) {
+  String s = it.previous();
+  if (s.equals("b")) {
+    it.set("B");  // Thay thế phần tử
+  }
+}</code></pre>
 
   <h4>Fail-fast và ConcurrentModificationException</h4>
   <p>Iterator của ArrayList, HashMap... là <strong>fail-fast</strong>: nếu collection bị sửa (add/remove) ngoài iterator trong lúc duyệt, sẽ ném <code>ConcurrentModificationException</code>. Cách an toàn: dùng <code>iterator.remove()</code> thay vì <code>list.remove()</code> trong vòng lặp.</p>
@@ -71,6 +104,16 @@ while (it.hasNext()) {
 }
 
 // SAI: list.remove(s) trong for-each → ConcurrentModificationException</code></pre>
+
+  <h4>Unmodifiable collections (Java 9+)</h4>
+  <p><code>List.of()</code>, <code>Set.of()</code>, <code>Map.of()</code> tạo collection immutable — không add/remove/set. <code>List.copyOf(collection)</code> tạo bản sao immutable. Dùng khi cần truyền collection mà không muốn bị sửa.</p>
+  <pre><code>List&lt;String&gt; immutable = List.of("a", "b", "c");
+// immutable.add("d");  // UnsupportedOperationException
+
+List&lt;String&gt; copy = List.copyOf(someList);  // Bản sao immutable
+
+// Collections.unmodifiableList(list) — view, thay đổi list gốc vẫn ảnh hưởng
+List&lt;String&gt; view = Collections.unmodifiableList(list);</code></pre>
 
   <section class="when-use">
     <h4>Khi nào dùng Iterator?</h4>

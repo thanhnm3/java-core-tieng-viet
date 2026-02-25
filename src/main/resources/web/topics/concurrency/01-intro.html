@@ -33,6 +33,21 @@
       </tr>
     </tbody>
   </table>
+
+  <h4>Daemon Thread</h4>
+  <p>Daemon thread chạy nền — JVM thoát khi tất cả <strong>user thread</strong> kết thúc, không đợi daemon. Ví dụ: GC thread. <code>thread.setDaemon(true)</code> phải gọi trước <code>start()</code>.</p>
+  <pre><code>Thread daemon = new Thread(() -> {
+  while (true) {
+    cleanup();  // Chạy nền
+    Thread.sleep(1000);
+  }
+});
+daemon.setDaemon(true);  // Trước start()
+daemon.start();
+// JVM thoát khi main thread kết thúc, không đợi daemon</code></pre>
+
+  <h4>Thread Priority</h4>
+  <p><code>Thread.MIN_PRIORITY (1)</code> đến <code>Thread.MAX_PRIORITY (10)</code>, mặc định 5. Chỉ gợi ý cho scheduler — không đảm bảo. Tránh phụ thuộc priority cho logic.</p>
 </section>
 
 <section>
@@ -52,7 +67,11 @@ new MyThread().start();</code></pre>
   <p>Cách phổ biến nhất. Tách biệt logic thực thi và quản lý luồng. Có thể implement thêm interface khác.</p>
   <pre><code>Runnable task = () -> System.out.println("Thread: " + Thread.currentThread().getName());
 Thread t = new Thread(task);
-t.start();</code></pre>
+t.start();
+
+// Hoặc với tên thread
+Thread t2 = new Thread(task, "Worker-1");
+t2.start();</code></pre>
 
   <h4>3. Implements Callable</h4>
   <p>Giống Runnable nhưng trả về kết quả (<code>Future</code>) và có thể ném Exception. Dùng với <code>ExecutorService.submit()</code>.</p>
@@ -62,7 +81,8 @@ t.start();</code></pre>
 };
 ExecutorService exec = Executors.newSingleThreadExecutor();
 Future&lt;Integer&gt; future = exec.submit(task);
-System.out.println(future.get());  // 42</code></pre>
+System.out.println(future.get());  // 42 — block cho đến khi xong
+exec.shutdown();</code></pre>
 
   <table class="comparison-table">
     <caption>So sánh 3 cách tạo Thread</caption>
@@ -95,4 +115,10 @@ System.out.println(future.get());  // 42</code></pre>
       </tr>
     </tbody>
   </table>
+
+  <section class="when-use">
+    <h4>Lưu ý</h4>
+    <p class="when-use-do"><strong>Runnable:</strong> Dùng cho task không cần kết quả; Callable khi cần Future; ưu tiên ExecutorService thay vì new Thread().</p>
+    <p class="when-use-avoid"><strong>Tránh:</strong> extends Thread — mất cơ hội kế thừa class khác; tạo quá nhiều thread thủ công — dùng thread pool.</p>
+  </section>
 </section>

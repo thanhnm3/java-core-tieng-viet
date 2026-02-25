@@ -23,7 +23,7 @@
     <nav class="topic-sidebar"><ul>
         <li><a href="../../index.html">Trang ch&#7911;</a>
         </li>
-        <li><a href="../oop.html">OOP</a>
+        <li><a href="../oop/01-intro.html">OOP</a>
         </li>
         <li><a href="../collections/01-intro.html">Collections</a>
         </li>
@@ -58,16 +58,68 @@
   <p>Để tránh <strong>Race Condition</strong> — nhiều thread cùng sửa dữ liệu dẫn đến kết quả sai. Cần kiểm soát truy cập vào shared state.</p>
 
   <h4>synchronized</h4>
-  <p>Khóa một phương thức hoặc block — chỉ 1 thread truy cập tại một thời điểm. Mỗi object có một monitor lock. <code>synchronized</code> trên method = lock trên <code>this</code>; trên static method = lock trên <code>Class</code> object.</p>
+  <p>Khóa một phương thức hoặc block — chỉ 1 thread truy cập tại một thời điểm. Mỗi object có một monitor lock. <code>synchronized</code> trên method = lock trên <code>this</code>; trên static method = lock trên <code>Class</code> object. <strong>Reentrant</strong> — thread đã giữ lock có thể vào lại (đếm số lần vào).</p>
 
   <h4>volatile</h4>
   <p>Đảm bảo mọi thread đọc giá trị mới nhất từ main memory (không đọc từ CPU cache). Không đảm bảo atomicity cho compound (i++) — chỉ phù hợp flag đơn giản.</p>
+  <pre><code>private volatile boolean running = true;  // Visibility
+
+// SAI với volatile: i++ không atomic
+private volatile int count;  // count++ vẫn race
+// Đúng: AtomicInteger</code></pre>
+
+  <h4>AtomicInteger, AtomicLong, AtomicReference</h4>
+  <p>Thao tác atomic không cần synchronized. <code>incrementAndGet()</code>, <code>compareAndSet()</code>, <code>accumulateAndGet()</code>. Dùng cho counter, flag.</p>
+  <pre><code>AtomicInteger counter = new AtomicInteger(0);
+counter.incrementAndGet();  // Atomic
+counter.addAndGet(10);
+counter.compareAndSet(10, 20);  // Chỉ set nếu hiện tại = 10
+
+AtomicReference&lt;String&gt; ref = new AtomicReference&lt;&gt;("a");
+ref.compareAndSet("a", "b");  // Atomic swap</code></pre>
 
   <h4>ReentrantLock</h4>
-  <p>Linh hoạt hơn <code>synchronized</code>: <code>tryLock()</code> thử lấy lock không block; <code>lockInterruptibly()</code> cho phép ngắt khi đợi; lock timeout.</p>
+  <p>Linh hoạt hơn <code>synchronized</code>: <code>tryLock()</code> thử lấy lock không block; <code>lockInterruptibly()</code> cho phép ngắt khi đợi; <code>tryLock(timeout)</code> — timeout. Luôn unlock trong finally.</p>
+  <pre><code>ReentrantLock lock = new ReentrantLock();
+if (lock.tryLock(1, TimeUnit.SECONDS)) {
+  try {
+    doWork();
+  } finally {
+    lock.unlock();
+  }
+}</code></pre>
+
+  <h4>ReentrantReadWriteLock</h4>
+  <p>Nhiều thread đọc đồng thời; chỉ 1 thread ghi. Read lock không exclusive với read; write lock exclusive với mọi lock. Phù hợp: nhiều đọc, ít ghi.</p>
+  <pre><code>ReadWriteLock rw = new ReentrantReadWriteLock();
+rw.readLock().lock();
+try {
+  return data;  // Nhiều reader đồng thời
+} finally {
+  rw.readLock().unlock();
+}
+// Writer
+rw.writeLock().lock();
+try {
+  data = newValue;
+} finally {
+  rw.writeLock().unlock();
+}</code></pre>
+
+  <h4>CountDownLatch</h4>
+  <p>Một hoặc nhiều thread đợi cho đến khi count về 0. <code>countDown()</code> giảm count; <code>await()</code> block cho đến khi 0. Dùng khi đợi N task hoàn thành.</p>
+  <pre><code>CountDownLatch latch = new CountDownLatch(3);
+for (int i = 0; i < 3; i++) {
+  executor.submit(() -> {
+    doWork();
+    latch.countDown();
+  });
+}
+latch.await();  // Đợi 3 task xong
+System.out.println("All done");</code></pre>
 
   <h4>wait() / notify()</h4>
-  <p>Giao tiếp giữa các thread. Phải gọi trong <code>synchronized</code> block. <code>wait()</code> giải phóng lock và chờ; <code>notify()</code> đánh thức thread đang chờ. Dùng cho Producer-Consumer.</p>
+  <p>Giao tiếp giữa các thread. Phải gọi trong <code>synchronized</code> block. <code>wait()</code> giải phóng lock và chờ; <code>notify()</code> đánh thức 1 thread; <code>notifyAll()</code> đánh thức tất cả. Dùng <strong>while</strong> thay vì if khi check điều kiện (spurious wakeup).</p>
 
   <table class="comparison-table">
     <caption>synchronized vs volatile vs ReentrantLock</caption>
@@ -97,6 +149,12 @@
         <td>Block</td>
         <td>Có</td>
         <td>Linh hoạt, timeout</td>
+      </tr>
+      <tr>
+        <td><code>Atomic*</code></td>
+        <td>Biến</td>
+        <td>—</td>
+        <td>Counter, CAS</td>
       </tr>
     </tbody>
   </table>

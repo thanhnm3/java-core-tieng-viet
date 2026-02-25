@@ -2,6 +2,13 @@
   <h3>Vòng đời Thread (Thread Lifecycle)</h3>
   <p>Thread không chỉ "chạy" hay "dừng" — nó đi qua các trạng thái. Mỗi trạng thái có <code>Thread.State</code> tương ứng.</p>
 
+  <h4>Chuyển đổi trạng thái</h4>
+  <pre><code>NEW → start() → RUNNABLE
+RUNNABLE → synchronized block bị chiếm → BLOCKED
+RUNNABLE → wait() / join() → WAITING
+RUNNABLE → sleep(ms) / wait(ms) / join(ms) → TIMED_WAITING
+RUNNABLE/WAITING/TIMED_WAITING/BLOCKED → run() kết thúc → TERMINATED</code></pre>
+
   <table class="comparison-table">
     <caption>Các trạng thái Thread</caption>
     <thead>
@@ -37,6 +44,31 @@
       </tr>
     </tbody>
   </table>
+
+  <h4>join() — Đợi thread kết thúc</h4>
+  <p><code>thread.join()</code> — thread gọi join() sẽ block cho đến khi thread đích kết thúc. <code>join(timeout)</code> — đợi tối đa timeout ms. Dùng khi cần đợi kết quả từ thread con.</p>
+  <pre><code>Thread worker = new Thread(() -> doWork());
+worker.start();
+worker.join();  // Main thread đợi worker xong
+System.out.println("Worker done");</code></pre>
+
+  <h4>interrupt() — Ngắt thread</h4>
+  <p><code>thread.interrupt()</code> đặt cờ interrupt. Thread đang sleep/wait/join sẽ nhận <code>InterruptedException</code>. Thread đang chạy phải kiểm tra <code>Thread.interrupted()</code> hoặc <code>isInterrupted()</code>. Luôn restore interrupt: <code>Thread.currentThread().interrupt()</code> sau khi catch.</p>
+  <pre><code>Thread t = new Thread(() -> {
+  try {
+    while (!Thread.interrupted()) {
+      doWork();
+      Thread.sleep(100);
+    }
+  } catch (InterruptedException e) {
+    Thread.currentThread().interrupt();  // Restore interrupt status
+  }
+});
+t.start();
+t.interrupt();  // Gửi tín hiệu ngắt</code></pre>
+
+  <h4>isAlive()</h4>
+  <p><code>thread.isAlive()</code> — true nếu thread đã start và chưa chết. Dùng để kiểm tra trước khi join.</p>
 
   <pre><code>Thread t = new Thread(() -> {
   try {

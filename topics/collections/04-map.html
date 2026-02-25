@@ -23,7 +23,7 @@
     <nav class="topic-sidebar"><ul>
         <li><a href="../../index.html">Trang ch&#7911;</a>
         </li>
-        <li><a href="../oop.html">OOP</a>
+        <li><a href="../oop/01-intro.html">OOP</a>
         </li>
         <li><a href="../collections/01-intro.html" class="topic-sidebar-link--active">Collections</a>
         <ul class="topic-sub-nav">
@@ -63,6 +63,49 @@
 
   <h4>Load factor và resize</h4>
   <p>Load factor = số phần tử / capacity. Mặc định 0.75. Khi <code>size &gt; threshold (= capacity * loadFactor)</code> thì resize: capacity x2, rehash toàn bộ. Resize tốn O(n) nhưng amortized vẫn O(1) cho put.</p>
+
+  <h4>Map.Entry — Duyệt key-value</h4>
+  <p><code>map.entrySet()</code> trả về <code>Set&lt;Map.Entry&lt;K,V&gt;&gt;</code>. Mỗi Entry có <code>getKey()</code>, <code>getValue()</code>, <code>setValue(v)</code>. Duyệt entry hiệu quả hơn get(key) trong vòng lặp.</p>
+  <pre><code>Map&lt;String, Integer&gt; map = new HashMap&lt;&gt;();
+map.put("apple", 1);
+map.put("banana", 2);
+
+for (Map.Entry&lt;String, Integer&gt; e : map.entrySet()) {
+  System.out.println(e.getKey() + " = " + e.getValue());
+}
+// Hoặc forEach
+map.forEach((k, v) -&gt; System.out.println(k + " = " + v));</code></pre>
+
+  <h4>computeIfAbsent và merge</h4>
+  <p><code>computeIfAbsent(key, mappingFunction)</code>: nếu key chưa có, tính value bằng function và put. <code>merge(key, value, remappingFunction)</code>: gộp value mới với value cũ (hoặc put nếu chưa có). Hữu ích cho grouping, counting.</p>
+  <pre><code>// Nhóm theo category
+Map&lt;String, List&lt;String&gt;&gt; grouped = new HashMap&lt;&gt;();
+for (String item : items) {
+  String cat = getCategory(item);
+  grouped.computeIfAbsent(cat, k -&gt; new ArrayList&lt;&gt;()).add(item);
+}
+
+// Đếm tần suất
+Map&lt;String, Integer&gt; count = new HashMap&lt;&gt;();
+for (String word : words) {
+  count.merge(word, 1, Integer::sum);  // (old, new) -&gt; old + new
+}</code></pre>
+
+  <h4>getOrDefault và putIfAbsent</h4>
+  <p><code>getOrDefault(key, defaultValue)</code> — trả về value hoặc default nếu key không có. <code>putIfAbsent(key, value)</code> — chỉ put khi key chưa có, trả về value hiện tại (hoặc null).</p>
+  <pre><code>int count = map.getOrDefault("apple", 0);
+map.putIfAbsent("newKey", 100);  // Chỉ put nếu "newKey" chưa có</code></pre>
+
+  <h4>Immutable Map — Map.of() và Map.ofEntries()</h4>
+  <p><code>Map.of(k1,v1, k2,v2)</code> — tối đa 10 cặp. <code>Map.ofEntries(entry(k1,v1), ...)</code> — không giới hạn. <code>Map.copyOf(map)</code> — bản sao immutable. Key và value không được null.</p>
+  <pre><code>Map&lt;String, Integer&gt; immutable = Map.of("a", 1, "b", 2);
+Map&lt;String, Integer&gt; fromEntries = Map.ofEntries(
+  Map.entry("x", 10),
+  Map.entry("y", 20)
+);</code></pre>
+
+  <h4>LinkedHashMap — Access order (LRU)</h4>
+  <p>Constructor <code>LinkedHashMap(capacity, loadFactor, true)</code> — tham số thứ 3 = accessOrder. Khi true: mỗi lần get/put, entry được chuyển về cuối linked list. Dùng cho LRU cache: entry ít dùng ở đầu, có thể removeEldestEntry khi vượt capacity.</p>
 
   <table class="comparison-table">
     <caption>Độ phức tạp — HashMap vs LinkedHashMap vs TreeMap</caption>
@@ -113,9 +156,6 @@
       </tr>
     </tbody>
   </table>
-
-  <h4>LinkedHashMap — Access order</h4>
-  <p>Constructor <code>LinkedHashMap(capacity, loadFactor, true)</code> — tham số thứ 3 = accessOrder. Khi true: mỗi lần get/put, entry được chuyển về cuối linked list. Dùng cho LRU cache: entry ít dùng ở đầu, có thể removeEldestEntry khi vượt capacity.</p>
 
   <pre><code>Map&lt;String, Integer&gt; map = new HashMap&lt;&gt;();
 map.put("apple", 1);

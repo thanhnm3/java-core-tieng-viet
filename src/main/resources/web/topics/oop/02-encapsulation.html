@@ -1,0 +1,152 @@
+<section>
+  <h3>2. Encapsulation (Đóng gói)</h3>
+
+  <h4>Định nghĩa</h4>
+  <p>Đóng gói là ẩn dữ liệu bên trong class, chỉ cho phép truy cập qua các phương thức công khai (getter/setter). Dùng <code>private</code> cho thuộc tính, <code>public</code> cho phương thức cần thiết. Điều này giúp kiểm soát cách dữ liệu được đọc và ghi, có thể thêm validation trong setter.</p>
+
+  <h4>Access modifiers — Phạm vi truy cập</h4>
+  <table class="comparison-table">
+    <thead>
+      <tr>
+        <th>Modifier</th>
+        <th>Class</th>
+        <th>Package</th>
+        <th>Subclass</th>
+        <th>Mọi nơi</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>private</code></td>
+        <td>Có</td>
+        <td>Không</td>
+        <td>Không</td>
+        <td>Không</td>
+      </tr>
+      <tr>
+        <td><code>package-private</code> (mặc định)</td>
+        <td>Có</td>
+        <td>Có</td>
+        <td>Không</td>
+        <td>Không</td>
+      </tr>
+      <tr>
+        <td><code>protected</code></td>
+        <td>Có</td>
+        <td>Có</td>
+        <td>Có</td>
+        <td>Không</td>
+      </tr>
+      <tr>
+        <td><code>public</code></td>
+        <td>Có</td>
+        <td>Có</td>
+        <td>Có</td>
+        <td>Có</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h4>Getter và Setter — Kiểm soát truy cập</h4>
+  <p>Getter trả về giá trị; setter gán giá trị và có thể validate. Quy ước đặt tên: <code>getXxx()</code>, <code>setXxx(value)</code>. Với boolean: <code>isXxx()</code>, <code>hasXxx()</code>.</p>
+  <pre><code>public class BankAccount {
+  private double balance;
+  private String owner;
+
+  public BankAccount(String owner, double initialBalance) {
+    this.owner = owner;
+    if (initialBalance >= 0) {
+      this.balance = initialBalance;
+    }
+  }
+
+  // Getter — read-only, có thể tính toán
+  public double getBalance() {
+    return balance;
+  }
+
+  // Setter — validation trước khi gán
+  public void setBalance(double amount) {
+    if (amount >= 0) {
+      this.balance = amount;
+    }
+    // Bỏ qua nếu amount &lt; 0 — hoặc ném IllegalArgumentException
+  }
+
+  public void deposit(double amount) {
+    if (amount > 0) {
+      this.balance += amount;
+    }
+  }
+
+  public boolean withdraw(double amount) {
+    if (amount > 0 && amount &lt;= balance) {
+      balance -= amount;
+      return true;
+    }
+    return false;
+  }
+}</code></pre>
+
+  <h4>Validation trong Setter</h4>
+  <p>Setter là nơi đặt validation để đảm bảo dữ liệu luôn hợp lệ. Có thể ném <code>IllegalArgumentException</code> khi giá trị không hợp lệ.</p>
+  <pre><code>public class Person {
+  private String name;
+  private int age;
+
+  public void setAge(int age) {
+    if (age &lt; 0 || age > 150) {
+      throw new IllegalArgumentException("Age must be 0-150: " + age);
+    }
+    this.age = age;
+  }
+
+  public void setName(String name) {
+    if (name == null || name.isBlank()) {
+      throw new IllegalArgumentException("Name cannot be null or blank");
+    }
+    this.name = name.trim();
+  }
+}</code></pre>
+
+  <h4>Read-only và Write-only</h4>
+  <p>Chỉ getter: field read-only (immutable từ bên ngoài). Chỉ setter: hiếm dùng, thường cho config. Cả hai: full control.</p>
+  <pre><code>// Read-only — chỉ có getter, không setter
+public class ImmutablePoint {
+  private final int x;
+  private final int y;
+
+  public ImmutablePoint(int x, int y) {
+    this.x = x;
+    this.y = y;
+  }
+
+  public int getX() { return x; }
+  public int getY() { return y; }
+  // Không có setX/setY — không thể thay đổi sau khi tạo
+}</code></pre>
+
+  <section class="comparison">
+    <h4>Encapsulation: Nên dùng hay không?</h4>
+    <div class="comparison-grid">
+      <div class="comparison-box comparison-box--pro">
+        <h4>Khi dùng đóng gói (private + getter/setter)</h4>
+        <ul>
+          <li>Kiểm soát gán giá trị (validation trong setter)</li>
+          <li>Dễ đổi implementation nội bộ mà không ảnh hưởng code bên ngoài</li>
+          <li>API rõ ràng, client chỉ gọi method thay vì truy cập trực tiếp field</li>
+        </ul>
+      </div>
+      <div class="comparison-box comparison-box--con">
+        <h4>Khi không đóng gói (public field)</h4>
+        <ul>
+          <li>Có thể gán <code>person.age = -100</code> từ bất kỳ đâu</li>
+          <li>Khó bảo trì khi logic thay đổi (phải sửa nhiều chỗ)</li>
+          <li>Vi phạm nguyên tắc thiết kế, dễ phát sinh bug</li>
+        </ul>
+        <pre><code>// Anti-pattern: tránh làm vậy
+person.age = -1;</code></pre>
+      </div>
+    </div>
+  </section>
+</section>

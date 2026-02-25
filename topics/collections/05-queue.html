@@ -23,7 +23,7 @@
     <nav class="topic-sidebar"><ul>
         <li><a href="../../index.html">Trang ch&#7911;</a>
         </li>
-        <li><a href="../oop.html">OOP</a>
+        <li><a href="../oop/01-intro.html">OOP</a>
         </li>
         <li><a href="../collections/01-intro.html" class="topic-sidebar-link--active">Collections</a>
         <ul class="topic-sub-nav">
@@ -58,8 +58,56 @@
   <h4>ArrayDeque — Mảng vòng (circular array)</h4>
   <p>Lưu trong <code>Object[] elements</code>. Hai chỉ số <code>head</code> và <code>tail</code>. Index thực tế: <code>(head + i) &amp; (elements.length - 1)</code> — dùng bit AND vì length luôn lũy thừa 2. offerLast: ghi tail, tăng tail; offerFirst: giảm head, ghi head. Khi đầy: capacity x2, copy. Không cho phép null. Nhanh hơn LinkedList vì: không tạo node, cache locality tốt, ít allocation.</p>
 
+  <h4>ArrayDeque — Queue và Stack</h4>
+  <p>ArrayDeque implement cả Queue và Deque. Dùng <code>offer(e)</code>/<code>poll()</code> cho FIFO queue. Dùng <code>push(e)</code>/<code>pop()</code> (tương đương addFirst/removeFirst) cho LIFO stack. <strong>Tránh class Stack</strong> (legacy) — ArrayDeque nhanh hơn và thread-safe hơn khi dùng đúng cách.</p>
+  <pre><code>// Queue (FIFO)
+Queue&lt;String&gt; queue = new ArrayDeque&lt;&gt;();
+queue.offer("first");
+queue.offer("second");
+queue.offer("third");
+System.out.println(queue.poll());  // first
+System.out.println(queue.poll());  // second
+
+// Stack (LIFO)
+Deque&lt;String&gt; stack = new ArrayDeque&lt;&gt;();
+stack.push("a");
+stack.push("b");
+stack.push("c");
+System.out.println(stack.pop());  // c
+System.out.println(stack.peek()); // b (không xóa)</code></pre>
+
   <h4>PriorityQueue — Binary Heap</h4>
   <p>Lưu trong mảng <code>Object[] queue</code> biểu diễn min-heap (hoặc max-heap với Comparator.reverseOrder()). Parent tại <code>(i-1)/2</code>, left child <code>2*i+1</code>, right child <code>2*i+2</code>. offer: thêm cuối, siftUp (heapify up); poll: lấy root, đặt phần tử cuối lên root, siftDown (heapify down). Cả hai O(log n). peek O(1). Iterator không đảm bảo thứ tự — chỉ poll mới lấy theo thứ tự.</p>
+
+  <h4>PriorityQueue — Custom Comparator</h4>
+  <pre><code>// Min-heap (mặc định)
+Queue&lt;Integer&gt; minHeap = new PriorityQueue&lt;&gt;();
+
+// Max-heap
+Queue&lt;Integer&gt; maxHeap = new PriorityQueue&lt;&gt;(Comparator.reverseOrder());
+
+// Custom: sắp xếp theo độ ưu tiên
+record Task(String name, int priority) { }
+Queue&lt;Task&gt; tasks = new PriorityQueue&lt;&gt;(
+  Comparator.comparingInt(Task::priority).reversed()
+);
+tasks.offer(new Task("low", 1));
+tasks.offer(new Task("high", 10));
+System.out.println(tasks.poll().name());  // high</code></pre>
+
+  <h4>BlockingQueue — Đa luồng</h4>
+  <p><code>BlockingQueue</code> (trong <code>java.util.concurrent</code>) — put/take chặn khi queue đầy/rỗng. <code>ArrayBlockingQueue</code>, <code>LinkedBlockingQueue</code>, <code>PriorityBlockingQueue</code>. Dùng cho producer-consumer pattern.</p>
+  <pre><code>BlockingQueue&lt;String&gt; queue = new LinkedBlockingQueue&lt;&gt;(10);
+
+// Producer
+queue.put("item");  // Chặn nếu đầy
+
+// Consumer
+String item = queue.take();  // Chặn nếu rỗng
+
+// Non-blocking
+queue.offer("item");  // false nếu đầy
+String s = queue.poll();  // null nếu rỗng</code></pre>
 
   <table class="comparison-table">
     <caption>Độ phức tạp — LinkedList vs ArrayDeque vs PriorityQueue</caption>
@@ -116,13 +164,7 @@ deque.offerFirst(1);
 deque.offerLast(2);
 deque.offerFirst(0);
 System.out.println(deque.pollFirst());  // 0
-System.out.println(deque.pollLast());   // 2
-
-// Stack: push = addFirst, pop = removeFirst
-Deque&lt;String&gt; stack = new ArrayDeque&lt;&gt;();
-stack.push("a");
-stack.push("b");
-System.out.println(stack.pop());  // b</code></pre>
+System.out.println(deque.pollLast());   // 2</code></pre>
 
   <pre><code>Queue&lt;Integer&gt; pq = new PriorityQueue&lt;&gt;();
 pq.offer(30);

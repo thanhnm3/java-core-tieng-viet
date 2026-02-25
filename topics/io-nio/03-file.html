@@ -23,7 +23,7 @@
     <nav class="topic-sidebar"><ul>
         <li><a href="../../index.html">Trang ch&#7911;</a>
         </li>
-        <li><a href="../oop.html">OOP</a>
+        <li><a href="../oop/01-intro.html">OOP</a>
         </li>
         <li><a href="../collections/01-intro.html">Collections</a>
         </li>
@@ -88,7 +88,47 @@
     </tbody>
   </table>
 
-  <pre><code>// Đọc file text — luôn dùng BufferedReader
+  <h4>GZIPInputStream / GZIPOutputStream</h4>
+  <p>Nén/giải nén GZIP. Wrap stream gốc. Dùng khi cần giảm dung lượng file (log, backup).</p>
+  <pre><code>// Ghi file nén
+try (GZIPOutputStream gz = new GZIPOutputStream(
+    new FileOutputStream("data.gz"))) {
+  gz.write("Hello".getBytes(StandardCharsets.UTF_8));
+}
+
+// Đọc file nén
+try (GZIPInputStream gz = new GZIPInputStream(
+    new FileInputStream("data.gz"))) {
+  byte[] buf = new byte[1024];
+  int n;
+  while ((n = gz.read(buf)) != -1) {
+    System.out.print(new String(buf, 0, n));
+  }
+}</code></pre>
+
+  <h4>ByteArrayInputStream / ByteArrayOutputStream</h4>
+  <p>Stream trong memory — dữ liệu từ byte[]. Dùng khi cần đọc/ghi qua API stream nhưng dữ liệu ở memory. <code>ByteArrayOutputStream.toByteArray()</code> lấy byte[] đã ghi.</p>
+  <pre><code>byte[] data = "Hello".getBytes(StandardCharsets.UTF_8);
+try (InputStream in = new ByteArrayInputStream(data)) {
+  processStream(in);  // API nhận InputStream
+}
+
+ByteArrayOutputStream out = new ByteArrayOutputStream();
+out.write("Hello".getBytes());
+byte[] result = out.toByteArray();</code></pre>
+
+  <h4>PushbackInputStream</h4>
+  <p>Cho phép "đẩy lại" byte đã đọc vào buffer. Dùng khi cần peek (xem trước) hoặc parse (đọc thừa cần trả lại).</p>
+  <pre><code>try (PushbackInputStream in = new PushbackInputStream(
+    new FileInputStream("data.txt"), 2)) {
+  int b = in.read();
+  if (b == 'A') {
+    in.unread(b);  // Trả lại để xử lý khác
+  }
+}</code></pre>
+
+  <h4>Đọc file text — BufferedReader</h4>
+  <pre><code>// Luôn dùng BufferedReader cho text
 try (BufferedReader br = new BufferedReader(
     new InputStreamReader(new FileInputStream("data.txt"), StandardCharsets.UTF_8))) {
   String line;

@@ -23,7 +23,7 @@
     <nav class="topic-sidebar"><ul>
         <li><a href="../../index.html">Trang ch&#7911;</a>
         </li>
-        <li><a href="../oop.html">OOP</a>
+        <li><a href="../oop/01-intro.html">OOP</a>
         </li>
         <li><a href="../collections/01-intro.html">Collections</a>
         </li>
@@ -96,14 +96,77 @@
       </tr>
     </tbody>
   </table>
+
+  <h4>Luồng dữ liệu</h4>
+  <pre><code>// java.io — Stream
+Source → InputStream/Reader → [process] → OutputStream/Writer → Destination
+
+// java.nio — Buffer + Channel
+Source → Channel.read(ByteBuffer) → Buffer → [process] → Buffer → Channel.write(ByteBuffer) → Destination</code></pre>
 </section>
 
 <section>
   <h3>Hierarchy java.io</h3>
   <p><strong>InputStream / OutputStream</strong> — byte stream. <strong>Reader / Writer</strong> — character stream (Unicode). Các subclass: FileInputStream, BufferedInputStream, FileReader, BufferedReader... Luôn đóng stream bằng try-with-resources để tránh rò rỉ file descriptor.</p>
 
+  <h4>Sơ đồ phân cấp</h4>
+  <pre><code>InputStream
+  ├── FileInputStream
+  ├── ByteArrayInputStream
+  ├── FilterInputStream
+  │     ├── BufferedInputStream
+  │     ├── DataInputStream
+  │     └── GZIPInputStream (via InflaterInputStream)
+  └── ObjectInputStream
+
+Reader
+  ├── FileReader
+  ├── InputStreamReader  ← bridge byte → char (encoding)
+  └── BufferedReader</code></pre>
+
   <h4>Hierarchy java.nio</h4>
   <p><strong>Buffer</strong> — ByteBuffer, CharBuffer, IntBuffer... Container cho dữ liệu. <strong>Channel</strong> — FileChannel, SocketChannel, ServerSocketChannel... Kết nối tới nguồn/đích. <strong>Selector</strong> — multiplexing nhiều channel non-blocking.</p>
+
+  <pre><code>Buffer (ByteBuffer, CharBuffer...)
+Channel
+  ├── FileChannel
+  ├── SocketChannel
+  ├── ServerSocketChannel
+  └── DatagramChannel
+
+Selector — quản lý nhiều SelectableChannel</code></pre>
+
+  <h4>Use case — Khi nào dùng gì</h4>
+  <table class="comparison-table">
+    <thead>
+      <tr>
+        <th>Use case</th>
+        <th>Gợi ý</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Đọc file text nhỏ</td>
+        <td>Files.readAllLines() hoặc BufferedReader</td>
+      </tr>
+      <tr>
+        <td>Đọc file binary</td>
+        <td>BufferedInputStream + FileInputStream</td>
+      </tr>
+      <tr>
+        <td>Copy file lớn</td>
+        <td>FileChannel.transferTo()</td>
+      </tr>
+      <tr>
+        <td>Server nhiều kết nối</td>
+        <td>Selector + SocketChannel</td>
+      </tr>
+      <tr>
+        <td>Duyệt thư mục</td>
+        <td>Files.walk() hoặc FileVisitor</td>
+      </tr>
+    </tbody>
+  </table>
 
   <section class="when-use">
     <h4>Khi nào dùng I/O vs NIO?</h4>

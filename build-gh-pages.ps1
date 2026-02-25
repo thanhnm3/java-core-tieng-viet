@@ -6,7 +6,7 @@ function Get-TopicsNav {
   param([string]$toTopics, [string]$active, [array]$subPages = @(), [string]$activeSubPage = "")
   $mainLinks = @(
     @{ href = "index.html"; slug = "home"; label = "Trang ch&#7911;" },
-    @{ href = "oop.html"; slug = "oop"; label = "OOP" },
+    @{ href = "oop/01-intro.html"; slug = "oop"; label = "OOP" },
     @{ href = "collections/01-intro.html"; slug = "collections"; label = "Collections" },
     @{ href = "io-nio/01-intro.html"; slug = "io-nio"; label = "I/O & NIO" },
     @{ href = "concurrency/01-intro.html"; slug = "concurrency"; label = "Concurrency" },
@@ -47,7 +47,7 @@ $topicLabels = @{
   "lambda"      = "Lambda & Stream"
 }
 $topicFirstPage = @{
-  "oop"         = "oop.html"
+  "oop"         = "oop/01-intro.html"
   "collections" = "collections/01-intro.html"
   "io-nio"      = "io-nio/01-intro.html"
   "concurrency" = "concurrency/01-intro.html"
@@ -66,10 +66,7 @@ function New-Page {
   $nav = Get-TopicsNav -toTopics $toTopics -active $activeSlug -subPages $subPages -activeSubPage $activeSubPage
 
   $topicLabel = $topicLabels[$activeSlug]
-  if ($activeSlug -eq "oop") {
-    $breadcrumb = "<a href=`"$homePath`">Trang ch&#7911;</a> / OOP"
-  }
-  elseif ($topicLabel) {
+  if ($topicLabel) {
     $topicUrl = $toTopics + $topicFirstPage[$activeSlug]
     $breadcrumb = "<a href=`"$homePath`">Trang ch&#7911;</a> / <a href=`"$topicUrl`">$topicLabel</a> / $title"
   }
@@ -84,11 +81,8 @@ function New-Page {
   [System.IO.File]::WriteAllText((Join-Path $PWD $destFile), $html, $utf8)
 }
 
-# topics/oop.html (prefix=../ for css/home, toTopics="" for nav links from topics/)
-New-Page -srcFile "$webRoot\topics\oop.html" -destFile "topics\oop.html" -title "OOP" -prefix "../" -toTopics "" -activeSlug "oop"
-
-# Subdirs: collections, io-nio, concurrency, jvm-memory, exception, generics, lambda
-$subdirs = @("collections", "io-nio", "concurrency", "jvm-memory", "exception", "generics", "lambda")
+# Subdirs: oop, collections, io-nio, concurrency, jvm-memory, exception, generics, lambda
+$subdirs = @("oop", "collections", "io-nio", "concurrency", "jvm-memory", "exception", "generics", "lambda")
 $titlesJson = [System.IO.File]::ReadAllText("_titles.json", [System.Text.Encoding]::UTF8)
 $titlesObj = $titlesJson | ConvertFrom-Json
 foreach ($dir in $subdirs) {

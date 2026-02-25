@@ -23,7 +23,7 @@
     <nav class="topic-sidebar"><ul>
         <li><a href="../../index.html">Trang ch&#7911;</a>
         </li>
-        <li><a href="../oop.html">OOP</a>
+        <li><a href="../oop/01-intro.html">OOP</a>
         </li>
         <li><a href="../collections/01-intro.html" class="topic-sidebar-link--active">Collections</a>
         <ul class="topic-sub-nav">
@@ -61,14 +61,35 @@
   <h4>equals và hashCode — Contract bắt buộc</h4>
   <p>Với custom object trong Set/Map: <strong>equals</strong> so sánh logic; <strong>hashCode</strong> phải nhất quán với equals — nếu <code>a.equals(b)</code> thì <code>a.hashCode() == b.hashCode()</code>. Ngược lại không đúng (hash collision). Nếu hashCode sai: hai object equals nhưng hash khác nhau → có thể cả hai vào Set (vi phạm không trùng). Nếu hashCode đúng nhưng equals sai: hai object không equals nhưng hash trùng → chaining, vẫn đúng.</p>
 
-  <pre><code>// Ví dụ: class phải override equals và hashCode
-record Person(String id, String name) {
-  // record tự sinh equals/hashCode dựa trên id, name
+  <h4>Ví dụ override equals và hashCode</h4>
+  <pre><code>public class Person {
+  private final String id;
+  private final String name;
+
+  public Person(String id, String name) {
+    this.id = id;
+    this.name = name;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (!(o instanceof Person person)) return false;
+    return id.equals(person.id);
+  }
+
+  @Override
+  public int hashCode() {
+    return id.hashCode();  // Dùng cùng field với equals
+  }
 }
+
+// Hoặc dùng record (Java 16+) — tự sinh equals/hashCode
+record PersonRecord(String id, String name) { }
 
 Set&lt;Person&gt; set = new HashSet&lt;&gt;();
 set.add(new Person("1", "Alice"));
-set.add(new Person("1", "Alice"));  // Bị bỏ qua
+set.add(new Person("1", "Alice"));  // Bị bỏ qua (trùng id)
 set.add(new Person("2", "Bob"));
 System.out.println(set.size());  // 2</code></pre>
 
@@ -76,7 +97,31 @@ System.out.println(set.size());  // 2</code></pre>
   <p>Kế thừa HashSet, thêm doubly-linked list chạy qua các entry theo thứ tự chèn. Mỗi entry có <code>before</code>, <code>after</code>. Iteration theo thứ tự thêm vào. Overhead nhỏ so với HashSet.</p>
 
   <h4>TreeSet</h4>
-  <p>Dùng <code>TreeMap</code> (Red-Black tree) bên trong. Phần tử phải <code>Comparable</code> hoặc truyền <code>Comparator</code>. Cây cân bằng — độ cao O(log n). first(), last(), headSet(), tailSet() — O(log n).</p>
+  <p>Dùng <code>TreeMap</code> (Red-Black tree) bên trong. Phần tử phải <code>Comparable</code> hoặc truyền <code>Comparator</code>. Cây cân bằng — độ cao O(log n). first(), last(), headSet(), tailSet() — O(log n). Không cho phép null khi dùng natural order.</p>
+
+  <h4>EnumSet — Set cho enum (hiệu năng cao)</h4>
+  <p><code>EnumSet</code> dùng bit vector — rất nhanh, ít bộ nhớ. Chỉ dùng với enum. <code>EnumSet.of()</code>, <code>EnumSet.allOf()</code>, <code>EnumSet.range()</code>.</p>
+  <pre><code>enum Day { MON, TUE, WED, THU, FRI, SAT, SUN }
+
+Set&lt;Day&gt; weekend = EnumSet.of(Day.SAT, Day.SUN);
+Set&lt;Day&gt; weekdays = EnumSet.range(Day.MON, Day.FRI);
+Set&lt;Day&gt; all = EnumSet.allOf(Day.class);</code></pre>
+
+  <h4>Set operations — Union, intersection, difference</h4>
+  <pre><code>Set&lt;Integer&gt; a = new HashSet&lt;&gt;(Set.of(1, 2, 3));
+Set&lt;Integer&gt; b = new HashSet&lt;&gt;(Set.of(2, 3, 4));
+
+// Union
+Set&lt;Integer&gt; union = new HashSet&lt;&gt;(a);
+union.addAll(b);  // {1, 2, 3, 4}
+
+// Intersection
+Set&lt;Integer&gt; inter = new HashSet&lt;&gt;(a);
+inter.retainAll(b);  // {2, 3}
+
+// Difference (a - b)
+Set&lt;Integer&gt; diff = new HashSet&lt;&gt;(a);
+diff.removeAll(b);  // {1}</code></pre>
 
   <table class="comparison-table">
     <caption>Độ phức tạp — HashSet vs LinkedHashSet vs TreeSet</caption>

@@ -23,7 +23,7 @@
     <nav class="topic-sidebar"><ul>
         <li><a href="../../index.html">Trang ch&#7911;</a>
         </li>
-        <li><a href="../oop.html">OOP</a>
+        <li><a href="../oop/01-intro.html">OOP</a>
         </li>
         <li><a href="../collections/01-intro.html">Collections</a>
         </li>
@@ -58,7 +58,44 @@
   <p><code>Channel</code> là kết nối tới nguồn/đích. Đọc/ghi qua <code>Buffer</code>. <code>FileChannel</code> — file; <code>SocketChannel</code> — TCP; <code>ServerSocketChannel</code> — TCP server; <code>DatagramChannel</code> — UDP.</p>
 
   <h4>FileChannel</h4>
-  <p>Lấy từ <code>FileInputStream.getChannel()</code>, <code>FileOutputStream.getChannel()</code>, hoặc <code>RandomAccessFile.getChannel()</code>. <code>read(ByteBuffer)</code> đọc vào buffer; <code>write(ByteBuffer)</code> ghi. <code>transferTo</code> / <code>transferFrom</code> — zero-copy giữa channel (OS hỗ trợ sendfile).</p>
+  <p>Lấy từ <code>FileInputStream.getChannel()</code>, <code>FileOutputStream.getChannel()</code>, hoặc <code>FileChannel.open(Path, options)</code>. <code>read(ByteBuffer)</code> đọc vào buffer; <code>write(ByteBuffer)</code> ghi. <code>transferTo</code> / <code>transferFrom</code> — zero-copy giữa channel (OS hỗ trợ sendfile).</p>
+
+  <h4>SocketChannel — TCP client</h4>
+  <p><code>SocketChannel.open()</code> tạo channel. <code>connect(SocketAddress)</code> kết nối. <code>configureBlocking(false)</code> cho non-blocking. Đọc/ghi qua ByteBuffer.</p>
+  <pre><code>try (SocketChannel channel = SocketChannel.open()) {
+  channel.connect(new InetSocketAddress("localhost", 8080));
+  ByteBuffer buf = ByteBuffer.allocate(1024);
+  buf.put("Hello".getBytes(StandardCharsets.UTF_8));
+  buf.flip();
+  channel.write(buf);
+}</code></pre>
+
+  <h4>ServerSocketChannel — TCP server</h4>
+  <p><code>ServerSocketChannel.open()</code>, <code>bind(port)</code>, <code>accept()</code> trả về SocketChannel. Có thể <code>configureBlocking(false)</code> để dùng với Selector.</p>
+  <pre><code>ServerSocketChannel server = ServerSocketChannel.open();
+server.bind(new InetSocketAddress(8080));
+while (true) {
+  SocketChannel client = server.accept();  // Blocking
+  ByteBuffer buf = ByteBuffer.allocate(1024);
+  client.read(buf);
+  buf.flip();
+  client.write(buf);
+  client.close();
+}</code></pre>
+
+  <h4>Scattering read / Gathering write</h4>
+  <p><strong>Scattering:</strong> Đọc từ 1 channel vào nhiều buffer tuần tự. <strong>Gathering:</strong> Ghi từ nhiều buffer ra 1 channel. Hữu ích khi có header + body (buffer 1 = header, buffer 2 = body).</p>
+  <pre><code>ByteBuffer header = ByteBuffer.allocate(128);
+ByteBuffer body = ByteBuffer.allocate(1024);
+ByteBuffer[] buffers = { header, body };
+
+// Scattering read
+channel.read(buffers);  // Đọc lần lượt vào header, body
+
+// Gathering write
+header.flip();
+body.flip();
+channel.write(buffers);</code></pre>
 
   <table class="comparison-table">
     <caption>FileChannel vs Stream</caption>

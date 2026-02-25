@@ -23,7 +23,7 @@
     <nav class="topic-sidebar"><ul>
         <li><a href="../../index.html">Trang ch&#7911;</a>
         </li>
-        <li><a href="../oop.html">OOP</a>
+        <li><a href="../oop/01-intro.html">OOP</a>
         </li>
         <li><a href="../collections/01-intro.html">Collections</a>
         </li>
@@ -86,6 +86,51 @@
     </tbody>
   </table>
 
+  <h4>DataInputStream / DataOutputStream</h4>
+  <p>Đọc/ghi primitive types: <code>readInt()</code>, <code>readDouble()</code>, <code>readUTF()</code>... Data được ghi theo format nhị phân (Java Data Format). Dùng khi cần trao đổi dữ liệu có cấu trúc.</p>
+  <pre><code>// Ghi
+try (DataOutputStream out = new DataOutputStream(
+    new BufferedOutputStream(new FileOutputStream("data.bin")))) {
+  out.writeInt(42);
+  out.writeDouble(3.14);
+  out.writeUTF("Hello");
+}
+
+// Đọc
+try (DataInputStream in = new DataInputStream(
+    new BufferedInputStream(new FileInputStream("data.bin")))) {
+  int i = in.readInt();
+  double d = in.readDouble();
+  String s = in.readUTF();
+}</code></pre>
+
+  <h4>ObjectInputStream / ObjectOutputStream — Serialization</h4>
+  <p>Đọc/ghi object (serialization). Class phải implement <code>Serializable</code>. <code>transient</code> — field không serialize. <code>serialVersionUID</code> — version compatibility.</p>
+  <pre><code>public class Person implements Serializable {
+  private static final long serialVersionUID = 1L;
+  private String name;
+  private transient String password;  // Không ghi ra file
+}
+
+try (ObjectOutputStream out = new ObjectOutputStream(
+    new FileOutputStream("person.ser"))) {
+  out.writeObject(new Person("Alice", "secret"));
+}
+
+try (ObjectInputStream in = new ObjectInputStream(
+    new FileInputStream("person.ser"))) {
+  Person p = (Person) in.readObject();
+}</code></pre>
+
+  <h4>PrintStream / PrintWriter</h4>
+  <p>Ghi text với format. <code>print()</code>, <code>println()</code>, <code>printf()</code>. PrintStream cho byte (System.out); PrintWriter cho char (encoding). PrintWriter không throw IOException — check <code>checkError()</code>.</p>
+  <pre><code>try (PrintWriter pw = new PrintWriter(
+    new OutputStreamWriter(new FileOutputStream("out.txt"), StandardCharsets.UTF_8))) {
+  pw.println("Line 1");
+  pw.printf("Value: %d%n", 42);
+}</code></pre>
+
+  <h4>Đọc byte và text với encoding</h4>
   <pre><code>// Đọc byte
 try (InputStream in = new FileInputStream("data.bin")) {
   byte[] buf = new byte[8192];
