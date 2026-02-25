@@ -456,6 +456,21 @@ body.topic-page {
   font-weight: 500;
 }
 
+.topic-sub-nav {
+  list-style: none;
+  padding: 0.25rem 0 0 1rem;
+  margin: 0;
+}
+
+.topic-sub-nav li {
+  margin-bottom: 0.15rem;
+}
+
+.topic-sub-nav a {
+  font-size: 0.85rem;
+  padding: 0.35rem 0.5rem;
+}
+
 .topic-main {
   flex: 1;
   min-width: 0;
