@@ -6,6 +6,7 @@
   <title>Wildcards - Java Core</title>
   <link rel="icon" type="image/svg+xml" href="../../favicon.svg">
   <link rel="stylesheet" href="../../css/style.css">
+  <style>.flow-diagram svg g.node,.flow-diagram svg rect,.flow-diagram svg path{pointer-events:auto !important}.flow-tooltip{position:fixed;z-index:9999;max-width:380px;padding:1rem 1.25rem;background:#fff;border:1px solid #10B981;border-radius:10px;box-shadow:0 12px 32px rgba(0,0,0,.15);font-size:.9rem;line-height:1.6;pointer-events:none;opacity:0;visibility:hidden;transition:opacity .2s,visibility .2s}.flow-tooltip.is-visible{opacity:1;visibility:visible}.flow-tooltip__title{font-weight:600;margin-bottom:.6rem;color:#059669}.flow-tooltip__body{color:#475569}</style>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -184,64 +185,60 @@ void addIntegers(List&lt;? super Integer&gt; list) {
         }
         return id;
       }
-      function attachTooltips() {
+      function findClosest(el, sel) {
+        if (!el || !el.nodeType) return null;
+        if (el.closest) return el.closest(sel);
+        while (el && el !== document) {
+          if (el.matches && el.matches(sel)) return el;
+          el = el.parentElement;
+        }
+        return null;
+      }
+      document.addEventListener('mouseover', function(e) {
+        var t = e.target;
+        var g = findClosest(t, 'g.node') || findClosest(t, 'g[id^="flowchart-"]');
+        var diagram = g && findClosest(g, '.flow-diagram');
+        if (!g || !diagram) return;
+        if (!diagram) return;
+        var script = diagram.querySelector('script[type="application/json"][data-flow-tooltips]');
+        if (!script) return;
+        var data;
+        try { data = JSON.parse(script.textContent); } catch (err) { return; }
+        var nodeId = getNodeIdFromElement(g);
+        if (!nodeId) return;
+        var tip = data[nodeId];
+        if (!tip || !tip.detail) return;
+        tooltipEl.querySelector('.flow-tooltip__title').textContent = tip.title || nodeId;
+        tooltipEl.querySelector('.flow-tooltip__body').innerHTML = tip.detail;
+        tooltipEl.style.left = '';
+        tooltipEl.style.top = '';
+        tooltipEl.classList.add('is-visible');
+        var rect = g.getBoundingClientRect();
+        var x = rect.left + rect.width / 2;
+        var y = rect.top - 10;
+        requestAnimationFrame(function() {
+          var w = tooltipEl.offsetWidth;
+          var h = tooltipEl.offsetHeight;
+          tooltipEl.style.left = Math.max(12, Math.min(x - w / 2, window.innerWidth - w - 12)) + 'px';
+          tooltipEl.style.top = Math.max(12, y - h) + 'px';
+        });
+      });
+      document.addEventListener('mouseout', function(e) {
+        var related = e.relatedTarget;
+        if (related && findClosest(related, '.flow-diagram g.node')) return;
+        tooltipEl.classList.remove('is-visible');
+      });
+      function styleRects() {
         document.querySelectorAll('.flow-diagram svg rect').forEach(function(r) {
           r.setAttribute('rx', '8');
           r.setAttribute('ry', '8');
+          r.style.pointerEvents = 'auto';
         });
-        var attached = 0;
-        document.querySelectorAll('.flow-diagram').forEach(function(diagram, di) {
-          var script = diagram.querySelector('script[type="application/json"][data-flow-tooltips]');
-          if (!script) return;
-          var data;
-          try { data = JSON.parse(script.textContent); } catch (e) { return; }
-          var svg = diagram.querySelector('svg');
-          if (!svg) return;
-          if (diagram.hasAttribute('data-tooltip-delegated')) return;
-          diagram.setAttribute('data-tooltip-delegated', '1');
-          diagram.querySelectorAll('g.node').forEach(function(g) { g.style.pointerEvents = 'auto'; });
-          var onOver = function(e) {
-            var g = e.target.closest && e.target.closest('g.node');
-            if (!g) return;
-            var nodeId = getNodeIdFromElement(g);
-            if (!nodeId) return;
-            var tip = data[nodeId];
-            if (!tip || !tip.detail) return;
-            tooltipEl.querySelector('.flow-tooltip__title').textContent = tip.title || nodeId;
-            tooltipEl.querySelector('.flow-tooltip__body').innerHTML = tip.detail;
-            tooltipEl.style.left = '';
-            tooltipEl.style.top = '';
-            tooltipEl.classList.add('is-visible');
-            var rect = g.getBoundingClientRect();
-            var x = rect.left + rect.width / 2;
-            var y = rect.top - 10;
-            requestAnimationFrame(function() {
-              var w = tooltipEl.offsetWidth;
-              var h = tooltipEl.offsetHeight;
-              tooltipEl.style.left = Math.max(12, Math.min(x - w / 2, window.innerWidth - w - 12)) + 'px';
-              tooltipEl.style.top = Math.max(12, y - h) + 'px';
-            });
-          };
-          var onOut = function(e) {
-            var related = e.relatedTarget;
-            if (related && diagram.contains(related)) return;
-            tooltipEl.classList.remove('is-visible');
-          };
-          diagram.addEventListener('mouseover', onOver);
-          diagram.addEventListener('mouseout', onOut);
-          attached++;
+        document.querySelectorAll('.flow-diagram svg g.node').forEach(function(n) {
+          n.style.pointerEvents = 'auto';
         });
-        return attached;
       }
-      var delays = [150, 400, 800];
-      delays.forEach(function(delay, i) {
-        setTimeout(function() {
-          var n = attachTooltips();
-          if (n === 0 && i === delays.length - 1) {
-            setTimeout(attachTooltips, 500);
-          }
-        }, delay);
-      });
+      [0, 150, 400, 800, 1500, 2500].forEach(function(d) { setTimeout(styleRects, d); });
     });
   </script>
 </body>

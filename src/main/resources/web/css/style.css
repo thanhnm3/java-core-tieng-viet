@@ -912,6 +912,7 @@ body.topic-page {
 
 .topic-content .flow-diagram svg g.node {
   cursor: pointer;
+  pointer-events: auto;
   transition: opacity 0.2s ease, filter 0.2s ease;
 }
 
