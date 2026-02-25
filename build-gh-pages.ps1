@@ -41,9 +41,10 @@ function Build-Page {
   param([string]$srcFile, [string]$destFile, [string]$title, [string]$prefix, [string]$toTopics, [string]$activeSlug, [array]$subPages = @(), [string]$activeSubPage = "")
   $content = [System.IO.File]::ReadAllText($srcFile, [System.Text.Encoding]::UTF8)
   $cssPath = $prefix + "css/style.css"
+  $faviconPath = $prefix + "favicon.svg"
   $homePath = $prefix + "index.html"
   $nav = Get-TopicsNav -toTopics $toTopics -active $activeSlug -subPages $subPages -activeSubPage $activeSubPage
-  $html = $layout -replace '\{\{title\}\}', $title -replace '\{\{content\}\}', $content -replace '\{\{cssPath\}\}', $cssPath -replace '\{\{homePath\}\}', $homePath -replace '\{\{topicsNav\}\}', $nav
+  $html = $layout -replace '\{\{title\}\}', $title -replace '\{\{content\}\}', $content -replace '\{\{cssPath\}\}', $cssPath -replace '\{\{faviconPath\}\}', $faviconPath -replace '\{\{homePath\}\}', $homePath -replace '\{\{topicsNav\}\}', $nav
   $destDir = Split-Path $destFile -Parent
   if (!(Test-Path $destDir)) { New-Item -ItemType Directory -Force -Path $destDir | Out-Null }
   $utf8 = New-Object System.Text.UTF8Encoding $true
